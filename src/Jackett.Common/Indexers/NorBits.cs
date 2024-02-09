@@ -18,77 +18,86 @@ using Jackett.Common.Utils;
 using Jackett.Common.Utils.Clients;
 using Newtonsoft.Json.Linq;
 using NLog;
+using static Jackett.Common.Models.IndexerConfig.ConfigurationData;
 
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
     public class NorBits : BaseCachingWebIndexer
     {
+        public override string Id => "norbits";
+        public override string Name => "NorBits";
+        public override string Description => "NorBits is a Norwegian Private site for MOVIES / TV / GENERAL";
+        public override string SiteLink { get; protected set; } = "https://norbits.net/";
+        public override Encoding Encoding => Encoding.GetEncoding("iso-8859-1");
+        public override string Language => "nb-NO";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string LoginUrl => SiteLink + "login.php";
         private string LoginCheckUrl => SiteLink + "takelogin.php";
         private string SearchUrl => SiteLink + "browse.php";
-        private string TorrentDetailsUrl => SiteLink + "details.php?id={id}";
-        private string TorrentDownloadUrl => SiteLink + "download.php?id={id}&passkey={passkey}";
 
         private ConfigurationDataNorbits ConfigData => (ConfigurationDataNorbits)configData;
 
         public NorBits(IIndexerConfigurationService configService, WebClient w, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "norbits",
-                   name: "NorBits",
-                   description: "NorBits is a Norwegian Private site for MOVIES / TV / GENERAL",
-                   link: "https://norbits.net/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q
-                       },
-                       BookSearchParams = new List<BookSearchParam>
-                       {
-                           BookSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: w,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationDataNorbits())
         {
-            Encoding = Encoding.GetEncoding("iso-8859-1");
-            Language = "nb-NO";
-            Type = "private";
+            configData.AddDynamic("freeleech", new BoolConfigurationItem("Search freeleech only") { Value = false });
+        }
 
-            AddCategoryMapping("main_cat[]=1&sub2_cat[]=49", TorznabCatType.MoviesUHD, "Filmer - UHD-2160p");
-            AddCategoryMapping("main_cat[]=1&sub2_cat[]=19", TorznabCatType.MoviesHD, "Filmer - HD-1080p/i");
-            AddCategoryMapping("main_cat[]=1&sub2_cat[]=20", TorznabCatType.MoviesHD, "Filmer - HD-720p");
-            AddCategoryMapping("main_cat[]=1&sub2_cat[]=22", TorznabCatType.MoviesSD, "Filmer - SD");
-            AddCategoryMapping("main_cat[]=2&sub2_cat[]=49", TorznabCatType.TVUHD, "TV - UHD-2160p");
-            AddCategoryMapping("main_cat[]=2&sub2_cat[]=19", TorznabCatType.TVHD, "TV - HD-1080p/i");
-            AddCategoryMapping("main_cat[]=2&sub2_cat[]=20", TorznabCatType.TVHD, "TV - HD-720p");
-            AddCategoryMapping("main_cat[]=2&sub2_cat[]=22", TorznabCatType.TVSD, "TV - SD");
-            AddCategoryMapping("main_cat[]=3", TorznabCatType.PC, "Programmer");
-            AddCategoryMapping("main_cat[]=4", TorznabCatType.Console, "Spill");
-            AddCategoryMapping("main_cat[]=5&sub2_cat[]=42", TorznabCatType.AudioMP3, "Musikk - 192");
-            AddCategoryMapping("main_cat[]=5&sub2_cat[]=43", TorznabCatType.AudioMP3, "Musikk - 256");
-            AddCategoryMapping("main_cat[]=5&sub2_cat[]=44", TorznabCatType.AudioMP3, "Musikk - 320");
-            AddCategoryMapping("main_cat[]=5&sub2_cat[]=45", TorznabCatType.AudioMP3, "Musikk - VBR");
-            AddCategoryMapping("main_cat[]=5&sub2_cat[]=46", TorznabCatType.AudioLossless, "Musikk - Lossless");
-            AddCategoryMapping("main_cat[]=6", TorznabCatType.Books, "Tidsskrift");
-            AddCategoryMapping("main_cat[]=7", TorznabCatType.AudioAudiobook, "Lydbøker");
-            AddCategoryMapping("main_cat[]=8&sub2_cat[]=19", TorznabCatType.AudioVideo, "Musikkvideoer - HD-1080p/i");
-            AddCategoryMapping("main_cat[]=8&sub2_cat[]=20", TorznabCatType.AudioVideo, "Musikkvideoer - HD-720p");
-            AddCategoryMapping("main_cat[]=8&sub2_cat[]=22", TorznabCatType.AudioVideo, "Musikkvideoer - SD");
-            AddCategoryMapping("main_cat[]=40", TorznabCatType.AudioOther, "Podcasts");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping("main_cat[]=1&sub2_cat[]=49", TorznabCatType.MoviesUHD, "Filmer - UHD-2160p");
+            caps.Categories.AddCategoryMapping("main_cat[]=1&sub2_cat[]=19", TorznabCatType.MoviesHD, "Filmer - HD-1080p/i");
+            caps.Categories.AddCategoryMapping("main_cat[]=1&sub2_cat[]=20", TorznabCatType.MoviesHD, "Filmer - HD-720p");
+            caps.Categories.AddCategoryMapping("main_cat[]=1&sub2_cat[]=22", TorznabCatType.MoviesSD, "Filmer - SD");
+            caps.Categories.AddCategoryMapping("main_cat[]=2&sub2_cat[]=49", TorznabCatType.TVUHD, "TV - UHD-2160p");
+            caps.Categories.AddCategoryMapping("main_cat[]=2&sub2_cat[]=19", TorznabCatType.TVHD, "TV - HD-1080p/i");
+            caps.Categories.AddCategoryMapping("main_cat[]=2&sub2_cat[]=20", TorznabCatType.TVHD, "TV - HD-720p");
+            caps.Categories.AddCategoryMapping("main_cat[]=2&sub2_cat[]=22", TorznabCatType.TVSD, "TV - SD");
+            caps.Categories.AddCategoryMapping("main_cat[]=3", TorznabCatType.PC, "Programmer");
+            caps.Categories.AddCategoryMapping("main_cat[]=4", TorznabCatType.Console, "Spill");
+            caps.Categories.AddCategoryMapping("main_cat[]=5&sub2_cat[]=42", TorznabCatType.AudioMP3, "Musikk - 192");
+            caps.Categories.AddCategoryMapping("main_cat[]=5&sub2_cat[]=43", TorznabCatType.AudioMP3, "Musikk - 256");
+            caps.Categories.AddCategoryMapping("main_cat[]=5&sub2_cat[]=44", TorznabCatType.AudioMP3, "Musikk - 320");
+            caps.Categories.AddCategoryMapping("main_cat[]=5&sub2_cat[]=45", TorznabCatType.AudioMP3, "Musikk - VBR");
+            caps.Categories.AddCategoryMapping("main_cat[]=5&sub2_cat[]=46", TorznabCatType.AudioLossless, "Musikk - Lossless");
+            caps.Categories.AddCategoryMapping("main_cat[]=6", TorznabCatType.Books, "Tidsskrift");
+            caps.Categories.AddCategoryMapping("main_cat[]=7", TorznabCatType.AudioAudiobook, "Lydbøker");
+            caps.Categories.AddCategoryMapping("main_cat[]=8&sub2_cat[]=19", TorznabCatType.AudioVideo, "Musikkvideoer - HD-1080p/i");
+            caps.Categories.AddCategoryMapping("main_cat[]=8&sub2_cat[]=20", TorznabCatType.AudioVideo, "Musikkvideoer - HD-720p");
+            caps.Categories.AddCategoryMapping("main_cat[]=8&sub2_cat[]=22", TorznabCatType.AudioVideo, "Musikkvideoer - SD");
+            caps.Categories.AddCategoryMapping("main_cat[]=40", TorznabCatType.AudioOther, "Podcasts");
+
+            return caps;
         }
 
         /// <summary>
@@ -130,8 +139,16 @@ namespace Jackett.Common.Indexers
             // Building login form data
             var pairs = new Dictionary<string, string> {
                 { "username", ConfigData.Username.Value },
-                { "password", ConfigData.Password.Value }
+                { "password", ConfigData.Password.Value },
+                { "logout", "no" },
+                { "returnto", "/" }
             };
+
+            // Use 2FA code if defined
+            if (!string.IsNullOrEmpty(ConfigData.TwoFactorAuth.Value))
+            {
+                pairs.Add("code", ConfigData.TwoFactorAuth.Value);
+            }
 
             // Build WebRequest for login
             var myRequestLogin = new WebRequest
@@ -147,7 +164,7 @@ namespace Jackett.Common.Indexers
             logger.Info("\nNorBits - Getting login page (user simulation).. with " + LoginUrl);
             await webclient.GetResultAsync(myRequestLogin);
 
-            // Build WebRequest for submitting authentification
+            // Build WebRequest for submitting authentication
             var request = new WebRequest
             {
                 PostData = pairs,
@@ -158,8 +175,7 @@ namespace Jackett.Common.Indexers
                 Encoding = Encoding
             };
 
-            // Perform loggin
-            logger.Info("\nPerform loggin.. with " + LoginCheckUrl);
+            logger.Info("\nPerform login with " + LoginCheckUrl);
             var response = await webclient.GetResultAsync(request);
 
             // Test if we are logged in
@@ -218,14 +234,16 @@ namespace Jackett.Common.Indexers
             // Check login before performing a query
             await CheckLoginAsync();
 
-            var SearchTerms = new List<string> { exactSearchTerm };
+            var searchTerms = new List<string> { exactSearchTerm };
 
             // duplicate search without diacritics
             var baseSearchTerm = StringUtil.RemoveDiacritics(exactSearchTerm);
             if (baseSearchTerm != exactSearchTerm)
-                SearchTerms.Add(baseSearchTerm);
+            {
+                searchTerms.Add(baseSearchTerm);
+            }
 
-            foreach (var searchTerm in SearchTerms)
+            foreach (var searchTerm in searchTerms)
             {
                 // Build our query
                 var request = BuildQuery(searchTerm, query, searchUrl);
@@ -233,7 +251,7 @@ namespace Jackett.Common.Indexers
                 // Getting results & Store content
                 var response = await RequestWithCookiesAndRetryAsync(request, ConfigData.CookieHeader.Value);
                 var parser = new HtmlParser();
-                var dom = parser.ParseDocument(response.ContentString);
+                using var dom = parser.ParseDocument(response.ContentString);
 
                 try
                 {
@@ -259,49 +277,38 @@ namespace Jackett.Common.Indexers
                     logger.Info("\nNorBits - Found " + nbResults + " result(s) (+/- " + firstPageRows.Length + ") in " + pageLinkCount + " page(s) for this query !");
                     logger.Info("\nNorBits - There are " + firstPageRows.Length + " results on the first page !");
 
-                    // Loop on results
-
                     foreach (var row in firstPageRows)
                     {
-                        var id = row.QuerySelector("td:nth-of-type(2) > a:nth-of-type(1)").GetAttribute("href").Split('=').Last();                  // ID
-                        var name = row.QuerySelector("td:nth-of-type(2) > a:nth-of-type(1)").GetAttribute("title");                                 // Release Name
-                        var categoryName = row.QuerySelector("td:nth-of-type(1) > div > a:nth-of-type(1)").GetAttribute("title");                   // Category
-                        var mainCat = row.QuerySelector("td:nth-of-type(1) > div > a:nth-of-type(1)").GetAttribute("href").Split('?').Last();
-                        var qSubCat2 = row.QuerySelector("td:nth-of-type(1) > div > a[href^=\"/browse.php?sub2_cat[]=\"]");
-                        var cat = mainCat;
-                        if (qSubCat2 != null)
-                            cat += '&' + qSubCat2.GetAttribute("href").Split('?').Last();
-                        var seeders = ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(9)").TextContent);                                      // Seeders
-                        var leechers = ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(10)").TextContent);                                    // Leechers
-                        var regexObj = new Regex(@"[^\d]");                                                                                         // Completed
-                        var completed2 = row.QuerySelector("td:nth-of-type(8)").TextContent;
-                        var completed = ParseUtil.CoerceLong(regexObj.Replace(completed2, ""));
-                        var qFiles = row.QuerySelector("td:nth-of-type(3) > a");                                                                    // Files
-                        var files = qFiles != null ? ParseUtil.CoerceInt(Regex.Match(qFiles.TextContent, @"\d+").Value) : 1;
-                        var humanSize = row.QuerySelector("td:nth-of-type(7)").TextContent.ToLowerInvariant();                                      // Size
-                        var size = ReleaseInfo.GetBytes(humanSize);                                                                                 // Date
-                        var dateTimeOrig = row.QuerySelector("td:nth-of-type(5)").TextContent;
-                        var dateTime = Regex.Replace(dateTimeOrig, @"<[^>]+>|&nbsp;", "").Trim();
-                        var date = DateTime.ParseExact(dateTime, "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToLocalTime();
-                        var details = new Uri(TorrentDetailsUrl.Replace("{id}", id.ToString()));                                                    // Description Link
-                        var passkey = row.QuerySelector("td:nth-of-type(2) > a:nth-of-type(2)").GetAttribute("href");                               // Download Link
-                        var key = Regex.Match(passkey, "(?<=passkey\\=)([a-zA-z0-9]*)");
-                        var downloadLink = new Uri(TorrentDownloadUrl.Replace("{id}", id.ToString()).Replace("{passkey}", key.ToString()));
+                        var link = new Uri(SiteLink + row.QuerySelector("td:nth-of-type(2) > a[href*=\"download.php?id=\"]")?.GetAttribute("href").TrimStart('/'));
+                        var qDetails = row.QuerySelector("td:nth-of-type(2) > a[href*=\"details.php?id=\"]");
 
-                        // Building release infos
+                        var title = qDetails?.GetAttribute("title").Trim();
+                        var details = new Uri(SiteLink + qDetails?.GetAttribute("href").TrimStart('/'));
+
+                        var mainCategory = row.QuerySelector("td:nth-of-type(1) > div > a[href*=\"main_cat[]\"]")?.GetAttribute("href")?.Split('?').Last();
+                        var secondCategory = row.QuerySelector("td:nth-of-type(1) > div > a[href*=\"sub2_cat[]\"]")?.GetAttribute("href")?.Split('?').Last();
+
+                        var categoryList = new[] { mainCategory, secondCategory };
+                        var cat = string.Join("&", categoryList.Where(c => !string.IsNullOrWhiteSpace(c)));
+
+                        var seeders = ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(9)").TextContent);
+                        var leechers = ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(10)").TextContent);
+
                         var release = new ReleaseInfo
                         {
-                            Category = MapTrackerCatToNewznab(cat),
-                            Title = name,
-                            Seeders = seeders,
-                            Peers = seeders + leechers,
-                            PublishDate = date,
-                            Size = size,
-                            Files = files,
-                            Grabs = completed,
                             Guid = details,
                             Details = details,
-                            Link = downloadLink,
+                            Link = link,
+                            Title = title,
+                            Category = MapTrackerCatToNewznab(cat),
+                            Size = ParseUtil.GetBytes(row.QuerySelector("td:nth-of-type(7)").TextContent),
+                            Files = ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(3) > a")?.TextContent.Trim()),
+                            Grabs = ParseUtil.CoerceLong(row.QuerySelector("td:nth-of-type(8)")?.FirstChild?.TextContent.Trim()),
+                            Seeders = seeders,
+                            Peers = seeders + leechers,
+                            PublishDate = DateTime.ParseExact(row.QuerySelector("td:nth-of-type(5)")?.TextContent.Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture),
+                            DownloadVolumeFactor = 1,
+                            UploadVolumeFactor = 1,
                             MinimumRatio = 1,
                             MinimumSeedTime = 172800 // 48 hours
                         };
@@ -311,8 +318,7 @@ namespace Jackett.Common.Indexers
                         {
                             genres = genres.Trim().Replace("\xA0", " ").Replace("(", "").Replace(")", "").Replace(" | ", ",");
                             release.Description = genres;
-                            if (release.Genres == null)
-                                release.Genres = new List<string>();
+                            release.Genres ??= new List<string>();
                             release.Genres = release.Genres.Union(genres.Split(',')).ToList();
                         }
 
@@ -321,15 +327,17 @@ namespace Jackett.Common.Indexers
                         release.Imdb = ParseUtil.GetLongFromString(imdbLink);
 
                         if (row.QuerySelector("img[title=\"100% freeleech\"]") != null)
+                        {
                             release.DownloadVolumeFactor = 0;
+                        }
                         else if (row.QuerySelector("img[title=\"Halfleech\"]") != null)
+                        {
                             release.DownloadVolumeFactor = 0.5;
+                        }
                         else if (row.QuerySelector("img[title=\"90% Freeleech\"]") != null)
+                        {
                             release.DownloadVolumeFactor = 0.1;
-                        else
-                            release.DownloadVolumeFactor = 1;
-
-                        release.UploadVolumeFactor = 1;
+                        }
 
                         releases.Add(release);
                     }
@@ -348,19 +356,20 @@ namespace Jackett.Common.Indexers
         /// </summary>
         /// <param name="term">Term to search</param>
         /// <param name="query">Torznab Query for categories mapping</param>
-        /// <param name="url">Search url for provider</param>
+        /// <param name="searchUrl">Search url for provider</param>
         /// <param name="page">Page number to request</param>
         /// <returns>URL to query for parsing and processing results</returns>
-        private string BuildQuery(string term, TorznabQuery query, string url, int page = 0)
+        private string BuildQuery(string term, TorznabQuery query, string searchUrl, int page = 0)
         {
-            var parameters = new NameValueCollection();
-            var categoriesList = MapTorznabCapsToTrackers(query);
             var searchterm = term;
 
             // Building our tracker query
-            parameters.Add("incldead", "1");
-            parameters.Add("fullsearch", ConfigData.UseFullSearch.Value ? "1" : "0");
-            parameters.Add("scenerelease", "0");
+            var parameters = new NameValueCollection
+            {
+                { "incldead", "1" },
+                { "fullsearch", ConfigData.UseFullSearch.Value ? "1" : "0" },
+                { "scenerelease", "0" }
+            };
 
             // If search term provided
             if (!string.IsNullOrWhiteSpace(query.ImdbID))
@@ -378,17 +387,23 @@ namespace Jackett.Common.Indexers
                 term = "all";
             }
 
-            var CatQryStr = "";
-            foreach (var cat in categoriesList)
-                CatQryStr += "&" + cat;
+            if (((BoolConfigurationItem)configData.GetDynamic("freeleech")).Value)
+            {
+                parameters.Add("FL", "1");
+            }
 
             // Building our query
-            url += "?" + searchterm + "&" + parameters.GetQueryString() + "&" + CatQryStr;
+            searchUrl += "?" + searchterm + "&" + parameters.GetQueryString();
 
-            logger.Info("\nBuilded query for \"" + term + "\"... " + url);
+            var categoriesList = MapTorznabCapsToTrackers(query);
+            if (categoriesList.Any())
+            {
+                searchUrl += "&" + string.Join("&", categoriesList);
+            }
 
-            // Return our search url
-            return url;
+            logger.Info("\nBuilded query for \"" + term + "\"... " + searchUrl);
+
+            return searchUrl;
         }
 
         /// <summary>

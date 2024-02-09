@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Jackett.Common.Extensions;
 using Jackett.Common.Indexers.Abstract;
 using Jackett.Common.Models;
 using Jackett.Common.Services.Interfaces;
@@ -11,46 +12,60 @@ namespace Jackett.Common.Indexers
     [ExcludeFromCodeCoverage]
     public class AvistaZ : AvistazTracker
     {
+        public override string Id => "avistaz";
+        public override string Name => "AvistaZ";
+        public override string Description => "Aka AsiaTorrents";
+        public override string SiteLink { get; protected set; } = "https://avistaz.to/";
+
+        protected override string TimezoneOffset => "+01:00";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         public AvistaZ(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "avistaz",
-                   name: "AvistaZ",
-                   description: "Aka AsiaTorrents",
-                   link: "https://avistaz.to/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.Genre
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.Genre
-                       },
-                       SupportsRawSearch = true
-                   },
-                   configService: configService,
+                       ICacheService cs)
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
-                   cs: cs
-                   )
+                   cs: cs)
         {
-            AddCategoryMapping(1, TorznabCatType.Movies);
-            AddCategoryMapping(1, TorznabCatType.MoviesUHD);
-            AddCategoryMapping(1, TorznabCatType.MoviesHD);
-            AddCategoryMapping(1, TorznabCatType.MoviesSD);
-            AddCategoryMapping(2, TorznabCatType.TV);
-            AddCategoryMapping(2, TorznabCatType.TVUHD);
-            AddCategoryMapping(2, TorznabCatType.TVHD);
-            AddCategoryMapping(2, TorznabCatType.TVSD);
-            AddCategoryMapping(3, TorznabCatType.Audio);
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                LimitsDefault = 50,
+                LimitsMax = 50,
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.TvdbId, TvSearchParam.Genre
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.TmdbId, MovieSearchParam.Genre
+                },
+                SupportsRawSearch = true,
+                TvSearchImdbAvailable = true
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.Movies);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesUHD);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesHD);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesSD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TV);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVUHD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVHD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVSD);
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.Audio);
+
+            return caps;
         }
 
         // Avistaz has episodes without season. eg Running Man E323
-        protected override string GetSearchTerm(TorznabQuery query) =>
-            !string.IsNullOrWhiteSpace(query.Episode) && query.Season == 0 ?
-            $"{query.SearchTerm} E{query.Episode}" :
-            $"{query.SearchTerm} {query.GetEpisodeSearchString()}";
+        protected override string GetEpisodeSearchTerm(TorznabQuery query) =>
+            query.Season == 0 && query.Episode.IsNotNullOrWhiteSpace()
+                ? $"E{query.Episode}"
+                : $"{query.GetEpisodeSearchString()}";
     }
 }

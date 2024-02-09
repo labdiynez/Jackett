@@ -8,7 +8,6 @@ encoding: UTF-8
 links:
   - https://yourbittorrent.com/
   - https://yourbittorrent2.com/
-  - https://yourbittorrent.nocensor.lol/
 legacylinks:
   - https://yourbittorrent.host/
   - https://yourbittorrent.nocensor.space/
@@ -16,6 +15,12 @@ legacylinks:
   - https://yourbittorrent.nocensor.biz/
   - https://yourbittorrent.nocensor.sbs/
   - https://yourbittorrent.nocensor.world/
+  - https://yourbittorrent.nocensor.lol/
+  - https://yourbittorrent.mrunblock.guru/
+  - https://yourbittorrent.mrunblock.life/
+  - https://yourbittorrent.nocensor.click/
+  - https://yourbittorrent.nocensor.cloud/
+  - https://yourbittorrent.mrunblock.bond/
 
 caps:
   categorymappings:
@@ -100,7 +105,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "02/01/06 -07:00"
+          args: "dd/MM/yy zzz"
     date:
       text: "{{ if or .Result.date_year .Result.date_day }}{{ or .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
     seeders:

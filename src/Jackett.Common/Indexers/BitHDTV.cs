@@ -15,51 +15,62 @@ using Jackett.Common.Utils;
 using Jackett.Common.Utils.Clients;
 using Newtonsoft.Json.Linq;
 using NLog;
+using static Jackett.Common.Models.IndexerConfig.ConfigurationData;
 
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class BitHDTV : BaseWebIndexer
+    public class BitHDTV : IndexerBase
     {
+        public override string Id => "bithdtv";
+        public override string Name => "BIT-HDTV";
+        public override string Description => "BIT-HDTV - Home of High Definition";
+        public override string SiteLink { get; protected set; } = "https://www.bit-hdtv.com/";
+        public override Encoding Encoding => Encoding.GetEncoding("iso-8859-1");
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string SearchUrl => SiteLink + "torrents.php";
 
         private new ConfigurationDataCookie configData => (ConfigurationDataCookie)base.configData;
 
         public BitHDTV(IIndexerConfigurationService configService, WebClient w, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "bithdtv",
-                   name: "BIT-HDTV",
-                   description: "BIT-HDTV - Home of High Definition",
-                   link: "https://www.bit-hdtv.com/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.Genre
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.Genre
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: w,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationDataCookie("For best results, change the 'Torrents per page' setting to 100 in your profile."))
         {
-            Encoding = Encoding.GetEncoding("iso-8859-1");
-            Language = "en-US";
-            Type = "private";
+            configData.AddDynamic("freeleech", new BoolConfigurationItem("Search freeleech only") { Value = false });
+        }
 
-            AddCategoryMapping(6, TorznabCatType.AudioLossless, "HQ Audio");
-            AddCategoryMapping(7, TorznabCatType.Movies, "Movies");
-            AddCategoryMapping(8, TorznabCatType.AudioVideo, "Music Videos");
-            AddCategoryMapping(9, TorznabCatType.Other, "Other");
-            AddCategoryMapping(10, TorznabCatType.TV, "TV");
-            AddCategoryMapping(12, TorznabCatType.TV, "TV/Seasonpack");
-            AddCategoryMapping(11, TorznabCatType.XXX, "XXX");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.Genre
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.Genre
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.AudioLossless, "HQ Audio");
+            caps.Categories.AddCategoryMapping(7, TorznabCatType.Movies, "Movies");
+            caps.Categories.AddCategoryMapping(8, TorznabCatType.AudioVideo, "Music Videos");
+            caps.Categories.AddCategoryMapping(9, TorznabCatType.Other, "Other");
+            caps.Categories.AddCategoryMapping(10, TorznabCatType.TV, "TV");
+            caps.Categories.AddCategoryMapping(12, TorznabCatType.TV, "TV/Seasonpack");
+            caps.Categories.AddCategoryMapping(11, TorznabCatType.XXX, "XXX");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -91,6 +102,15 @@ namespace Jackett.Common.Indexers
             {
                 {"cat", MapTorznabCapsToTrackers(query, true).FirstIfSingleOrDefault("0")}
             };
+
+            // free=4 green:  (DL won't be counted, and UL will be counted double.)
+            // free=3 grey:   (DL will be counted as normal, and UL will be counted double.)
+            // free=2 yellow: (DL won't be counted, and UL will be counted as normal.)
+            // free=1 normal: (DL and UL counted as normal.)
+            // free=0 (any)
+            if (((BoolConfigurationItem)configData.GetDynamic("freeleech")).Value)
+                qc.Add("free", "2");
+
             var results = new List<WebResult>();
             var search = new UriBuilder(SearchUrl);
             if (query.IsGenreQuery)
@@ -123,7 +143,7 @@ namespace Jackett.Common.Indexers
             foreach (var result in results)
                 try
                 {
-                    var dom = parser.ParseDocument(result.ContentString);
+                    using var dom = parser.ParseDocument(result.ContentString);
 
                     var tableBody = dom.QuerySelector("#torrents-index-table > #torrents-index-table-body");
                     if (tableBody == null) // No results, so skip this search
@@ -163,24 +183,24 @@ namespace Jackett.Common.Indexers
                         var pubDate = DateTime.ParseExact(dateString, "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
                         release.PublishDate = DateTime.SpecifyKind(pubDate, DateTimeKind.Local);
                         var sizeStr = row.Children[6].TextContent;
-                        release.Size = ReleaseInfo.GetBytes(sizeStr);
+                        release.Size = ParseUtil.GetBytes(sizeStr);
                         release.Seeders = ParseUtil.CoerceInt(row.Children[8].TextContent.Trim());
                         release.Peers = ParseUtil.CoerceInt(row.Children[9].TextContent.Trim()) + release.Seeders;
                         switch (row.GetAttribute("bgcolor"))
                         {
-                            case "#DDDDDD":
+                            case "#DDDDDD": // grey
                                 release.DownloadVolumeFactor = 1;
                                 release.UploadVolumeFactor = 2;
                                 break;
-                            case "#FFFF99":
+                            case "#FFFF99": // yellow
                                 release.DownloadVolumeFactor = 0;
                                 release.UploadVolumeFactor = 1;
                                 break;
-                            case "#CCFF99":
+                            case "#CCFF99": // green
                                 release.DownloadVolumeFactor = 0;
                                 release.UploadVolumeFactor = 2;
                                 break;
-                            default:
+                            default: // normal
                                 release.DownloadVolumeFactor = 1;
                                 release.UploadVolumeFactor = 1;
                                 break;

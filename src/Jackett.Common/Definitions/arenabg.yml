@@ -5,8 +5,6 @@ description: "ArenaBG is a BULGARIAN Semi-Private Torrent Tracker for 0DAY / GEN
 language: bg-BG
 type: semi-private
 encoding: UTF-8
-certificates:
-  - d5d96eaf33f4b7470a7009f1e591a45f6af0430d # expired 15 Oct 2022
 links:
   - https://arenabg.com/
 legacylinks:
@@ -30,6 +28,7 @@ caps:
     - {id: 20, cat: Movies/HD, desc: "Movies / Movies HD"}
     - {id: 21, cat: Movies/HD, desc: "Movies / x265"}
     - {id: 22, cat: Movies/UHD, desc: "Movies / 4K"}
+    - {id: 59, cat: Movies/HD, desc: "Movies / AV1"}
     - {id: 2, cat: TV, desc: "Series"}
     - {id: 23, cat: TV/HD, desc: "Series / TV Episodes HD"}
     - {id: 24, cat: TV, desc: "Series / TV Episodes"}
@@ -187,7 +186,7 @@ search:
         - name: append
           args: " +02:00" # EET
         - name: dateparse
-          args: "2 January 2006, Monday @ 15:04 -07:00"
+          args: "d MMMM yyyy, dddd @ HH:mm zzz"
     size:
       selector: td:nth-child(3)
     seeders:

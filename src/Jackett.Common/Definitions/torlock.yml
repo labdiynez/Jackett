@@ -5,34 +5,33 @@ description: "Torlock is a torrent search site that lists verified torrents only
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 requestDelay: 2
 links:
-  - https://www.torlock2.com/
   - https://www.torlock.com/
-  - https://torlock.unblockit.pet/
-  - https://torlock.nocensor.lol/
+  - https://www.torlock2.com/
+  - https://torlock.unblockit.dad/
 legacylinks:
   - https://torlock.com/
-  - https://torlock.nocensor.work/
-  - https://torlock.unblockit.kim/
-  - https://torlock.unblockit.bz/
-  - https://torlock.unblockit.tv/
-  - https://torlock.unblockit.how/
-  - https://torlock.unblockit.cam/
-  - https://torlock.nocensor.biz/
-  - https://torlock.unblockit.day/
-  - https://torlock.unblockit.llc/
-  - https://torlock.unblockit.blue/
   - https://www.torlock.icu/
-  - https://torlock.unblockit.name/
-  - https://torlock.nocensor.sbs/
-  - https://torlock.unblockit.ist/
-  - https://torlock.unblockit.bet/
-  - https://torlock.unblockit.cat/
-  - https://torlock.unblockit.nz/
-  - https://torlock.nocensor.world/
-  - https://torlock.unblockit.page/
+  - https://torlock.nocensor.lol/
+  - https://torlock.unblockit.ink/
+  - https://torlock.unblockit.bio/
+  - https://torlock.unblockit.boo/
+  - https://torlock.mrunblock.guru/
+  - https://torlock.unblockit.click/
+  - https://torlock.unblockit.asia/
+  - https://torlock.mrunblock.life/
+  - https://torlock.unblockit.mov/
+  - https://torlock.unblockit.rsvp/
+  - https://torlock.nocensor.click/
+  - https://torlock.unblockit.vegas/
+  - https://torlock.unblockit.esq/
+  - https://torlock.unblockit.zip/
+  - https://torlock.unblockit.foo/
+  - https://torlock.unblockit.ing/
+  - https://torlock.nocensor.cloud/
+  - https://torlock.mrunblock.bond/
+  - https://torlock.unblockit.date/
 
 caps:
   # dont forget to update the search fields category case block
@@ -75,7 +74,7 @@ settings:
 
 search:
   paths:
-    - path: "{{ if .Keywords }}/all/torrents/{{ .Keywords }}.html?sort={{ .Config.sort }}&order={{ .Config.type }}{{ else }}/fresh.html{{ end }}"
+    - path: "/all/torrents/{{ if .Keywords }}{{ .Keywords }}{{ else }}{{ .Today.Year }}{{ end }}.html?sort={{ .Config.sort }}&order={{ .Config.type }}"
       categories: ["!", TELEVISION, MOVIES, MUSIC, GAMES, SOFTWARE, ANIME, EBOOKS, OTHER, ADULT, AUDIOBOOK, IMAGES]
     - path: "{{ if .Keywords }}/television/torrents/{{ .Keywords }}.html?sort={{ .Config.sort }}&order={{ .Config.type }}{{else}}/television/1/{{ .Config.sort }}/{{ .Config.type }}.html{{end}}"
       categories: [TELEVISION]
@@ -149,7 +148,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "1/2/2006 -07:00"
+          args: "M/d/yyyy zzz"
     date_day:
       selector: td:nth-child(2):contains("Today"), td:nth-child(2):contains("Yesterday")
       optional: true

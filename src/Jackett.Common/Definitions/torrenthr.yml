@@ -54,6 +54,7 @@ login:
     - selector: div.glavni:has(div.glavni_naslov:contains("Greška"))
   test:
     path: browse.php
+    selector: a[href*="logout.php"]
 
 search:
   paths:
@@ -123,7 +124,7 @@ search:
         - name: replace
           args: [" u ", " "]
         - name: dateparse
-          args: "02.01.2006 15:04:05"
+          args: "dd.MM.yyyy HH:mm:ss"
     description:
       selector: td:nth-child(2)
       remove: a, br, small

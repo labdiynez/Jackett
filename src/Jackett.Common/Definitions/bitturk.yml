@@ -14,6 +14,7 @@ legacylinks:
 caps:
   categorymappings:
     - {id: 56, cat: Movies, desc: "BTRG"}
+    - {id: 95, cat: Movies, desc: "BTRG HMAX"}
     - {id: 57, cat: Movies, desc: "Yerli Dizi"}
     - {id: 62, cat: Movies, desc: "Yab@ncı Dizi"}
     - {id: 63, cat: Movies, desc: "Türkçe Film"}
@@ -95,7 +96,7 @@ settings:
   - name: info
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b><li>And set the <b>Language (Dil)</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</ol>"
+    default: "<ol><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b></li><li>And set the <b>Language (Dil)</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</li></ol>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -192,7 +193,7 @@ search:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: dateparse
-          args: "02-01-2006 15:04"
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]

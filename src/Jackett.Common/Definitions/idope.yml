@@ -1,6 +1,6 @@
 ---
 id: idope
-name: Idope
+name: iDope
 description: "iDope is a Public torrent search engine presenting direct magnet links"
 language: en-US
 type: public
@@ -77,10 +77,9 @@ search:
 
   fields:
     category:
-      text: 0
-    category|noappend:
-      optional: true
       selector: div.resultdivbotton div.resultdivbottoncategory
+      optional: true
+      default: 0
       case:
         ":contains(\"Others\")": 0
         ":contains(\"Movies\")": 1

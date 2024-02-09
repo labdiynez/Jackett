@@ -2,7 +2,7 @@
 id: korsar
 name: Korsar
 description: "Korsar is a RUSSIAN Private Torrent Tracker for MOVIES / TV / GENERAL"
-language: ru-ru
+language: ru-RU
 type: private
 encoding: UTF-8
 links:
@@ -438,7 +438,14 @@ settings:
   - name: info
     type: info
     label: How to get the Cookie
-    default: "<ol><li><a href=\"http://filbi1976.org/ucp.php?mode=login\" target =_blank>Login</a> to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
+    default: "<ol><li>Login to this tracker with your browser</li><li>Open the <b>DevTools</b> panel by pressing <b>F12</b></li><li>Select the <b>Network</b> tab</li><li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)</li><li>Refresh the page by pressing <b>F5</b></li><li>Click on the first row entry</li><li>Select the <b>Headers</b> tab on the Right panel</li><li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</li></ol>"
+  - name: useragent
+    type: text
+    label: User-Agent
+  - name: info_useragent
+    type: info
+    label: How to get the User-Agent
+    default: "<ol><li>From the same place you fetched the cookie,</li><li>Find <b>'user-agent:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole user-agent string <i>(everything after 'user-agent: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -461,9 +468,13 @@ login:
   inputs:
     cookie: "{{ .Config.cookie }}"
   test:
-    path: index.php
+    path: /
+    selector: a[href*="ucp.php?mode=logout"]
 
 search:
+  headers:
+    User-Agent: ["{{ .Config.useragent }}"]
+
   paths:
   # http://filbi1976.org/search.php?t=0&cs=1&cs_post=1&sc=1&keywords=&cs_where=title&cs_forb=&submit=Hand+Search&fid%5B%5D=0&cs_format=0&cs_year=0&cs_filter=0&sk=nt&sd=d&cs_private=0
     - path: search.php
@@ -490,11 +501,11 @@ search:
 
   fields:
     category:
-      selector: a[href*="/viewtopic.php?f="]
+      selector: dt > a[href$=".html"]
       attribute: href
       filters:
-        - name: querystring
-          args: f
+        - name: regexp
+          args: -f(\d+)
     title:
       selector: a.topictitle
     details:
@@ -596,7 +607,7 @@ search:
         - name: append
           args: " +03:00" # MSK
         - name: dateparse
-          args: "02 Jan 2006, 15:04 -07:00"
+          args: "dd MMM yyyy, HH:mm zzz"
     date:
       text: "{{ if or .Result.date_time .Result.date_year .Result.date_day }}{{ or .Result.date_time .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
     downloadvolumefactor:

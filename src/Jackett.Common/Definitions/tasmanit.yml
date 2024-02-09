@@ -91,7 +91,8 @@ login:
   error:
     - selector: div#content:has(h2:contains("Login Failed"))
   test:
-    path: browse.php
+    path: index.php
+    selector: a[href*="logout.php"]
 
 search:
   paths:
@@ -118,11 +119,10 @@ search:
   fields:
     title_default:
       selector: td:nth-child(2) a
-    title_optional:
-      optional: true
-      selector: div.tooltip-content > div
     title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      selector: div.tooltip-content > div
+      optional: true
+      default: "{{ .Result.title_default }}"
     category:
       selector: a[href*="/browse.php?category="]
       attribute: href
@@ -151,7 +151,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "02-01-2006 15:04"
+          args: "dd-MM-yyyy HH:mm"
     downloadvolumefactor:
       case:
         img[src$="/freedownload.gif"]: 0

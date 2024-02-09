@@ -7,9 +7,11 @@ type: semi-private
 encoding: windows-1251
 testlinktorrent: false
 links:
-  - https://anime-free.biz/
+  - https://anime-free.one/
 legacylinks:
   - https://anime-free.net/ # redirects to *.biz
+  - https://anime-free.biz/
+  - http://anime-free.one/
 
 caps:
   categorymappings:
@@ -50,7 +52,6 @@ login:
   inputs:
     login_name: "{{ .Config.email }}"
     login_password: "{{ .Config.password }}"
-    login: submit
   error:
     - selector: div.berrors
   test:
@@ -87,10 +88,11 @@ search:
     selector: article
 
   fields:
-    category_optional:
-      optional: true
+    category:
       selector: a[href*="category="]
       attribute: href
+      optional: true
+      default: 54
       case:
         a[href$="3d_hentai"]: 51
         a[href$="3dcg_game"]: 55
@@ -109,8 +111,6 @@ search:
         a[href$="original_hentai"]: 48
         a[href$="rus-game"]: 57
         a[href$="uncensored"]: 45
-    category:
-      text: "{{ if .Result.category_optional }}{{ .Result.category_optional }}{{ else }}54{{ end }}"
     title:
       selector: h2.title a
     details:
@@ -124,21 +124,19 @@ search:
       attribute: src
     description:
       selector: div[itemprop="description"]
-      optional: true
     date:
       selector: li:has(img#adddate)
       filters:
         - name: dateparse
-          args: "02-01-2006, 15:04"
+          args: "dd-MM-yyyy, HH:mm"
     seeders:
       text: 1
     leechers:
       text: 1
-    size_optional:
-      optional: true
-      selector: b.file_size
     size:
-      text: "{{ if .Result.size_optional }}{{ .Result.size_optional }}{{ else }}0 B{{ end }}"
+      selector: b.file_size
+      optional: true
+      default: 0 B
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

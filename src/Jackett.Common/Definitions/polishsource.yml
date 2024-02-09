@@ -5,8 +5,10 @@ description: "PolishSource (PS) is a POLISH Private Torrent Tracker for MOVIES /
 language: pl-PL
 type: private
 encoding: ISO-8859-2
+requestDelay: 3
 links:
   - https://polishsource.cz/
+  - https://plsrc.cz/
 
 caps:
   categorymappings:
@@ -120,9 +122,9 @@ search:
       selector: a[href^="details.php?id="]
       filters:
         - name: re_replace
-          args: ["(?i)(\\.multi\\.)", ".{{ .Config.multilanguage }}."]
+          args: ["(?i)\\b(MULTI(?!.*(?:POLISH|ENGLISH|\\bPL\\b)))\\b", "{{ .Config.multilanguage }}"]
         - name: re_replace
-          args: ["(?i)(\\.pl\\.)", ".POLISH."]
+          args: ["(?i)\\b(pl)\\b", "POLISH"]
     title:
       text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
     details:
@@ -157,7 +159,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "2006-01-0215:04:05"
+          args: "yyyy-MM-ddHH:mm:ss"
     size:
       selector: td:nth-child(5)
     grabs:

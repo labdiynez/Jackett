@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
@@ -21,54 +20,27 @@ using static Jackett.Common.Models.IndexerConfig.ConfigurationData;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class Anidex : BaseWebIndexer
+    public class Anidex : IndexerBase
     {
+        public override string Id => "anidex";
+        public override string Name => "Anidex";
+        public override string Description => "Anidex is a Public torrent tracker and indexer, primarily for English fansub groups of anime";
+        public override string SiteLink { get; protected set; } = "https://anidex.info/";
+        public override string Language => "en-US";
+        public override string Type => "public";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         public Anidex(IIndexerConfigurationService configService, Utils.Clients.WebClient wc, Logger l,
-            IProtectionService ps, ICacheService cs)
-            : base(id: "anidex",
-                   name: "Anidex",
-                   description: "Anidex is a Public torrent tracker and indexer, primarily for English fansub groups of anime",
-                   link: "https://anidex.info/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+                      IProtectionService ps, ICacheService cs)
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationData())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "public";
-
-            // Configure the category mappings
-            AddCategoryMapping(1, TorznabCatType.TVAnime, "Anime - Sub");
-            AddCategoryMapping(2, TorznabCatType.TVAnime, "Anime - Raw");
-            AddCategoryMapping(3, TorznabCatType.TVAnime, "Anime - Dub");
-            AddCategoryMapping(4, TorznabCatType.TVAnime, "LA - Sub");
-            AddCategoryMapping(5, TorznabCatType.TVAnime, "LA - Raw");
-            AddCategoryMapping(6, TorznabCatType.BooksEBook, "Light Novel");
-            AddCategoryMapping(7, TorznabCatType.BooksComics, "Manga - TLed");
-            AddCategoryMapping(8, TorznabCatType.BooksComics, "Manga - Raw");
-            AddCategoryMapping(9, TorznabCatType.AudioMP3, "♫ - Lossy");
-            AddCategoryMapping(10, TorznabCatType.AudioLossless, "♫ - Lossless");
-            AddCategoryMapping(11, TorznabCatType.AudioVideo, "♫ - Video");
-            AddCategoryMapping(12, TorznabCatType.PCGames, "Games");
-            AddCategoryMapping(13, TorznabCatType.PC0day, "Applications");
-            AddCategoryMapping(14, TorznabCatType.XXXImageSet, "Pictures");
-            AddCategoryMapping(15, TorznabCatType.XXX, "Adult Video");
-            AddCategoryMapping(16, TorznabCatType.Other, "Other");
-
-            configData.AddDynamic(
-                "DDoS-Guard",
-                new DisplayInfoConfigurationItem("", "This site may use DDoS-Guard Protection, therefore Jackett requires <a href='https://github.com/Jackett/Jackett#configuring-flaresolverr' target='_blank'>FlareSolverr</a> to access it.")
-                );
+            configData.AddDynamic("DDoS-Guard", new DisplayInfoConfigurationItem("DDoS-Guard", "This site may use DDoS-Guard Protection, therefore Jackett requires <a href='https://github.com/Jackett/Jackett#configuring-flaresolverr' target='_blank'>FlareSolverr</a> to access it."));
 
             AddLanguageConfiguration();
 
@@ -92,6 +64,45 @@ namespace Jackett.Common.Indexers
             configData.AddDynamic("orderrequestedfromsite", orderSelect);
 
             EnableConfigurableRetryAttempts();
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q,
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q,
+                }
+            };
+
+            // Configure the category mappings
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.TVAnime, "Anime - Sub");
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVAnime, "Anime - Raw");
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.TVAnime, "Anime - Dub");
+            caps.Categories.AddCategoryMapping(4, TorznabCatType.TVAnime, "LA - Sub");
+            caps.Categories.AddCategoryMapping(5, TorznabCatType.TVAnime, "LA - Raw");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.BooksEBook, "Light Novel");
+            caps.Categories.AddCategoryMapping(7, TorznabCatType.BooksComics, "Manga - TLed");
+            caps.Categories.AddCategoryMapping(8, TorznabCatType.BooksComics, "Manga - Raw");
+            caps.Categories.AddCategoryMapping(9, TorznabCatType.AudioMP3, "♫ - Lossy");
+            caps.Categories.AddCategoryMapping(10, TorznabCatType.AudioLossless, "♫ - Lossless");
+            caps.Categories.AddCategoryMapping(11, TorznabCatType.AudioVideo, "♫ - Video");
+            caps.Categories.AddCategoryMapping(12, TorznabCatType.PCGames, "Games");
+            caps.Categories.AddCategoryMapping(13, TorznabCatType.PC0day, "Applications");
+            caps.Categories.AddCategoryMapping(14, TorznabCatType.XXXImageSet, "Pictures");
+            caps.Categories.AddCategoryMapping(15, TorznabCatType.XXX, "Adult Video");
+            caps.Categories.AddCategoryMapping(16, TorznabCatType.Other, "Other");
+
+            return caps;
         }
 
         private void AddLanguageConfiguration()
@@ -146,8 +157,7 @@ namespace Jackett.Common.Indexers
             LoadValuesFromJson(configJson);
             var releases = await PerformQuery(new TorznabQuery());
 
-            await ConfigureIfOK(string.Empty, releases.Any(), () =>
-                throw new Exception("Could not find releases from this URL"));
+            await ConfigureIfOK(string.Empty, releases.Any(), () => throw new Exception("Could not find releases from this URL"));
 
             return IndexerConfigurationStatus.Completed;
         }
@@ -166,18 +176,21 @@ namespace Jackett.Common.Indexers
             // Prepare the search query
             var queryParameters = new NameValueCollection
             {
-                { "q", query.SearchTerm ?? string.Empty },
+                { "page", "search" },
                 { "s", GetSortBy },
                 { "o", GetOrder },
-                { "group_id", "0" } // No group
+                { "group_id", "0" }, // No group
+                { "q", query.SearchTerm ?? string.Empty }
             };
 
             // Get specified categories
             // AniDex throws errors when categories are url encoded. See issue #9727
             var searchCategories = MapTorznabCapsToTrackers(query);
             var catString = "";
-            if (searchCategories.Count > 0)
+            if (searchCategories.Any() && GetAllTrackerCategories().Except(searchCategories).Any())
+            {
                 catString = "&id=" + string.Join(",", searchCategories);
+            }
 
             // Get Selected Languages
             // AniDex throws errors when the commas between language IDs are url encoded.
@@ -196,13 +209,11 @@ namespace Jackett.Common.Indexers
 
         private IEnumerable<ReleaseInfo> ParseResult(string response)
         {
-            const string rowSelector = "div#content table > tbody > tr";
-
             try
             {
                 var resultParser = new HtmlParser();
-                var resultDocument = resultParser.ParseDocument(response);
-                IEnumerable<IElement> rows = resultDocument.QuerySelectorAll(rowSelector);
+                using var resultDocument = resultParser.ParseDocument(response);
+                IEnumerable<IElement> rows = resultDocument.QuerySelectorAll("div#content table > tbody > tr");
 
                 var releases = new List<ReleaseInfo>();
                 foreach (var r in rows)
@@ -216,7 +227,7 @@ namespace Jackett.Common.Indexers
                         release.Title = ParseStringValueFromRow(r, nameof(release.Title), "td:nth-child(3) span") + " " + language;
                         release.Link = ParseValueFromRow(r, nameof(release.Link), "a[href^=\"/dl/\"]", (e) => GetAbsoluteUrl(e.Attributes["href"].Value));
                         release.MagnetUri = ParseValueFromRow(r, nameof(release.MagnetUri), "a[href^=\"magnet:?\"]", (e) => new Uri(e.Attributes["href"].Value));
-                        release.Size = ParseValueFromRow(r, nameof(release.Size), "td:nth-child(7)", (e) => ReleaseInfo.GetBytes(e.Text()));
+                        release.Size = ParseValueFromRow(r, nameof(release.Size), "td:nth-child(7)", (e) => ParseUtil.GetBytes(e.Text()));
                         release.PublishDate = ParseValueFromRow(r, nameof(release.PublishDate), "td:nth-child(8)", (e) => DateTime.ParseExact(e.Attributes["title"].Value, "yyyy-MM-dd HH:mm:ss UTC", CultureInfo.InvariantCulture));
                         release.Seeders = ParseIntValueFromRow(r, nameof(release.Seeders), "td:nth-child(9)");
                         release.Peers = ParseIntValueFromRow(r, nameof(release.Peers), "td:nth-child(10)") + release.Seeders;

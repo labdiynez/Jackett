@@ -66,12 +66,13 @@ login:
     password: "{{ .Config.password }}"
     logout: ""
     securelogin: ""
-    ssl: ""
-    trackerssl: ""
+    ssl: yes
+    trackerssl: yes
   error:
     - selector: form#loginform > span.warning
   test:
-    path: torrents.php
+    path: index.php
+    selector: a[href="logout.php"]
 
 search:
   paths:
@@ -89,6 +90,7 @@ search:
     incldead: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: tr:has(td.name)
@@ -125,7 +127,7 @@ search:
       optional: true
       filters:
         - name: dateparse
-          args: "2006-01-0215:04:05"
+          args: "yyyy-MM-ddHH:mm:ss"
     date_ago:
       # 2 ngày<br/>23 giờ
       selector: td:nth-child(5):not(:contains("-"))
@@ -164,4 +166,7 @@ search:
         "*": 1
     minimumratio:
       text: 0.5
+    description:
+      selector: td:nth-child(3) > div:nth-child(2)
+      remove: a, b, font, img, span
 # NexusPHP 1.0

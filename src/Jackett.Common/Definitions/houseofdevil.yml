@@ -29,7 +29,7 @@ caps:
     - {id: 127, cat: Movies, desc: "Fuer Unsere Kleinsten"}
     - {id: 121, cat: PC/Mobile-Other, desc: "Handy-Stuff"}
     - {id: 124, cat: Audio, desc: "Musik - Alben"}
-    - {id: 140, cat: Audio, desc: "Musik - Diskografie"}
+    - {id: 141, cat: Audio, desc: "Musik - Diskografie"}
     - {id: 122, cat: Audio/Audiobook, desc: "Musik - Hoerbuch"}
     - {id: 123, cat: Audio, desc: "Musik - Mixe"}
     - {id: 133, cat: Audio/MP3, desc: "Musik - MP3"}
@@ -71,7 +71,7 @@ settings:
   - name: info_free
     type: info
     label: About OnlyUpload at H-O-D
-    default: <li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li>
+    default: "<ul><li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li></ul>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -161,7 +161,7 @@ search:
         - name: replace
           args: ["\xA0", " "]
         - name: dateparse
-          args: "02.01.2006 15:04:05 -07:00"
+          args: "dd.MM.yyyy HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="/pic/free.gif"]: 0

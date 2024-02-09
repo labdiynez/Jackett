@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../libs/handlebarsextend.js?changed=2017083001"></script>
     <script type="text/javascript" src="../bootstrap/bootstrap.min.js?changed=2017083001"></script>
     <script type="text/javascript" src="../libs/bootstrap-notify.js?changed=2017083001"></script>
-    <script type="text/javascript" src="../libs/bootstrap-multiselect.js?changed=2017083001"></script>
+    <script type="text/javascript" src="../libs/bootstrap-multiselect.js?changed=20230107001"></script>
     <script type="text/javascript" src="../libs/tagify.min.js?changed=11662"></script>
     <script type="text/javascript" src="../libs/jQuery.tagify.min.js?changed=11662"></script>
 
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../custom.css?changed=20220721002" media="only screen and (min-device-width: 480px)">
     <link rel="stylesheet" type="text/css" href="../custom_mobile.css?changed=20220721002" media="only screen and (max-device-width: 480px)">
     <link rel="stylesheet" type="text/css" href="../css/jquery.dataTables.min.css?changed=2017083001">
-    <link rel="stylesheet" type="text/css" href="../css/bootstrap-multiselect.css?changed=2017083001" />
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-multiselect.css?changed=20230107001" />
     <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css?changed=2017083001">
     <title>Jackett</title>
 </head>
@@ -49,6 +49,12 @@
             </button>
         </div>
         <hr />
+
+        <div id="warning-external-access" hidden class="alert alert-danger text-center" role="alert">
+            <strong>
+                <span class="glyphicon glyphicon-alert"></span> Security Risk: Your instance has external access enabled without using an admin password. <span class="glyphicon glyphicon-alert"></span>
+            </strong>
+        </div>
 
         <div id="can-upgrade-from-mono" hidden class="alert alert-info" role="alert">
             <strong>Standalone version of Jackett is now available - Mono not required</strong> <br>
@@ -178,6 +184,10 @@
         <div class="input-area">
             <span class="input-header">External access: </span>
             <input id="jackett-allowext" class="form-control input-right" type="checkbox" />
+        </div>
+        <div class="input-area">
+            <span class="input-header">Local bind address: </span>
+            <input id="jackett-local-bind-address" class="form-control input-right" type="text" value="" placeholder="127.0.0.1">
         </div>
         <div class="input-area">
             <span class="input-header">Allow CORS: </span>
@@ -465,11 +475,11 @@
                                     <td class="fit">{{jacketTimespan PublishDate}}</td>
                                     <td class="fit">{{jacketTimespan FirstSeen}}</td>
                                     <td class="fit">{{Tracker}}</td>
-                                    <td class="Title"><a href="{{Details}}">{{Title}}</a> <span class="release-labels"></span></td>
+                                    <td class="Title" style="word-break: break-all"><a href="{{Details}}" target="_blank">{{Title}}</a> <span class="release-labels"></span></td>
                                     <td class="fit">{{Size}}</td>
                                     <td class="fit">{{jacketSize Size}}</td>
                                     <td class="fit">{{Files}}</td>
-                                    <td class="fit Cat">{{CategoryDesc}}</td>
+                                    <td class="fit Cat" style="word-break: break-all">{{CategoryDesc}}</td>
                                     <td class="fit">{{Grabs}}</td>
                                     <td class="fit">{{Seeders}}</td>
                                     <td class="fit">{{Peers}}</td>
@@ -529,10 +539,10 @@
                     </div>
                     <div class="modal-body">
                         <p>You can search all configured indexers from this screen.</p>
-                        <label for="text">Query</label>
+                        <label for="searchquery">Query</label>
                         <input class="form-control" type="text" name="query" id="searchquery" />
                         {{#if filters}}
-                        <label for="filter">Filter</label>
+                        <label for="searchFilter">Filter</label>
                         <select name="filter" id="searchFilter">
                           <option value="all">all</option>
                           {{#each filters}}
@@ -540,9 +550,9 @@
                           {{/each}}
                         </select>
                         {{/if}}
-                        <label for="tracker">Tracker</label>
+                        <label for="searchTracker">Tracker</label>
                         <select name="tracker" id="searchTracker" multiple="multiple"></select>
-                        <label for="category">Category</label>
+                        <label for="searchCategory">Category</label>
                         <select name="category" id="searchCategory" multiple="multiple"></select>
                         <button id="jackett-search-perform" class="btn btn-success btn-sm"><span class="fa fa-search"></span></button>
                         <div id="searchResults"></div>
@@ -570,39 +580,39 @@
         <table id="jackett-search-results-datatable" class="dataTable compact cell-border hover stripe">
             <thead>
                 <tr>
-                    <th>Published</th>
-                    <th>Published</th>
-                    <th>Tracker</th>
+                    <th class="text-center">Published</th>
+                    <th class="text-center">Published</th>
+                    <th class="text-center">Tracker</th>
                     <th>Name</th>
-                    <th>Size</th>
-                    <th>Size</th>
-                    <th title="Files">F</th>
-                    <th>Category</th>
-                    <th title="Grabs">G</th>
-                    <th title="Seeders">S</th>
-                    <th title="Leechers">L</th>
-                    <th title="DownloadVolumeFactor" class="fit">DLF</th>
-                    <th title="UploadVolumeFactor" class="fit">ULF</th>
-                    <th title="Download">DL</th>
+                    <th class="text-center">Size</th>
+                    <th class="text-center">Size</th>
+                    <th class="text-center" title="Files">F</th>
+                    <th class="text-center">Category</th>
+                    <th class="text-center" title="Grabs">G</th>
+                    <th class="text-center" title="Seeders">S</th>
+                    <th class="text-center" title="Leechers">L</th>
+                    <th class="text-center fit" title="DownloadVolumeFactor">DLF</th>
+                    <th class="text-center fit" title="UploadVolumeFactor">ULF</th>
+                    <th class="text-center" title="Download">DL</th>
                 </tr>
             </thead>
             <tbody>
                 {{#each Results}}
                 <tr class="jackett-search-results-row" data-imdb="{{Imdb}}" data-tmdb="{{TMDb}}" data-tvdb="{{TVDBId}}" data-tvmaze="{{TVMazeId}}" data-trakt="{{TraktId}}" data-douban="{{DoubanId}}" data-poster="{{Poster}}" data-description="{{Description}}">
-                    <td>{{PublishDate}}</td>
-                    <td>{{jacketTimespan PublishDate}}</td>
-                    <td>{{Tracker}}</td>
-                    <td class="Title"><a href="{{Details}}" target="_blank">{{Title}}</a> <span class="release-labels"></span></td>
-                    <td>{{Size}}</td>
-                    <td class="fit">{{jacketSize Size}}</td>
-                    <td>{{Files}}</td>
-                    <td class="Cat">{{CategoryDesc}}</td>
-                    <td>{{Grabs}}</td>
-                    <td>{{Seeders}}</td>
-                    <td>{{Peers}}</td>
-                    <td class="DownloadVolumeFactor">{{DownloadVolumeFactor}}</td>
-                    <td class="UploadVolumeFactor">{{UploadVolumeFactor}}</td>
-                    <td class="downloadcolumn">
+                    <td class="text-center">{{PublishDate}}</td>
+                    <td class="text-center" title="{{dateFormat PublishDate format="YYYY-MM-DD HH:mm:ss Z"}}">{{jacketTimespan PublishDate}}</td>
+                    <td class="text-center">{{Tracker}}</td>
+                    <td class="Title" style="word-break: break-all"><a href="{{Details}}" target="_blank">{{Title}}</a> <span class="release-labels"></span></td>
+                    <td class="text-right">{{Size}}</td>
+                    <td class="text-right fit">{{jacketSize Size}}</td>
+                    <td class="text-center">{{Files}}</td>
+                    <td class="text-center Cat" style="word-break: break-all">{{CategoryDesc}}</td>
+                    <td class="text-center">{{Grabs}}</td>
+                    <td class="text-center">{{Seeders}}</td>
+                    <td class="text-center">{{Peers}}</td>
+                    <td class="text-center DownloadVolumeFactor">{{DownloadVolumeFactor}}</td>
+                    <td class="text-center UploadVolumeFactor">{{UploadVolumeFactor}}</td>
+                    <td class="text-center downloadcolumn">
                         {{#if Link}}
                         <a class="downloadlink" title="Download locally" href="{{Link}}"><i class="fa fa-download"></i></a>
                         {{/if}}
@@ -700,7 +710,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title">{{title}} - <a target="_blank" href="{{link}}">{{link}}</a></h4>
+                        <h4 class="modal-title">{{title}} - <a target="_blank" href="{{link}}" rel="noreferrer">{{link}}</a></h4>
                         {{#if description}}
                         <div class="alert alert-info">{{description}}</div>
                         {{/if}}
@@ -756,6 +766,6 @@
     </script>
 
     <script type="text/javascript" src="../libs/api.js?changed=2017083001"></script>
-    <script type="text/javascript" src="../custom.js?changed=20221221"></script>
+    <script type="text/javascript" src="../custom.js?changed=20240126v1"></script>
 </body>
 </html>

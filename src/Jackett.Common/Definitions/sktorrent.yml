@@ -4,7 +4,7 @@ name: SkTorrent
 description: "SkTorrent is a CZECH/SLOVAK Semi-Private Torrent Tracker for MOVIES / TV / GENERAL"
 language: cs-CZ
 type: semi-private
-encoding: windows-1250
+encoding: UTF-8
 links:
   - https://sktorrent.eu/
 legacylinks:
@@ -16,8 +16,8 @@ caps:
     - {id: 9, cat: XXX, desc: "xXx"}
     - {id: 23, cat: Books, desc: "Knihy a Časopisy"}
     - {id: 25, cat: Other, desc: "Ostatní"}
-    - {id: 5, cat: Movies, desc: "Filmy Kreslené"}
     - {id: 1, cat: Movies, desc: "Filmy CZ/SK dabing"}
+    - {id: 5, cat: Movies, desc: "Filmy Kreslené"}
     - {id: 14, cat: Movies/Other, desc: "Filmy Kamera"}
     - {id: 15, cat: Movies, desc: "Filmy s titulkama"}
     - {id: 20, cat: Movies/DVD, desc: "Filmy DVD"}
@@ -32,6 +32,7 @@ caps:
     - {id: 37, cat: PC/Games, desc: "Hry na Linux"}
     - {id: 59, cat: PC/Games, desc: "Hry na Mac"}
     - {id: 60, cat: PC/Games, desc: "xXx hry (18+)"}
+    - {id: 63, cat: PC/Games, desc: "VR Hry"}
     - {id: 16, cat: TV, desc: "TV Seriál"}
     - {id: 17, cat: TV/Documentary, desc: "TV Dokument"}
     - {id: 42, cat: TV, desc: "TV Pořad"}
@@ -100,8 +101,6 @@ search:
           args: ["^VA\\s*\\|", "VA -"]
         - name: re_replace
           args: ["^.*? \\/\\s*|^.*? \\|\\s*", ""]
-        - name: diacritics
-          args: replace
         - name: re_replace
           args: ["\\|\\s*\\d+\\% CSFD\\.cz\\/|\\s*=*\\s*CSFD\\s*\\d+\\%|\\s*CSFD\\s*=*\\s*\\d+\\%|\\s*CSFD", ""]
         - name: re_replace
@@ -183,16 +182,9 @@ search:
     details:
       selector: a[href^="details.php?name="]
       attribute: href
-    poster_default:
+    poster:
       selector: img[class="lozad"]
       attribute: data-src
-      optional: true
-    poster_optional:
-      selector: img[src="//cdn.sktorrent.eu/obrazky/xXx.jpg"]
-      attribute: src
-      optional: true
-    poster:
-      text: "{{ if .Result.poster_optional }}{{ .Result.poster_optional }}{{ else }}{{ .Result.poster_default }}{{ end }}"
     download:
       selector: a[href^="details.php?name="]
       attribute: href
@@ -208,7 +200,7 @@ search:
         - name: regexp
           args: "Pridany (\\d{2}/\\d{2}/\\d{4})"
         - name: dateparse
-          args: "02/01/2006"
+          args: "dd/MM/yyyy"
     seeders:
       selector: div:has(a)
       filters:

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Html.Parser;
+using Jackett.Common.Extensions;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig;
 using Jackett.Common.Services.Interfaces;
@@ -19,139 +19,151 @@ using static Jackett.Common.Models.IndexerConfig.ConfigurationData;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class XSpeeds : BaseWebIndexer
+    public class XSpeeds : IndexerBase
     {
+        public override string Id => "xspeeds";
+        public override string Name => "XSpeeds";
+        public override string Description => "XSpeeds (XS) is a Private Torrent Tracker for MOVIES / TV / GENERAL";
+        public override string SiteLink { get; protected set; } = "https://www.xspeeds.eu/";
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string LandingUrl => SiteLink + "login.php";
         private string LoginUrl => SiteLink + "takelogin.php";
-        private string GetRSSKeyUrl => SiteLink + "getrss.php";
         private string SearchUrl => SiteLink + "browse.php";
-        private readonly Regex _dateMatchRegex = new Regex(
-            @"\d{2}-\d{2}-\d{4} \d{2}:\d{2}", RegexOptions.Compiled);
+        private readonly Regex _dateMatchRegex = new Regex(@"\d{2}-\d{2}-\d{4} \d{2}:\d{2}", RegexOptions.Compiled);
 
-        private new ConfigurationDataBasicLoginWithRSSAndDisplay configData =>
-            (ConfigurationDataBasicLoginWithRSSAndDisplay)base.configData;
+        private new ConfigurationDataBasicLogin configData =>
+            (ConfigurationDataBasicLogin)base.configData;
 
-        public XSpeeds(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "xspeeds",
-                   name: "XSpeeds",
-                   description: "XSpeeds (XS) is a Private Torrent Tracker for MOVIES / TV / GENERAL",
-                   link: "https://www.xspeeds.eu/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       },
-                       BookSearchParams = new List<BookSearchParam>
-                       {
-                           BookSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+        public XSpeeds(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps, ICacheService cs)
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
-                   configData: new ConfigurationDataBasicLoginWithRSSAndDisplay())
+                   configData: new ConfigurationDataBasicLogin())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
+            // Configure the sort selects
+            var sortBySelect = new SingleSelectConfigurationItem(
+                "Sort by",
+                new Dictionary<string, string>
+                {
+                    { "added", "created" },
+                    { "seeders", "seeders" },
+                    { "size", "size" },
+                    { "name", "title" }
+                })
+            { Value = "added" };
+            configData.AddDynamic("sortrequestedfromsite", sortBySelect);
 
-            AddCategoryMapping(92, TorznabCatType.MoviesUHD, "4K Movies");
-            AddCategoryMapping(91, TorznabCatType.TVUHD, "4K TV");
-            AddCategoryMapping(94, TorznabCatType.TVUHD, "4K TV Boxsets");
-            AddCategoryMapping(70, TorznabCatType.TVAnime, "Anime");
-            AddCategoryMapping(4, TorznabCatType.PC, "Apps");
-            AddCategoryMapping(82, TorznabCatType.PCMac, "Mac");
-            AddCategoryMapping(80, TorznabCatType.AudioAudiobook, "Audiobooks");
-            AddCategoryMapping(66, TorznabCatType.MoviesBluRay, "Blu-Ray");
-            AddCategoryMapping(48, TorznabCatType.Books, "Books Magazines");
-            AddCategoryMapping(68, TorznabCatType.MoviesOther, "Cams/TS");
-            AddCategoryMapping(65, TorznabCatType.TVDocumentary, "Documentaries");
-            AddCategoryMapping(10, TorznabCatType.MoviesDVD, "DVDR");
-            AddCategoryMapping(72, TorznabCatType.MoviesForeign, "Foreign");
-            AddCategoryMapping(74, TorznabCatType.TVOther, "Kids");
-            AddCategoryMapping(95, TorznabCatType.PCMac, "Mac Games");
-            AddCategoryMapping(44, TorznabCatType.TVSport, "MMA");
-            AddCategoryMapping(11, TorznabCatType.Movies, "Movie Boxsets");
-            AddCategoryMapping(12, TorznabCatType.Movies, "Movies");
-            AddCategoryMapping(100, TorznabCatType.MoviesHD, "Movies HEVC");
-            AddCategoryMapping(13, TorznabCatType.Audio, "Music");
-            AddCategoryMapping(15, TorznabCatType.AudioVideo, "Music Videos");
-            AddCategoryMapping(32, TorznabCatType.ConsoleNDS, "NDS Games");
-            AddCategoryMapping(9, TorznabCatType.Other, "Other");
-            AddCategoryMapping(6, TorznabCatType.PCGames, "PC Games");
-            AddCategoryMapping(45, TorznabCatType.Other, "Pictures");
-            AddCategoryMapping(31, TorznabCatType.ConsolePS4, "Playstation");
-            AddCategoryMapping(71, TorznabCatType.TV, "PPV");
-            AddCategoryMapping(54, TorznabCatType.TV, "Soaps");
-            AddCategoryMapping(20, TorznabCatType.TVSport, "Sports");
-            AddCategoryMapping(86, TorznabCatType.TVSport, "MotorSports");
-            AddCategoryMapping(89, TorznabCatType.TVSport, "Olympics 2016");
-            AddCategoryMapping(88, TorznabCatType.TVSport, "World Cup");
-            AddCategoryMapping(83, TorznabCatType.Movies, "TOTM");
-            AddCategoryMapping(21, TorznabCatType.TVSD, "TV Boxsets");
-            AddCategoryMapping(76, TorznabCatType.TVHD, "TV HD Boxsets");
-            AddCategoryMapping(97, TorznabCatType.TVHD, "TV HECV Boxsets");
-            AddCategoryMapping(47, TorznabCatType.TVHD, "TV HD");
-            AddCategoryMapping(96, TorznabCatType.TVHD, "TV HD HEVC");
-            AddCategoryMapping(16, TorznabCatType.TVSD, "TV SD");
-            AddCategoryMapping(7, TorznabCatType.ConsoleWii, "Wii Games");
-            AddCategoryMapping(43, TorznabCatType.TVSport, "Wrestling");
-            AddCategoryMapping(8, TorznabCatType.ConsoleXBox, "Xbox Games");
+            var orderSelect = new SingleSelectConfigurationItem(
+                "Order",
+                new Dictionary<string, string>
+                {
+                    { "desc", "descending" },
+                    { "asc", "ascending" }
+                })
+            { Value = "desc" };
+            configData.AddDynamic("orderrequestedfromsite", orderSelect);
 
-            // RSS Textual categories
-            AddCategoryMapping("4K Movies", TorznabCatType.MoviesUHD);
-            AddCategoryMapping("4K TV", TorznabCatType.TVUHD);
-            AddCategoryMapping("4K TV Boxsets", TorznabCatType.TVUHD);
-            AddCategoryMapping("Anime", TorznabCatType.TVAnime);
-            AddCategoryMapping("Apps", TorznabCatType.PC);
-            AddCategoryMapping("Mac", TorznabCatType.PCMac);
-            AddCategoryMapping("Audiobooks", TorznabCatType.AudioAudiobook);
-            AddCategoryMapping("Blu-Ray", TorznabCatType.MoviesBluRay);
-            AddCategoryMapping("Books Magazines", TorznabCatType.Books);
-            AddCategoryMapping("Cams/TS", TorznabCatType.MoviesOther);
-            AddCategoryMapping("Documentaries", TorznabCatType.TVDocumentary);
-            AddCategoryMapping("DVDR", TorznabCatType.MoviesDVD);
-            AddCategoryMapping("Foreign", TorznabCatType.MoviesForeign);
-            AddCategoryMapping("Kids", TorznabCatType.TVOther);
-            AddCategoryMapping("MMA", TorznabCatType.TVSport);
-            AddCategoryMapping("Movie Boxsets", TorznabCatType.Movies);
-            AddCategoryMapping("Movies", TorznabCatType.Movies);
-            AddCategoryMapping("Music", TorznabCatType.Audio);
-            AddCategoryMapping("Music Videos", TorznabCatType.AudioVideo);
-            AddCategoryMapping("NDS Games", TorznabCatType.ConsoleNDS);
-            AddCategoryMapping("Other", TorznabCatType.Other);
-            AddCategoryMapping("PC Games", TorznabCatType.PCGames);
-            AddCategoryMapping("Pictures", TorznabCatType.Other);
-            AddCategoryMapping("Playstation", TorznabCatType.ConsolePS4);
-            AddCategoryMapping("PPV", TorznabCatType.TV);
-            AddCategoryMapping("Soaps", TorznabCatType.TV);
-            AddCategoryMapping("Sports", TorznabCatType.TVSport);
-            AddCategoryMapping("MotorSports", TorznabCatType.TVSport);
-            AddCategoryMapping("Olympics 2016", TorznabCatType.TVSport);
-            AddCategoryMapping("World Cup", TorznabCatType.TVSport);
-            AddCategoryMapping("TOTM", TorznabCatType.Movies);
-            AddCategoryMapping("TV Boxsets", TorznabCatType.TVSD);
-            AddCategoryMapping("HD Boxsets", TorznabCatType.TVHD);
-            AddCategoryMapping("TV-HD", TorznabCatType.TVHD);
-            AddCategoryMapping("TV-SD", TorznabCatType.TVSD);
-            AddCategoryMapping("Wii Games", TorznabCatType.ConsoleWii);
-            AddCategoryMapping("Wrestling", TorznabCatType.TVSport);
-            AddCategoryMapping("Xbox Games", TorznabCatType.ConsoleXBox);
+            configData.AddDynamic("freeleech", new BoolConfigurationItem("Filter freeleech only") { Value = false });
         }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(70, TorznabCatType.TVAnime, "Anime");
+            caps.Categories.AddCategoryMapping(113, TorznabCatType.TVAnime, "Anime Boxsets");
+            caps.Categories.AddCategoryMapping(112, TorznabCatType.MoviesOther, "Anime Movies");
+            caps.Categories.AddCategoryMapping(111, TorznabCatType.MoviesOther, "Anime TV");
+            caps.Categories.AddCategoryMapping(80, TorznabCatType.AudioAudiobook, "Audiobooks");
+            caps.Categories.AddCategoryMapping(48, TorznabCatType.Books, "Books Magazines");
+            caps.Categories.AddCategoryMapping(68, TorznabCatType.MoviesOther, "Cams/TS");
+            caps.Categories.AddCategoryMapping(140, TorznabCatType.TVDocumentary, "Documentary");
+            caps.Categories.AddCategoryMapping(10, TorznabCatType.MoviesDVD, "DVDR");
+            caps.Categories.AddCategoryMapping(109, TorznabCatType.MoviesBluRay, "Bluray Disc");
+            caps.Categories.AddCategoryMapping(131, TorznabCatType.TVSport, "Fighting");
+            caps.Categories.AddCategoryMapping(134, TorznabCatType.TVSport, "Fighting/Boxing");
+            caps.Categories.AddCategoryMapping(133, TorznabCatType.TVSport, "Fighting/MMA");
+            caps.Categories.AddCategoryMapping(132, TorznabCatType.TVSport, "Fighting/Wrestling");
+            caps.Categories.AddCategoryMapping(72, TorznabCatType.MoviesForeign, "Foreign");
+            caps.Categories.AddCategoryMapping(116, TorznabCatType.TVForeign, "Foreign Boxsets");
+            caps.Categories.AddCategoryMapping(114, TorznabCatType.MoviesForeign, "Foreign Movies");
+            caps.Categories.AddCategoryMapping(115, TorznabCatType.TVForeign, "Foreign TV");
+            caps.Categories.AddCategoryMapping(103, TorznabCatType.ConsoleOther, "Games Console");
+            caps.Categories.AddCategoryMapping(105, TorznabCatType.ConsoleOther, "Games Console/Nintendo");
+            caps.Categories.AddCategoryMapping(104, TorznabCatType.ConsolePS4, "Games Console/Playstation");
+            caps.Categories.AddCategoryMapping(106, TorznabCatType.ConsoleXBox, "Games Console/XBOX");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.PCGames, "Games PC");
+            caps.Categories.AddCategoryMapping(108, TorznabCatType.PC, "Games PC/Linux");
+            caps.Categories.AddCategoryMapping(107, TorznabCatType.PCMac, "Games PC/Mac");
+            caps.Categories.AddCategoryMapping(11, TorznabCatType.Movies, "Movie Boxsets");
+            caps.Categories.AddCategoryMapping(118, TorznabCatType.MoviesUHD, "Movie Boxsets/Boxset 4K");
+            caps.Categories.AddCategoryMapping(143, TorznabCatType.MoviesHD, "Movie Boxsets/Boxset HD");
+            caps.Categories.AddCategoryMapping(119, TorznabCatType.MoviesHD, "Movie Boxsets/Boxset HEVC");
+            caps.Categories.AddCategoryMapping(144, TorznabCatType.MoviesSD, "Movie Boxsets/Boxset SD");
+            caps.Categories.AddCategoryMapping(12, TorznabCatType.Movies, "Movies");
+            caps.Categories.AddCategoryMapping(117, TorznabCatType.MoviesUHD, "Movies 4K");
+            caps.Categories.AddCategoryMapping(145, TorznabCatType.MoviesHD, "Movies HD");
+            caps.Categories.AddCategoryMapping(100, TorznabCatType.MoviesHD, "Movies HEVC");
+            caps.Categories.AddCategoryMapping(146, TorznabCatType.MoviesSD, "Movies SD");
+            caps.Categories.AddCategoryMapping(13, TorznabCatType.Audio, "Music");
+            caps.Categories.AddCategoryMapping(135, TorznabCatType.AudioLossless, "Music/FLAC");
+            caps.Categories.AddCategoryMapping(136, TorznabCatType.Audio, "Music Boxset");
+            caps.Categories.AddCategoryMapping(15, TorznabCatType.AudioVideo, "Music Videos");
+            caps.Categories.AddCategoryMapping(9, TorznabCatType.Other, "Other");
+            caps.Categories.AddCategoryMapping(125, TorznabCatType.Other, "Other/Pictures");
+            caps.Categories.AddCategoryMapping(54, TorznabCatType.TVOther, "Soaps");
+            caps.Categories.AddCategoryMapping(83, TorznabCatType.TVOther, "Specials");
+            caps.Categories.AddCategoryMapping(139, TorznabCatType.TV, "TOTM (Freeleech)");
+            caps.Categories.AddCategoryMapping(138, TorznabCatType.TV, "TOTW (x2 upload)");
+            caps.Categories.AddCategoryMapping(139, TorznabCatType.Movies, "TOTM (Freeleech)");
+            caps.Categories.AddCategoryMapping(138, TorznabCatType.Movies, "TOTW (x2 upload)");
+            caps.Categories.AddCategoryMapping(20, TorznabCatType.TVSport, "Sports");
+            caps.Categories.AddCategoryMapping(88, TorznabCatType.TVSport, "Sports/Football");
+            caps.Categories.AddCategoryMapping(86, TorznabCatType.TVSport, "Sports/MotorSports");
+            caps.Categories.AddCategoryMapping(89, TorznabCatType.TVSport, "Sports/Olympics");
+            caps.Categories.AddCategoryMapping(126, TorznabCatType.TV, "TV");
+            caps.Categories.AddCategoryMapping(127, TorznabCatType.TVUHD, "TV 4K");
+            caps.Categories.AddCategoryMapping(129, TorznabCatType.TVHD, "TV HD");
+            caps.Categories.AddCategoryMapping(130, TorznabCatType.TVHD, "TV HEVC");
+            caps.Categories.AddCategoryMapping(128, TorznabCatType.TVSD, "TV SD");
+            caps.Categories.AddCategoryMapping(21, TorznabCatType.TVSD, "TV Boxsets");
+            caps.Categories.AddCategoryMapping(120, TorznabCatType.TVUHD, "Boxset TV 4K");
+            caps.Categories.AddCategoryMapping(76, TorznabCatType.TVHD, "Boxset TV HD");
+            caps.Categories.AddCategoryMapping(97, TorznabCatType.TVHD, "Boxset TV HEVC");
+            caps.Categories.AddCategoryMapping(147, TorznabCatType.TVSD, "Boxset TV SD");
+
+            return caps;
+        }
+
+        private string GetSortBy => ((SingleSelectConfigurationItem)configData.GetDynamic("sortrequestedfromsite")).Value;
+
+        private string GetOrder => ((SingleSelectConfigurationItem)configData.GetDynamic("orderrequestedfromsite")).Value;
 
         public override async Task<ConfigurationData> GetConfigurationForSetup()
         {
             var loginPage = await RequestWithCookiesAsync(LandingUrl);
             var parser = new HtmlParser();
-            var dom = parser.ParseDocument(loginPage.ContentString);
+            using var dom = parser.ParseDocument(loginPage.ContentString);
             var qCaptchaImg = dom.QuerySelector("img#regimage");
             if (qCaptchaImg != null)
             {
@@ -165,7 +177,9 @@ namespace Jackett.Common.Indexers
                 configData.AddDynamic("CaptchaImage", captchaImage);
             }
             else
+            {
                 logger.Debug($"{Id}: No captcha image found");
+            }
 
             return configData;
         }
@@ -173,96 +187,103 @@ namespace Jackett.Common.Indexers
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
         {
             LoadValuesFromJson(configJson);
-
             var pairs = new Dictionary<string, string>
-                        {
-                            {"username", configData.Username.Value},
-                            {"password", configData.Password.Value}
-                        };
+            {
+                { "username", configData.Username.Value },
+                { "password", configData.Password.Value }
+            };
 
             var captchaText = (StringConfigurationItem)configData.GetDynamic("CaptchaText");
             if (captchaText != null)
+            {
                 pairs.Add("imagestring", captchaText.Value);
+            }
 
             //var result = await RequestLoginAndFollowRedirect(LoginUrl, pairs, null, true, null, SiteLink, true);
             var result = await RequestLoginAndFollowRedirect(LoginUrl, pairs, null, true, SearchUrl, LandingUrl, true);
-            await ConfigureIfOK(result.Cookies, result.ContentString?.Contains("logout.php") == true,
-                () =>
-                {
-                    var parser = new HtmlParser();
-                    var dom = parser.ParseDocument(result.ContentString);
-                    var errorMessage = dom.QuerySelector(".left_side table:nth-of-type(1) tr:nth-of-type(2)")?.TextContent.Trim().Replace("\n\t", " ");
-                    if (string.IsNullOrWhiteSpace(errorMessage))
-                        errorMessage = dom.QuerySelector("div.notification-body").TextContent.Trim().Replace("\n\t", " ");
-                    throw new ExceptionWithConfigData(errorMessage, configData);
-                });
+            await ConfigureIfOK(result.Cookies, result.ContentString?.Contains("logout.php") == true, () =>
+            {
+                var parser = new HtmlParser();
+                using var dom = parser.ParseDocument(result.ContentString);
 
-            try
-            {
-                // Get RSS key
-                var rssParams = new Dictionary<string, string>
-                                {
-                                    {"feedtype", "download"},
-                                    {"timezone", "0"},
-                                    {"showrows", "50"}
-                                };
-                var rssPage = await RequestWithCookiesAsync(
-                    GetRSSKeyUrl, result.Cookies, RequestType.POST, data: rssParams);
-                var match = Regex.Match(rssPage.ContentString, "(?<=secret_key\\=)([a-zA-z0-9]*)");
-                configData.RSSKey.Value = match.Success ? match.Value : string.Empty;
-                if (string.IsNullOrWhiteSpace(configData.RSSKey.Value))
-                    throw new Exception("Failed to get RSS Key");
-                SaveConfig();
-            }
-            catch
-            {
-                IsConfigured = false;
-                throw;
-            }
+                var errorMessage = dom.QuerySelector(".left_side table:nth-of-type(1) tr:nth-of-type(2)")?.TextContent.Trim().Replace("\n\t", " ");
+                if (errorMessage.IsNullOrWhiteSpace())
+                {
+                    errorMessage = dom.QuerySelector("div.notification-body")?.TextContent.Trim().Replace("\n\t", " ");
+                }
+
+                throw new ExceptionWithConfigData(errorMessage ?? "Login failed.", configData);
+            });
+
             return IndexerConfigurationStatus.RequiresTesting;
         }
 
         protected override async Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query)
         {
-            var releases = new List<ReleaseInfo>();
-            var searchString = query.GetQueryString();
             var prevCook = CookieHeader + "";
 
-            var searchParams = new Dictionary<string, string> {
+            var categoryMapping = MapTorznabCapsToTrackers(query).Distinct().ToList();
+
+            var searchParams = new Dictionary<string, string>
+            {
                 { "do", "search" },
-                { "category", "0" },
-                { "include_dead_torrents", "no" }
+                { "category", categoryMapping.FirstIfSingleOrDefault("0") }, // multi category search not supported
+                { "include_dead_torrents", "yes" }
             };
+
+            if (((BoolConfigurationItem)configData.GetDynamic("freeleech")).Value)
+            {
+                searchParams.Add("sort", "free");
+                searchParams.Add("order", "desc");
+            }
+            else
+            {
+                searchParams.Add("sort", GetSortBy);
+                searchParams.Add("order", GetOrder);
+            }
+
+            var searchString = Regex.Replace(query.GetQueryString(), @"[ -._]+", " ").Trim();
 
             if (query.IsImdbQuery)
             {
                 searchParams.Add("keywords", query.ImdbID);
                 searchParams.Add("search_type", "t_both");
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(searchString))
             {
                 searchParams.Add("keywords", searchString);
                 searchParams.Add("search_type", "t_name");
             }
 
-            var searchPage = await RequestWithCookiesAndRetryAsync(
-                SearchUrl, CookieHeader, RequestType.POST, null, searchParams);
+            var searchPage = await RequestWithCookiesAndRetryAsync(SearchUrl, CookieHeader, RequestType.POST, null, searchParams);
             // Occasionally the cookies become invalid, login again if that happens
             if (searchPage.IsRedirect)
             {
                 await ApplyConfiguration(null);
-                searchPage = await RequestWithCookiesAndRetryAsync(
-                    SearchUrl, CookieHeader, RequestType.POST, null, searchParams);
+                searchPage = await RequestWithCookiesAndRetryAsync(SearchUrl, CookieHeader, RequestType.POST, null, searchParams);
             }
+
+            var releases = new List<ReleaseInfo>();
 
             try
             {
                 var parser = new HtmlParser();
-                var dom = parser.ParseDocument(searchPage.ContentString);
+                using var dom = parser.ParseDocument(searchPage.ContentString);
                 var rows = dom.QuerySelectorAll("table#sortabletable > tbody > tr:has(div > a[href*=\"details.php?id=\"])");
                 foreach (var row in rows)
                 {
                     var release = new ReleaseInfo();
+
+                    if (row.QuerySelector("img[alt^=\"Free Torrent\"], img[alt^=\"Sitewide Free Torrent\"]") != null)
+                        release.DownloadVolumeFactor = 0;
+                    else if (row.QuerySelector("img[alt^=\"Silver Torrent\"]") != null)
+                        release.DownloadVolumeFactor = 0.5;
+                    else
+                        release.DownloadVolumeFactor = 1;
+                    if (((BoolConfigurationItem)configData.GetDynamic("freeleech")).Value &&
+                        release.DownloadVolumeFactor != 0)
+                        continue;
+                    release.UploadVolumeFactor = row.QuerySelector("img[alt^=\"x2 Torrent\"]") != null ? 2 : 1;
 
                     var qDetails = row.QuerySelector("div > a[href*=\"details.php?id=\"]");
                     var qTitle = qDetails; // #7975
@@ -272,41 +293,30 @@ namespace Jackett.Common.Indexers
                     release.Guid = new Uri(row.QuerySelector("td:nth-of-type(3) a").GetAttribute("href"));
                     release.Link = release.Guid;
                     release.Details = new Uri(qDetails.GetAttribute("href"));
-                    //08-08-2015 12:51
+
+                    // 08-08-2015 12:51
                     // requests can be 'Pre Release Time: 25-04-2021 15:00 Uploaded: 3 Weeks, 2 Days, 23 Hours, 53 Minutes, 39 Seconds after Pre'
-                    var dateMatch = _dateMatchRegex.Match(row.QuerySelectorAll("td:nth-of-type(2) div").Last().TextContent.Trim());
+                    var dateMatch = _dateMatchRegex.Match(row.QuerySelector("td:nth-of-type(2) > div:last-child").TextContent.Trim());
                     if (dateMatch.Success)
-                        release.PublishDate = DateTime.ParseExact(dateMatch.Value
-                        , "dd-MM-yyyy H:mm",
-                        CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                        release.PublishDate = DateTime.ParseExact(dateMatch.Value, "dd-MM-yyyy HH:mm", CultureInfo.InvariantCulture);
+
                     release.Seeders = ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(7)").TextContent);
                     release.Peers = release.Seeders + ParseUtil.CoerceInt(row.QuerySelector("td:nth-of-type(8)").TextContent.Trim());
-                    release.Size = ReleaseInfo.GetBytes(row.QuerySelector("td:nth-of-type(5)").TextContent.Trim());
+                    release.Size = ParseUtil.GetBytes(row.QuerySelector("td:nth-of-type(5)").TextContent.Trim());
 
                     var qPoster = row.QuerySelector("td:nth-of-type(2) .tooltip-content img");
                     if (qPoster != null)
                         release.Poster = new Uri(qPoster.GetAttribute("src"));
 
-                    var cat = row.QuerySelector("td:nth-of-type(1) a").GetAttribute("href");
-                    var catSplit = cat.LastIndexOf('=');
-                    if (catSplit > -1)
-                        cat = cat.Substring(catSplit + 1);
+                    var categoryLink = row.QuerySelector("td:nth-of-type(1) a").GetAttribute("href");
+                    var cat = ParseUtil.GetArgumentFromQueryString(categoryLink, "category");
                     release.Category = MapTrackerCatToNewznab(cat);
 
                     var grabs = row.QuerySelector("td:nth-child(6)").TextContent;
                     release.Grabs = ParseUtil.CoerceInt(grabs);
 
-                    if (row.QuerySelector("img[alt^=\"Free Torrent\"]") != null)
-                        release.DownloadVolumeFactor = 0;
-                    else if (row.QuerySelector("img[alt^=\"Silver Torrent\"]") != null)
-                        release.DownloadVolumeFactor = 0.5;
-                    else
-                        release.DownloadVolumeFactor = 1;
-
-                    if (row.QuerySelector("img[alt^=\"x2 Torrent\"]") != null)
-                        release.UploadVolumeFactor = 2;
-                    else
-                        release.UploadVolumeFactor = 1;
+                    var cover = row.QuerySelector("td:nth-of-type(2) > div > img[src]")?.GetAttribute("src")?.Trim();
+                    release.Poster = !string.IsNullOrEmpty(cover) && cover.StartsWith("http") ? new Uri(cover) : null;
 
                     release.MinimumRatio = 0.8;
 

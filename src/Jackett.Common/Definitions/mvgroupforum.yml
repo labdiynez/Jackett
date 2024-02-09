@@ -5,8 +5,6 @@ description: "MVGroup is a Semi-Private site dedicated to UK TV and DOCUMENTARIE
 language: en-US
 type: semi-private
 encoding: UTF-8
-certificates:
-  - d2b71a2548cbc060a6d016eebe521927559ec4ae  # expired 11/15/2022
 links:
   - https://forums.mvgroup.org/
 legacylinks:
@@ -123,7 +121,7 @@ settings:
 login:
   path: index.php?act=Login&CODE=00
   method: form
-  form: form[action^="?act=Login"]
+  form: form[action$="act=Login&CODE=01"]
   inputs:
     UserName: "{{ .Config.username }}"
     PassWord: "{{ .Config.password }}"
@@ -137,8 +135,8 @@ login:
       message:
         selector: div.borderwrap div.tablepad
   test:
-    path: index.php?https://forums.mvgroup.org/
-    selector: tr td.nav_mem div span[id="member_menu"]
+    path: index.php
+    selector: tr td.nav_mem div span[id="member_menu"], a[href^="/maintracker.php?filter="]
 
 search:
   paths:
@@ -159,12 +157,11 @@ search:
   fields:
     category:
       text: Other
-    title_default:
-      # fallback title (to prevent abend if optional is not found)
-      text: "title not found"
-    title_optional:
-      optional: true
+    title:
       selector: td.doubleindent, td.singleindent a[href^="/index.php?showtopic="]
+      optional: true
+      # fallback title (to prevent abend if optional is not found)
+      default: "title not found"
       filters:
         - name: re_replace
           args: ["(?i)^BBC (.*)", "{{ if .Config.dropbbc }}{{ else }}BBC {{ end }}$1"]
@@ -198,8 +195,6 @@ search:
           args: ["(?i)^Al-Jazeera (.*)", "{{ if .Config.dropbbc }}{{ else }}Al-Jazeera {{ end }}$1"]
         - name: append
           args: "{{ if .Config.stripS01E01 }}{{ else }} S01E01{{ end }}"
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
     details:
       optional: true
       selector: td.singleindent a[href^="/index.php?showtopic="]
@@ -218,7 +213,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006/01/02 -07:00"
+          args: "yyyy/MM/dd zzz"
     seeders:
       selector: td:nth-of-type(4)
     leechers:

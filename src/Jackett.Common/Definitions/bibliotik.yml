@@ -80,15 +80,14 @@ search:
         div[title="Comics"]: 4
         div[title="Ebooks"]: 5
         div[title="Magazines"]: 7
-    _author:
-      selector: .authorLink
-      optional: true
     _editor:
       selector: .editorLink
       optional: true
     author:
-      text: "{{ or .Result._author .Result._editor }}"
-    _year:
+      selector: .authorLink
+      optional: true
+      default: "{{ .Result._editor }}"
+    year:
       selector: .torYear
       optional: true
     _filetype:
@@ -103,14 +102,15 @@ search:
       text: "{{ .Result.booktitle }}"
       filters:
         - name: append
-          args: "{{ if .Result.author }} by {{ .Result.author }}{{ else }}{{ end }}{{ if .Result._year }} {{ .Result._year }}{{ else }}{{ end }}{{ if .Result._filetype }} {{ .Result._filetype }}{{ else }}{{ end }}{{ if .Result._retail }} {{ .Result._retail }}{{ else }}{{ end }}"
+          args: "{{ if .Result.author }} by {{ .Result.author }}{{ else }}{{ end }}{{ if .Result.year }} {{ .Result.year }}{{ else }}{{ end }}{{ if .Result._filetype }} {{ .Result._filetype }}{{ else }}{{ end }}{{ if .Result._retail }} {{ .Result._retail }}{{ else }}{{ end }}"
     details:
       selector: .title a
       attribute: href
     date:
-      optional: true
       selector: .t_files_size_added time
       attribute: datetime
+      optional: true
+      default: now
     download:
       selector: a[title="Download"]
       attribute: href
@@ -122,21 +122,18 @@ search:
     size:
       selector: .t_files_size_added span
       attribute: data-bytecount
-    seeders_optional:
-      optional: true
-      selector: .seeders
     seeders:
-      text: "{{ if .Result.seeders_optional }}{{ .Result.seeders_optional }}{{ else }}0{{ end }}"
-    leechers_optional:
+      selector: .seeders
       optional: true
-      selector: .leechers
+      default: 0
     leechers:
-      text: "{{ if .Result.leechers_optional }}{{ .Result.leechers_optional }}{{ else }}0{{ end }}"
-    grabs_optional:
+      selector: .leechers
       optional: true
-      selector: .snatches
+      default: 0
     grabs:
-      text: "{{ if .Result.grabs_optional }}{{ .Result.grabs_optional }}{{ else }}0{{ end }}"
+      selector: .snatches
+      optional: true
+      default: 0
     downloadvolumefactor:
       text: 1
     uploadvolumefactor:

@@ -101,6 +101,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: div.group_content:has(a[href^="download.php?id="])
@@ -130,7 +131,6 @@ search:
       selector: a[href^="download.php?id="]
       attribute: href
     description:
-      optional: true
       selector: div.torrent_name_col > a
     poster:
       selector: img#poster
@@ -173,7 +173,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_added:
       # time added
       selector: div.time_col:contains("发布于"):not(:has(span[title]))
@@ -185,7 +185,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     minimumratio:

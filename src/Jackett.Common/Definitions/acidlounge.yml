@@ -105,7 +105,8 @@ login:
   error:
     - selector: div.errorWrap
   test:
-    path: browse.php
+    path: index.php
+    selector: a[href$="logout.php"]
 
 search:
   paths:
@@ -140,7 +141,6 @@ search:
       selector: a[href^="download.php?"]
       attribute: href
     description:
-      optional: true
       selector: span.torrent_small_desc
     genre:
       selector: span.torrent_small_desc
@@ -157,7 +157,7 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     size:
       selector: td.torrent_table_size
     grabs:

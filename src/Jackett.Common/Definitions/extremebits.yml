@@ -135,14 +135,14 @@ search:
     size:
       selector: td:nth-of-type(10)
       remove: a
-    _cat:
+    category_title:
       selector: td:nth-of-type(1) a img
       attribute: alt
     description:
       selector: td:nth-of-type(4)
       filters:
         - name: prepend
-          args: "cat={{ .Result._cat }}, wait="
+          args: "cat={{ .Result.category_title }}, wait="
     downloadvolumefactor:
       case:
         img[src="img/freedownload.png"]: 0
@@ -156,7 +156,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     minimumratio:
       text: 0.6
 # TBDEV

@@ -5,7 +5,10 @@ namespace Jackett.Common.Models.IndexerConfig.Bespoke
     [ExcludeFromCodeCoverage]
     internal class ConfigurationDataAnimeBytes : ConfigurationDataUserPasskey
     {
+        public BoolConfigurationItem FreeleechOnly { get; private set; }
+        public BoolConfigurationItem ExcludeHentai { get; private set; }
         public BoolConfigurationItem IncludeRaw { get; private set; }
+        public BoolConfigurationItem SearchByYear { get; private set; }
         //public DisplayItem DateWarning { get; private set; }
         public BoolConfigurationItem PadEpisode { get; private set; }
         public BoolConfigurationItem AddJapaneseTitle { get; private set; }
@@ -15,9 +18,12 @@ namespace Jackett.Common.Models.IndexerConfig.Bespoke
         public BoolConfigurationItem FilterSeasonEpisode { get; private set; }
 
         public ConfigurationDataAnimeBytes(string instructionMessageOptional = null)
-            : base()
+            : base(instructionMessageOptional)
         {
-            IncludeRaw = new BoolConfigurationItem("IncludeRaw") { Value = false };
+            FreeleechOnly = new BoolConfigurationItem("Search freeleech only") { Value = false };
+            ExcludeHentai = new BoolConfigurationItem("Exclude Hentai from results") { Value = false };
+            IncludeRaw = new BoolConfigurationItem("Include RAW in results") { Value = false };
+            SearchByYear = new BoolConfigurationItem("Search by year as a different argument in the request") { Value = false };
             //DateWarning = new DisplayItem("This tracker does not supply upload dates so they are based off year of release.") { Name = "DateWarning" };
             PadEpisode = new BoolConfigurationItem("Pad episode number for Sonarr compatability") { Value = false };
             AddJapaneseTitle = new BoolConfigurationItem("Add releases for Japanese Title") { Value = false };
@@ -25,7 +31,6 @@ namespace Jackett.Common.Models.IndexerConfig.Bespoke
             AddAlternativeTitles = new BoolConfigurationItem("Add releases for Alternative Title(s)") { Value = false };
             AddFileNameTitles = new BoolConfigurationItem("Add releases based on single filename") { Value = false };
             FilterSeasonEpisode = new BoolConfigurationItem("Filter results by season/episode") { Value = false };
-            Instructions = new DisplayInfoConfigurationItem("", instructionMessageOptional);
         }
     }
 }

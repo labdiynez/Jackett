@@ -15,35 +15,49 @@ namespace Jackett.Common.Indexers
     [ExcludeFromCodeCoverage]
     public class ExoticaZ : AvistazTracker
     {
-        private new ConfigurationDataAvistazTracker configData => (ConfigurationDataAvistazTracker)base.configData;
-
-        public override string[] LegacySiteLinks { get; protected set; } =
+        public override string Id => "exoticaz";
+        public override string Name => "ExoticaZ";
+        public override string Description => "ExoticaZ (YourExotic) is a Private Torrent Tracker for 3X";
+        public override string SiteLink { get; protected set; } = "https://exoticaz.to/";
+        public override string[] LegacySiteLinks => new[]
         {
             "https://torrents.yourexotic.com/"
         };
 
+        protected override string TimezoneOffset => "+01:00";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
+        private new ConfigurationDataAvistazTracker configData => (ConfigurationDataAvistazTracker)base.configData;
+
         public ExoticaZ(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "exoticaz",
-                   name: "ExoticaZ",
-                   description: "ExoticaZ (YourExotic) is a Private Torrent Tracker for 3X",
-                   link: "https://exoticaz.to/",
-                   caps: new TorznabCapabilities(),
-                   configService: configService,
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
-                   cs: cs
-                   )
+                   cs: cs)
         {
-            AddCategoryMapping(1, TorznabCatType.XXXx264, "Video Clip");
-            AddCategoryMapping(2, TorznabCatType.XXXPack, "Video Pack");
-            AddCategoryMapping(3, TorznabCatType.XXXPack, "Siterip Pack");
-            AddCategoryMapping(4, TorznabCatType.XXXPack, "Pornstar Pack");
-            AddCategoryMapping(5, TorznabCatType.XXXDVD, "DVD");
-            AddCategoryMapping(6, TorznabCatType.XXXx264, "BluRay");
-            AddCategoryMapping(7, TorznabCatType.XXXImageSet, "Photo Pack");
-            AddCategoryMapping(8, TorznabCatType.XXXImageSet, "Books & Magazines");
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                LimitsDefault = 50,
+                LimitsMax = 50
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.XXXx264, "Video Clip");
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.XXXPack, "Video Pack");
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.XXXPack, "Siterip Pack");
+            caps.Categories.AddCategoryMapping(4, TorznabCatType.XXXPack, "Pornstar Pack");
+            caps.Categories.AddCategoryMapping(5, TorznabCatType.XXXDVD, "DVD");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.XXXx264, "BluRay");
+            caps.Categories.AddCategoryMapping(7, TorznabCatType.XXXImageSet, "Photo Pack");
+            caps.Categories.AddCategoryMapping(8, TorznabCatType.XXXImageSet, "Books & Magazines");
+
+            return caps;
         }
 
         protected override List<KeyValuePair<string, string>> GetSearchQueryParameters(TorznabQuery query)
@@ -51,10 +65,17 @@ namespace Jackett.Common.Indexers
             var categoryMapping = MapTorznabCapsToTrackers(query).Distinct().ToList();
             var qc = new List<KeyValuePair<string, string>> // NameValueCollection don't support cat[]=19&cat[]=6
             {
-                {"in", "1"},
-                {"category", categoryMapping.Any() ? categoryMapping.First() : "0"},
-                {"search", GetSearchTerm(query).Trim()}
+                { "in", "1" },
+                { "category", categoryMapping.FirstIfSingleOrDefault("0") },
+                { "limit", "50" },
+                { "search", GetSearchTerm(query).Trim() }
             };
+
+            if (query.Limit > 0 && query.Offset > 0)
+            {
+                var page = query.Offset / query.Limit + 1;
+                qc.Add("page", page.ToString());
+            }
 
             if (configData.Freeleech.Value)
                 qc.Add("discount[]", "1");

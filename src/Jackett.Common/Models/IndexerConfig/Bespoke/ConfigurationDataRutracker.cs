@@ -5,16 +5,19 @@ namespace Jackett.Common.Models.IndexerConfig.Bespoke
     [ExcludeFromCodeCoverage]
     internal class ConfigurationDataRutracker : ConfigurationDataCaptchaLogin
     {
+        public BoolConfigurationItem UseMagnetLinks { get; private set; }
         public BoolConfigurationItem StripRussianLetters { get; private set; }
+        public BoolConfigurationItem AddRussianToTitle { get; private set; }
         public DisplayInfoConfigurationItem MoveTagsInfo { get; private set; }
         public BoolConfigurationItem MoveFirstTagsToEndOfReleaseTitle { get; private set; }
         public BoolConfigurationItem MoveAllTagsToEndOfReleaseTitle { get; private set; }
         public DisplayInfoConfigurationItem CaptchaWarning { get; private set; }
 
         public ConfigurationDataRutracker()
-            : base()
         {
+            UseMagnetLinks = new BoolConfigurationItem("Use Magnet Links") { Value = false };
             StripRussianLetters = new BoolConfigurationItem("Strip Russian Letters") { Value = true };
+            AddRussianToTitle = new BoolConfigurationItem("Add RUS to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.") { Value = false };
             MoveTagsInfo = new DisplayInfoConfigurationItem("Move Tags Info", "<b>About moving tags:</b> " +
                                             "We define a tag as a part of the release title between round or square brackets. " +
                                             "If the release title contains tags then these options will move those tags and their brackets to the end of the release title. " +

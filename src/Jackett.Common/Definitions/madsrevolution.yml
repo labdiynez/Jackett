@@ -121,9 +121,10 @@ search:
   paths:
     - path: torrents.php
   inputs:
-    $raw: "{{ range .Categories }}filter_cat[{{.}}]=1&{{end}}{{ if .Config.freeleech }}action=uploadonly&{{ else }}{{ end }}"
+    $raw: "{{ range .Categories }}filter_cat[{{.}}]=1&{{end}}"
+    action: "{{ if .Config.freeleech }}uploadonly{{ else }}{{ end }}"
     searchstr: "{{ .Keywords }}"
-    searchtags: "{{ if .Query.Genre }}{{ .Query.Genre }}{{ else }}{{ end }}"
+    searchtags: "{{ .Query.Genre }}"
     # 0 any, 1 all
     tags_type: 0
     order_by: "{{ .Config.sort }}"
@@ -164,7 +165,7 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "02 Jan 2006, 15:04 -07:00"
+          args: "dd MMM yyyy, HH:mm zzz"
     size:
       selector: td:nth-last-child(4)
     grabs:

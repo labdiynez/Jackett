@@ -45,7 +45,7 @@ settings:
   - name: info
     type: info
     label: How to get the Cookie
-    default: "<ol><li>Login to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
+    default: "<ol><li>Login to this tracker with your browser</li><li>Open the <b>DevTools</b> panel by pressing <b>F12</b></li><li>Select the <b>Network</b> tab</li><li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)</li><li>Refresh the page by pressing <b>F5</b></li><li>Click on the first row entry</li><li>Select the <b>Headers</b> tab on the Right panel</li><li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: freeleech
     type: checkbox
     label: Search freeleech only
@@ -56,15 +56,15 @@ settings:
     default: false
   - name: multilang
     type: checkbox
-    label: Replace MULTI & PL by another language in release name
+    label: Replace MULTi by another language in release name
     default: false
   - name: multilanguage
     type: select
-    label: Replace MULTI & PL by this language
+    label: Replace MULTi by this language
     default: POLISH
     options:
       POLISH: POLISH
-      MULTI.POLISH: MULTI.POLISH
+      MULTi POLISH: MULTi POLISH
   - name: sort
     type: select
     label: Sort requested from site
@@ -122,9 +122,9 @@ search:
       text: "{{ .Result.title_raw }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\[multi\\])", " {{ .Config.multilanguage }} "]
+          args: ["(?i)\\b(MULTI(?!.*(?:POLISH|ENGLISH|\\bPL\\b)))\\b", "{{ .Config.multilanguage }}"]
         - name: re_replace
-          args: ["(?i)(\\[pl\\])", " {{ .Config.multilanguage }} "]
+          args: ["(?i)\\b(pl)\\b", "POLISH"]
     title_phase1:
       text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_raw }}{{ end }}"
     title_stripped:
@@ -170,7 +170,7 @@ search:
         - name: append
           args: " +02:00" # EET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     size:
       selector: td:nth-child(4)
     seeders:

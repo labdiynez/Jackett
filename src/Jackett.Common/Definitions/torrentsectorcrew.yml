@@ -4,9 +4,7 @@ name: Torrent Sector Crew
 description: "Torrent Sector Crew (TSC) is a GERMAN Private Torrent Tracker for MOVIES / TV / GENERAL"
 language: de-DE
 type: private
-encoding: ISO-8859-1
-certificates:
-  - a64165a04e1e7b7348af03c985c9d5cb4b38e6f5 # expired 12 October 2022
+encoding: UTF-8
 links:
   - https://tsctracker.org/
 legacylinks:
@@ -99,7 +97,7 @@ settings:
   - name: info_results
     type: info
     label: "Search results"
-    default: "<ol><li>Only the Classic profile is supported.<li>Make sure to set the <b>TorrentList-Layout</b> option in your profile to <b>Klassisches Layout, sehr breite Darstellung.</b><li>And for best results set the <b>Torrents pro Seite</b> to <b>100.</b></ol>"
+    default: "<ol><li>Only the Classic profile is supported.</li><li>Make sure to set the <b>TorrentList-Layout</b> option in your profile to <b>Klassisches Layout, sehr breite Darstellung.</b></li><li>And for best results set the <b>Torrents pro Seite</b> to <b>100.</b></li></ol>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -128,7 +126,8 @@ login:
   error:
     - selector: "#login_box_desc"
   test:
-    path: my.php
+    path: index.php
+    selector: a[href="./logout.php"]
 
 search:
   paths:
@@ -164,9 +163,9 @@ search:
       selector: a.thumbnail > span > img
       attribute: src
     grabs:
-      selector: td:nth-child(9)
+      selector: td:nth-child(10)
     size:
-      selector: td:nth-child(6)
+      selector: td:nth-child(7)
     files:
       selector: a[href*="&filelist=1"]
     seeders:
@@ -174,14 +173,14 @@ search:
     leechers:
       selector: td:has(a[href*="&todlers="])
     date:
-      selector: td:nth-child(5)
+      selector: td:nth-child(6)
       filters:
         - name: re_replace
           args: ["\\s", " "]
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "02.01.200615:04:05 -07:00"
+          args: "dd.MM.yyyyHH:mm:ss zzz"
     downloadvolumefactor:
       case:
         "font[color=\"#730d1e\"]:contains(\"[OnlyUpload]\")": 0

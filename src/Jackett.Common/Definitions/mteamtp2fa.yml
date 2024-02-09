@@ -1,14 +1,13 @@
 ---
 id: mteamtp2fa
-name: MTeamTP2FA
-description: "this indexer uses a cookie login for MTeamTP for those that want to use 2FA"
+name: M-Team - TP (2FA)
+description: "This indexer uses a cookie login for M-Team TP (MTTP) for those that want to use 2FA"
 language: zh-CN
 type: private
 encoding: UTF-8
-requestDelay: 2
+requestDelay: 5
 links:
   - https://kp.m-team.cc/
-legacylinks:
   - https://tp.m-team.cc/
   - https://pt.m-team.cc/
 
@@ -64,22 +63,18 @@ settings:
   - name: infocookie
     type: info
     label: How to get the Cookie
-    default: "<ol><li>Login to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
+    default: "<ol><li>Login to this tracker with your browser</li><li>Open the <b>DevTools</b> panel by pressing <b>F12</b></li><li>Select the <b>Network</b> tab</li><li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)</li><li>Refresh the page by pressing <b>F5</b></li><li>Click on the first row entry</li><li>Select the <b>Headers</b> tab on the Right panel</li><li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: useragent
     type: text
     label: User-Agent
   - name: info_useragent
     type: info
     label: How to get the User-Agent
-    default: "<ol><li>From the same place you fetched the cookie,<li>Find <b>'user-agent:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole user-agent string <i>(everything after 'user-agent: ')</i> and <b>Paste</b> here.</ol>"
+    default: "<ol><li>From the same place you fetched the cookie,</li><li>Find <b>'user-agent:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole user-agent string <i>(everything after 'user-agent: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: freeleech
     type: checkbox
     label: Search freeleech only
     default: false
-  - name: infotitle
-    type: info
-    label: About Titles
-    default: For best results disable the torrent name tooltip (User CP/Tracker Settings/Torrents Page). Otherwise long release names will be cut off.
   - name: sort
     type: select
     label: Sort requested from site
@@ -100,6 +95,14 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile.
+  - name: info_title
+    type: info
+    label: About Titles
+    default: For best results, disable the torrent name tooltip in <b>User CP/Tracker Settings/Torrents Page</b>. Otherwise long release names will be cut off.
+  - name: info_download_link
+    type: info
+    label: About Download Links
+    default: For best results, you must enable the <b>Download icon</b> in <b>User CP/Tracker Settings/Torrents Page</b>.
 
 login:
   method: cookie
@@ -109,11 +112,6 @@ login:
     path: index.php
     selector: a[href="logout.php"]
 
-download:
-  selectors:
-    - selector: a[href$="&https=1"]
-      attribute: href
-
 search:
   paths:
     - path: torrents.php
@@ -122,6 +120,7 @@ search:
       categories: [410, 429, 424, 430, 426, 437, 431, 432, 436, 425, 433, 411, 412, 413]
     - path: music.php
       categories: [406, 408, 434]
+  allowEmptyInputs: true
   inputs:
     $raw: "{{ range .Categories }}cat{{.}}=1&{{end}}"
     search: "{{ if .Query.IMDBID }}{{ .Query.IMDBID }}{{ else }}{{ .Keywords }}{{ end }}"
@@ -135,6 +134,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   headers:
     User-Agent: ["{{ .Config.useragent }}"]
@@ -146,13 +146,12 @@ search:
     title_default:
       # shortened for long release names
       selector: a[href^="details.php?id="] > b
-    title_optional:
+    title:
       # not available if IMDB tooltips are turned on
-      optional: true
       selector: a[title][href^="details.php?id="]
       attribute: title
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      optional: true
+      default: "{{ .Result.title_default }}"
     category:
       selector: a[href^="?cat="]
       attribute: href
@@ -163,10 +162,10 @@ search:
       selector: a[href^="details.php?id="]
       attribute: href
     download:
-      selector: a[href^="details.php?id="]
+      selector: a[href^="download.php?id="]
       attribute: href
     poster:
-      selector: img[alt="torrent thumbnail"]
+      selector: img[alt="torrent thumbnail"][src]
       attribute: src
       filters:
         - name: replace
@@ -190,7 +189,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_elapsed:
       selector: td.rowfollow:nth-last-child(7):not(:has(span))
       optional: true
@@ -198,7 +197,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     downloadvolumefactor:
@@ -215,7 +214,12 @@ search:
         img.pro_free2up: 2
         img.pro_2up: 2
         "*": 1
+    minimumratio:
+      text: 1
+    minimumseedtime:
+      # 2 days (as seconds = 2 x 24 x 60 x 60)
+      text: 172800
     description:
       selector: td:nth-child(2)
-      remove: a, img
+      remove: a, b, font, img, span
 # NexusPHP Standard v1.5 Beta 4

@@ -15,12 +15,14 @@ caps:
     - {id: 51, cat: PC/Mac, desc: "Apple"}
     - {id: 3, cat: PC, desc: "Apps"}
     - {id: 64, cat: Audio/Audiobook, desc: "Audiobooks"}
+    - {id: 71, cat: Console, desc: "Batocera"}
     - {id: 4, cat: Movies/BluRay, desc: "Blu-Ray"}
     - {id: 22, cat: Console, desc: "CoinOps"}
     - {id: 42, cat: Console, desc: "CoinOPS Official"}
     - {id: 65, cat: Console, desc: "CoinOps Unofficial"}
     - {id: 63, cat: Books/Comics, desc: "Comics"}
     - {id: 60, cat: Console, desc: "Core"}
+    - {id: 72, cat: Console, desc: "CORE Community"}
     - {id: 44, cat: Console, desc: "CP78"}
     - {id: 16, cat: TV/Documentary, desc: "Docu"}
     - {id: 41, cat: Console, desc: "Dragon"}
@@ -49,6 +51,7 @@ caps:
     - {id: 9, cat: TV, desc: "TV-Boxsets"}
     - {id: 11, cat: TV, desc: "TV/x264"}
     - {id: 10, cat: TV, desc: "TV/Xvid"}
+    - {id: 73, cat: Console, desc: "Wolfanoz"}
     - {id: 14, cat: TV/Sport, desc: "WWE"}
     - {id: 26, cat: Console, desc: "Xbox"}
     - {id: 12, cat: Console, desc: "XBOX360"}
@@ -121,11 +124,10 @@ search:
           args: category
     title_default:
       selector: a[href*="/details.php?id="]
-    title_optional:
-      optional: true
-      selector: div.tooltip-content > div
     title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      selector: div.tooltip-content > div
+      optional: true
+      default: "{{ .Result.title_default }}"
     details:
       selector: a[href*="/details.php?id="]
       attribute: href
@@ -162,5 +164,5 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
+          args: "dd-MM-yyyy HH:mm zzz"
 # TS Special Edition v.8.0

@@ -7,23 +7,23 @@ type: public
 encoding: UTF-8
 followredirect: true
 links:
-  - https://torrentqq237.com/
+  - https://torrentqq295.com/
 legacylinks:
-  - https://torrentqq222.com/
-  - https://torrentqq223.com/
-  - https://torrentqq224.com/
-  - https://torrentqq225.com/
-  - https://torrentqq226.com/
-  - https://torrentqq227.com/
-  - https://torrentqq228.com/
-  - https://torrentqq229.com/
-  - https://torrentqq230.com/
-  - https://torrentqq231.com/
-  - https://torrentqq232.com/
-  - https://torrentqq233.com/
-  - https://torrentqq234.com/
-  - https://torrentqq235.com/
-  - https://torrentqq236.com/
+  - https://torrentqq280.com/
+  - https://torrentqq281.com/
+  - https://torrentqq282.com/
+  - https://torrentqq283.com/
+  - https://torrentqq284.com/
+  - https://torrentqq285.com/
+  - https://torrentqq286.com/
+  - https://torrentqq287.com/
+  - https://torrentqq288.com/
+  - https://torrentqq289.com/
+  - https://torrentqq290.com/
+  - https://torrentqq291.com/
+  - https://torrentqq292.com/
+  - https://torrentqq293.com/
+  - https://torrentqq294.com/
 
 caps:
   categorymappings:
@@ -42,7 +42,6 @@ caps:
     tv-search: [q, season, ep]
     movie-search: [q]
     music-search: [q]
-    book-search: [q]
 
 settings:
   - name: flaresolverr
@@ -94,13 +93,13 @@ search:
       optional: true
       filters:
         - name: dateparse
-          args: "01-02"
+          args: "MM-dd"
     date_time:
       selector: div.wr-date:contains(":")
       optional: true
       filters:
         - name: dateparse
-          args: "15:04"
+          args: "HH:mm"
     date:
       text: "{{ if or .Result.date_time .Result.date_day }}{{ or .Result.date_time .Result.date_day }}{{ else }}now{{ end }}"
     size:

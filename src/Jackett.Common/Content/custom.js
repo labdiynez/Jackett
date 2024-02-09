@@ -72,11 +72,6 @@ function getHashArgs() {
     }, prev), {});
 }
 
-function insertWordWrap(str) {
-    // insert optional word wrap after punctuation to avoid overflows on long scene titles
-    return str.replace(/([\.\-_\/\\])/g, "$1\u200B");
-}
-
 function type_filter(indexer) {
   return indexer.type == this.value;
 }
@@ -125,6 +120,7 @@ function loadJackettSettings() {
 
         $("#jackett-savedir").val(data.blackholedir);
         $("#jackett-allowext").attr('checked', data.external);
+        $("#jackett-local-bind-address").val(data.local_bind_address);
         $("#jackett-allowcors").attr('checked', data.cors);
         $("#jackett-allowupdate").attr('checked', data.updatedisabled);
         $("#jackett-prerelease").attr('checked', data.prerelease);
@@ -149,6 +145,10 @@ function loadJackettSettings() {
 
         if (data.can_run_netcore != null && data.can_run_netcore === true) {
             $("#can-upgrade-from-mono").show();
+        }
+
+        if (data.external != null && data.external === true && data.password === '') {
+            $("#warning-external-access").show();
         }
 
         $.each(data.notices, function (index, value) {
@@ -322,8 +322,8 @@ function displayUnconfiguredIndexersList() {
     indexersTable.find('.indexer-setup').each(function (i, btn) {
         var indexer = unconfiguredIndexers[i];
         $(btn).click(function () {
-            $('#select-indexer-modal').modal('hide').on('hidden.bs.modal', function (e) {
-                displayIndexerSetup(indexer.id, indexer.name, indexer.caps, indexer.link, indexer.alternativesitelinks, indexer.description);
+            $('#select-indexer-modal').modal('hide').on('hidden.bs.modal', function () {
+                displayIndexerSetup(indexer.id, indexer.name, indexer.caps, indexer.site_link, indexer.alternativesitelinks, indexer.description);
             });
         });
     });
@@ -466,7 +466,7 @@ function displayUnconfiguredIndexersList() {
         $('#indexers div.dataTables_filter input').focusWithoutScrolling();
     });
 
-    $("#modals").append(UnconfiguredIndexersDialog);
+    $("#modals").html(UnconfiguredIndexersDialog);
 
     $('#add-selected-indexers').click(function () {
         var selectedIndexers = $('#unconfigured-indexer-datatable').DataTable().$('input[type="checkbox"]');
@@ -660,7 +660,7 @@ function prepareSetupButtons(element) {
         var indexer = configuredIndexers.find(i => i.id === id);
         if (indexer)
           $btn.click(function () {
-              displayIndexerSetup(indexer.id, indexer.name, indexer.caps, indexer.link, indexer.alternativesitelinks, indexer.description);
+              displayIndexerSetup(indexer.id, indexer.name, indexer.caps, indexer.site_link, indexer.alternativesitelinks, indexer.description);
           });
     });
 }
@@ -804,7 +804,7 @@ function newConfigModal(title, config, caps, link, alternativesitelinks, descrip
         link: link,
         description: description
     }));
-    $("#modals").append(configForm);
+    $("#modals").html(configForm);
     populateConfigItems(configForm, config);
 
     if (alternativesitelinks.length >= 1) {
@@ -1048,14 +1048,13 @@ function showSearch(selectedFilter, selectedIndexer, query, category) {
     var selectedIndexers = [];
     if (selectedIndexer)
       selectedIndexers = selectedIndexer.split(",");
-    $('#select-indexer-modal').remove();
     var releaseTemplate = Handlebars.compile($("#jackett-search").html());
     var releaseDialog = $(releaseTemplate({
         filters: availableFilters,
         active: selectedFilter
     }));
 
-    $("#modals").append(releaseDialog);
+    $("#modals").html(releaseDialog);
 
     releaseDialog.on('shown.bs.modal', function () {
         releaseDialog.find('#searchquery').focusWithoutScrolling();
@@ -1155,12 +1154,6 @@ function showSearch(selectedFilter, selectedIndexer, query, category) {
 
         var trackerId = filterId || "all";
         api.resultsForIndexer(trackerId, queryObj, function (data) {
-            for (var i = 0; i < data.Results.length; i++) {
-                var item = data.Results[i];
-                item.Title = insertWordWrap(item.Title);
-                item.CategoryDesc = insertWordWrap(item.CategoryDesc);
-            }
-
             $('#jackett-search-perform').html($('#search-button-ready').html());
             var searchResults = $('#searchResults');
             searchResults.empty();
@@ -1256,7 +1249,7 @@ function setSavedPresets(presets) {
 }
 
 function setSavePresetsButtonState(table, element, state = false) {
-    var button = element.find("button[id=jackett-search-results-datatable_savepreset_button]")    
+    var button = element.find("button[id=jackett-search-results-datatable_savepreset_button]")
     if (state) {
         button.attr("class", "btn btn-danger btn-sm");
         button.on("click", function () {
@@ -1307,7 +1300,7 @@ $.fn.dataTable.ext.search = [
 ];
 
 function updateSearchResultTable(element, results) {
-    var resultsTemplate = Handlebars.compile($("#jackett-search-results").html());
+    var resultsTemplate = Handlebars.compile($("#jackett-search-results").text());
     element.html($(resultsTemplate(results)));
     element.find('tr.jackett-search-results-row').each(function () {
         updateReleasesRow(this);
@@ -1403,6 +1396,8 @@ function updateSearchResultTable(element, results) {
                             newKeyword = "^((?!" + $.fn.dataTable.util.escapeRegex(keyword.substring(1)) + ").)*$";
                         else
                             newKeyword = '(' + keyword.split('|').map(k => $.fn.dataTable.util.escapeRegex(k)).join('|') + ')';
+                        // fix search filters with "-", "." or "_" characters in the middle of the word => #13628
+                        newKeyword = newKeyword.replace("\\-", "\\-\u200B?").replace("\\.", "\\.\u200B?").replace("_", "_\u200B?");
                         newKeywords.push(newKeyword);
                     });
                     var filterText = newKeywords.join(" ");
@@ -1502,11 +1497,6 @@ function bindUIButtons() {
 
     $("#jackett-show-releases").click(function () {
         api.getServerCache(function (data) {
-            for (var i = 0; i < data.length; i++) {
-                var item = data[i];
-                item.Title = insertWordWrap(item.Title);
-                item.CategoryDesc = insertWordWrap(item.CategoryDesc);
-            }
             var releaseTemplate = Handlebars.compile($("#jackett-releases").html());
             var item = {
                 releases: data,
@@ -1595,7 +1585,7 @@ function bindUIButtons() {
                     });
                 }
             });
-            $("#modals").append(releaseDialog);
+            $("#modals").html(releaseDialog);
             releaseDialog.modal("show");
         }).fail(function () {
             doNotify("Request to Jackett server failed", "danger", "glyphicon glyphicon-alert");
@@ -1614,7 +1604,7 @@ function bindUIButtons() {
                 logs: data
             };
             var releaseDialog = $(releaseTemplate(item));
-            $("#modals").append(releaseDialog);
+            $("#modals").html(releaseDialog);
             releaseDialog.modal("show");
         }).fail(function () {
             doNotify("Request to Jackett server failed", "danger", "glyphicon glyphicon-alert");
@@ -1626,6 +1616,7 @@ function bindUIButtons() {
         var jackett_basepathoverride = $("#jackett-basepathoverride").val();
         var jackett_baseurloverride = $("#jackett-baseurloverride").val();
         var jackett_external = $("#jackett-allowext").is(':checked');
+        var jackett_local_bind_address = $("#jackett-local-bind-address").val();
         var jackett_cors = $("#jackett-allowcors").is(':checked');
         var jackett_update = $("#jackett-allowupdate").is(':checked');
         var jackett_prerelease = $("#jackett-prerelease").is(':checked');
@@ -1647,6 +1638,7 @@ function bindUIButtons() {
         var jsonObject = {
             port: jackett_port,
             external: jackett_external,
+            local_bind_address: jackett_local_bind_address,
             cors: jackett_cors,
             updatedisabled: jackett_update,
             prerelease: jackett_prerelease,

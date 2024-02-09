@@ -7,27 +7,31 @@ type: public
 encoding: UTF-8
 links:
   - https://extratorrent.st/
+  - https://extratorrent.unblockit.dad/
+  - https://extratorrent.ninjaproxy1.com/
+  - https://extratorrent.proxyninja.org/
+legacylinks:
   - https://extratorrent.unblockit.pet/
   - https://extratorrent.nocensor.lol/
-legacylinks:
-  - https://extratorrent.nocensor.work/
-  - https://extratorrent.unblockit.kim/
-  - https://extratorrent.unblockit.bz/
-  - https://extratorrent.unblockit.tv/
-  - https://extratorrent.unblockit.how/
-  - https://extratorrent.unblockit.cam/
-  - https://extratorrent.nocensor.biz/
-  - https://extratorrent.unblockit.day/
-  - https://extratorrent.unblockit.llc/
-  - https://extratorrent.unblockit.blue/
-  - https://extratorrent.unblockit.name/
-  - https://extratorrent.nocensor.sbs/
-  - https://extratorrent.unblockit.ist/
-  - https://extratorrent.unblockit.bet/
-  - https://extratorrent.unblockit.cat/
-  - https://extratorrent.unblockit.nz/
-  - https://extratorrent.nocensor.world/
-  - https://extratorrent.unblockit.page/
+  - https://extratorrent.unblockit.ink/
+  - https://extratorrent.nocensor.art/
+  - https://extratorrent.unblockit.bio/
+  - https://extratorrent.unblockit.boo/
+  - https://extratorrent.mrunblock.guru/
+  - https://extratorrent.unblockit.click/
+  - https://extratorrent.unblockit.asia/
+  - https://extratorrent.unblockit.mov/
+  - https://extratorrent.mrunblock.life/
+  - https://extratorrent.unblockit.rsvp/
+  - https://extratorrent.nocensor.click/
+  - https://extratorrent.unblockit.vegas/
+  - https://extratorrent.unblockit.esq/
+  - https://extratorrent.unblockit.zip/
+  - https://extratorrent.unblockit.foo/
+  - https://extratorrent.unblockit.ing/
+  - https://extratorrent.mrunblock.bond/
+  - https://extratorrent.nocensor.cloud/
+  - https://extratorrent.unblockit.date/
 
 caps:
   categorymappings:
@@ -94,7 +98,7 @@ search:
       args: ["[\\s]+", "."]
 
   rows:
-    selector: tr[class^="tl"]
+    selector: tr[class^="tl"]:has(a[href^="magnet:?xt="])
     filters:
       - name: andmatch
 
@@ -130,16 +134,14 @@ search:
         - name: timeago
     size:
       selector: td:nth-last-of-type(4)
-    seeders_optional:
-      optional: true
-      selector: td.sy, td.sn
     seeders:
-      text: "{{ if .Result.seeders_optional }}{{ .Result.seeders_optional }}{{ else }}0{{ end }}"
-    leechers_optional:
+      selector: td.sy, td.sn
       optional: true
-      selector: td.ly, td.ln
+      default: 0
     leechers:
-      text: "{{ if .Result.leechers_optional }}{{ .Result.leechers_optional }}{{ else }}0{{ end }}"
+      selector: td.ly, td.ln
+      optional: true
+      default: 0
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

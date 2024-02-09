@@ -4,14 +4,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
+using Jackett.Common.Extensions;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig.Bespoke;
 using Jackett.Common.Services.Interfaces;
+using Jackett.Common.Utils;
 using Jackett.Common.Utils.Clients;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -19,11 +20,19 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class BakaBT : BaseWebIndexer
+    public class BakaBT : IndexerBase
     {
+        public override string Id => "bakabt";
+        public override string Name => "BakaBT";
+        public override string Description => "Anime Comunity";
+        public override string SiteLink { get; protected set; } = "https://bakabt.me/";
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string SearchUrl => SiteLink + "browse.php?only=0&hentai=1&incomplete=1&lossless=1&hd=1&multiaudio=1&bonus=1&reorder=1&q=";
         private string LoginUrl => SiteLink + "login.php";
-        private readonly string LogoutStr = "<a href=\"logout.php\">Logout</a>";
         private bool AddRomajiTitle => configData.AddRomajiTitle.Value;
         private bool AppendSeason => configData.AppendSeason.Value;
 
@@ -37,55 +46,53 @@ namespace Jackett.Common.Indexers
 
         public BakaBT(IIndexerConfigurationService configService, Utils.Clients.WebClient wc, Logger l,
             IProtectionService ps, ICacheService cs)
-            : base(id: "bakabt",
-                   name: "BakaBT",
-                   description: "Anime Comunity",
-                   link: "https://bakabt.me/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q
-                       },
-                       BookSearchParams = new List<BookSearchParam>
-                       {
-                           BookSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
-                   configData: new ConfigurationDataBakaBT("To prevent 0-results-error, Enable the " +
-                                                               "Show-Adult-Content option in your BakaBT account Settings."))
+                   configData: new ConfigurationDataBakaBT("To prevent 0-results-error, Enable the Show-Adult-Content option in your BakaBT account Settings."))
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.TVAnime, "Anime Series");
-            AddCategoryMapping(2, TorznabCatType.TVAnime, "OVA");
-            AddCategoryMapping(3, TorznabCatType.AudioOther, "Soundtrack");
-            AddCategoryMapping(4, TorznabCatType.BooksComics, "Manga");
-            AddCategoryMapping(5, TorznabCatType.TVAnime, "Anime Movie");
-            AddCategoryMapping(6, TorznabCatType.TVOther, "Live Action");
-            AddCategoryMapping(7, TorznabCatType.BooksOther, "Artbook");
-            AddCategoryMapping(8, TorznabCatType.AudioVideo, "Music Video");
-            AddCategoryMapping(9, TorznabCatType.BooksEBook, "Light Novel");
-            AddCategoryMapping(11, TorznabCatType.XXX, "Hentai Series");
-            AddCategoryMapping(12, TorznabCatType.XXX, "Hentai OVA");
-            AddCategoryMapping(13, TorznabCatType.XXX, "Hentai Soundtrack");
-            AddCategoryMapping(14, TorznabCatType.XXX, "Hentai Manga");
-            AddCategoryMapping(15, TorznabCatType.XXX, "Hentai Movie");
-            AddCategoryMapping(16, TorznabCatType.XXX, "Hentai Live Action");
-            AddCategoryMapping(17, TorznabCatType.XXX, "Hentai Artbook");
-            AddCategoryMapping(18, TorznabCatType.XXX, "Hentai Music Video");
-            AddCategoryMapping(19, TorznabCatType.XXX, "Hentai Light Novel");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.TVAnime, "Anime Series");
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVAnime, "OVA");
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.AudioOther, "Soundtrack");
+            caps.Categories.AddCategoryMapping(4, TorznabCatType.BooksComics, "Manga");
+            caps.Categories.AddCategoryMapping(5, TorznabCatType.TVAnime, "Anime Movie");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.TVOther, "Live Action");
+            caps.Categories.AddCategoryMapping(7, TorznabCatType.BooksOther, "Artbook");
+            caps.Categories.AddCategoryMapping(8, TorznabCatType.AudioVideo, "Music Video");
+            caps.Categories.AddCategoryMapping(9, TorznabCatType.BooksEBook, "Light Novel");
+            caps.Categories.AddCategoryMapping(11, TorznabCatType.XXX, "Hentai Series");
+            caps.Categories.AddCategoryMapping(12, TorznabCatType.XXX, "Hentai OVA");
+            caps.Categories.AddCategoryMapping(13, TorznabCatType.XXX, "Hentai Soundtrack");
+            caps.Categories.AddCategoryMapping(14, TorznabCatType.XXX, "Hentai Manga");
+            caps.Categories.AddCategoryMapping(15, TorznabCatType.XXX, "Hentai Movie");
+            caps.Categories.AddCategoryMapping(16, TorznabCatType.XXX, "Hentai Live Action");
+            caps.Categories.AddCategoryMapping(17, TorznabCatType.XXX, "Hentai Artbook");
+            caps.Categories.AddCategoryMapping(18, TorznabCatType.XXX, "Hentai Music Video");
+            caps.Categories.AddCategoryMapping(19, TorznabCatType.XXX, "Hentai Light Novel");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -109,21 +116,23 @@ namespace Jackett.Common.Indexers
                 { "returnto", "/index.php" }
             };
 
-            var parser = new HtmlParser();
-            var dom = parser.ParseDocument(loginForm.ContentString);
+            var htmlParser = new HtmlParser();
+            using var dom = htmlParser.ParseDocument(loginForm.ContentString);
+
             var loginKey = dom.QuerySelector("input[name=\"loginKey\"]");
             if (loginKey != null)
+            {
                 pairs["loginKey"] = loginKey.GetAttribute("value");
+            }
 
             var response = await RequestLoginAndFollowRedirect(LoginUrl, pairs, loginForm.Cookies, true, null, SiteLink);
-            var responseContent = response.ContentString;
-            await ConfigureIfOK(response.Cookies, responseContent.Contains(LogoutStr), () =>
+
+            await ConfigureIfOK(response.Cookies, response.ContentString != null && !response.ContentString.Contains("loginForm"), () =>
             {
-                var parser = new HtmlParser();
-                var dom = parser.ParseDocument(responseContent);
-                var messageEl = dom.QuerySelectorAll(".error").First();
-                var errorMessage = messageEl.Text().Trim();
-                throw new ExceptionWithConfigData(errorMessage, configData);
+                using var document = htmlParser.ParseDocument(response.ContentString);
+                var errorMessage = document.QuerySelector("#loginError, .error")?.Text().Trim();
+
+                throw new ExceptionWithConfigData(errorMessage ?? "Login failed.", configData);
             });
         }
 
@@ -137,8 +146,9 @@ namespace Jackett.Common.Indexers
 
             var releases = new List<ReleaseInfo>();
             var episodeSearchUrl = SearchUrl + WebUtility.UrlEncode(searchString);
+
             var response = await RequestWithCookiesAndRetryAsync(episodeSearchUrl);
-            if (!response.ContentString.Contains(LogoutStr))
+            if (response.ContentString.Contains("loginForm"))
             {
                 //Cookie appears to expire after a period of time or logging in to the site via browser
                 await DoLogin();
@@ -148,12 +158,20 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var dom = parser.ParseDocument(response.ContentString);
+                using var dom = parser.ParseDocument(response.ContentString);
                 var rows = dom.QuerySelectorAll(".torrents tr.torrent, .torrents tr.torrent_alt");
                 ICollection<int> currentCategories = new List<int> { TorznabCatType.TVAnime.ID };
 
                 foreach (var row in rows)
                 {
+                    var downloadVolumeFactor = row.QuerySelector("span.freeleech") != null ? 0 : 1;
+
+                    // Skip non-freeleech results when freeleech only is set
+                    if (configData.FreeleechOnly.Value && downloadVolumeFactor != 0)
+                    {
+                        continue;
+                    }
+
                     var qTitleLink = row.QuerySelector("a.title, a.alt_title");
                     if (qTitleLink == null)
                         continue;
@@ -177,8 +195,11 @@ namespace Jackett.Common.Indexers
 
                     var stringSeparator = new[] { " | " };
                     var titles = titleSeries.Split(stringSeparator, StringSplitOptions.RemoveEmptyEntries);
-                    if (titles.Count() > 1 && !AddRomajiTitle)
+
+                    if (titles.Length > 1 && !AddRomajiTitle)
+                    {
                         titles = titles.Skip(1).ToArray();
+                    }
 
                     foreach (var name in titles)
                     {
@@ -220,7 +241,7 @@ namespace Jackett.Common.Indexers
                         release.MinimumSeedTime = 172800; // 48 hours
 
                         var size = row.QuerySelector(".size").TextContent;
-                        release.Size = ReleaseInfo.GetBytes(size);
+                        release.Size = ParseUtil.GetBytes(size);
 
                         //22 Jul 15
                         var dateStr = row.QuerySelector(".added").TextContent.Replace("'", string.Empty);
@@ -234,7 +255,7 @@ namespace Jackett.Common.Indexers
                         else
                             release.PublishDate = DateTime.ParseExact(dateStr, "dd MMM yy", CultureInfo.InvariantCulture);
 
-                        release.DownloadVolumeFactor = row.QuerySelector("span.freeleech") != null ? 0 : 1;
+                        release.DownloadVolumeFactor = downloadVolumeFactor;
                         release.UploadVolumeFactor = 1;
 
                         releases.Add(release);
@@ -295,14 +316,19 @@ namespace Jackett.Common.Indexers
         public override async Task<byte[]> Download(Uri link)
         {
             var downloadPage = await RequestWithCookiesAsync(link.ToString());
-            var parser = new HtmlParser();
-            var dom = parser.ParseDocument(downloadPage.ContentString);
-            var downloadLink = dom.QuerySelectorAll(".download_link").First().GetAttribute("href");
 
-            if (string.IsNullOrWhiteSpace(downloadLink))
+            var parser = new HtmlParser();
+            using var dom = parser.ParseDocument(downloadPage.ContentString);
+
+            var downloadLink = dom.QuerySelector(".download_link")?.GetAttribute("href");
+
+            if (downloadLink.IsNullOrWhiteSpace())
+            {
                 throw new Exception("Unable to find download link.");
+            }
 
             var response = await RequestWithCookiesAsync(SiteLink + downloadLink);
+
             return response.ContentBytes;
         }
     }

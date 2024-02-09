@@ -5,8 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Jackett.Common.Extensions;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig;
 using Jackett.Common.Services.Interfaces;
@@ -17,8 +18,19 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class PassThePopcorn : BaseWebIndexer
+    public class PassThePopcorn : IndexerBase
     {
+        public override string Id => "passthepopcorn";
+        public override string Name => "PassThePopcorn";
+        public override string Description => "PassThePopcorn (PTP) is a Private site for MOVIES / TV";
+        public override string SiteLink { get; protected set; } = "https://passthepopcorn.me/";
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override bool SupportsPagination => true;
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private static string SearchUrl => "https://passthepopcorn.me/torrents.php";
         private string AuthKey { get; set; }
         private string PassKey { get; set; }
@@ -32,22 +44,7 @@ namespace Jackett.Common.Indexers
 
         public PassThePopcorn(IIndexerConfigurationService configService, Utils.Clients.WebClient c, Logger l,
             IProtectionService ps, ICacheService cs)
-            : base(id: "passthepopcorn",
-                   name: "PassThePopcorn",
-                   description: "PassThePopcorn is a Private site for MOVIES / TV",
-                   link: "https://passthepopcorn.me/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: c,
                    logger: l,
                    p: ps,
@@ -56,25 +53,33 @@ namespace Jackett.Common.Indexers
                                                                         Separate options with a space if using more than one option.<br>Filter options available:
                                                                         <br><code>GoldenPopcorn</code><br><code>Scene</code><br><code>Checked</code><br><code>Free</code>"))
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
+            webclient.requestDelay = 2;
+        }
 
-            webclient.requestDelay = 2; // 0.5 requests per second
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                LimitsDefault = 50,
+                LimitsMax = 50,
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                }
+            };
 
-            AddCategoryMapping(1, TorznabCatType.Movies, "Feature Film");
-            AddCategoryMapping(1, TorznabCatType.MoviesForeign);
-            AddCategoryMapping(1, TorznabCatType.MoviesOther);
-            AddCategoryMapping(1, TorznabCatType.MoviesSD);
-            AddCategoryMapping(1, TorznabCatType.MoviesHD);
-            AddCategoryMapping(1, TorznabCatType.Movies3D);
-            AddCategoryMapping(1, TorznabCatType.MoviesBluRay);
-            AddCategoryMapping(1, TorznabCatType.MoviesDVD);
-            AddCategoryMapping(1, TorznabCatType.MoviesWEBDL);
-            AddCategoryMapping(2, TorznabCatType.Movies, "Short Film");
-            AddCategoryMapping(3, TorznabCatType.TV, "Miniseries");
-            AddCategoryMapping(4, TorznabCatType.TV, "Stand-up Comedy");
-            AddCategoryMapping(5, TorznabCatType.TV, "Live Performance");
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.Movies, "Feature Film");
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.Movies, "Short Film");
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.TV, "Miniseries");
+            caps.Categories.AddCategoryMapping(4, TorznabCatType.Movies, "Stand-up Comedy");
+            caps.Categories.AddCategoryMapping(5, TorznabCatType.Movies, "Live Performance");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.Movies, "Movie Collection");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -86,7 +91,10 @@ namespace Jackett.Common.Indexers
             {
                 var results = await PerformQuery(new TorznabQuery());
                 if (!results.Any())
+                {
                     throw new Exception("Testing returned no results!");
+                }
+
                 IsConfigured = true;
                 SaveConfig();
             }
@@ -106,16 +114,38 @@ namespace Jackett.Common.Indexers
             var configCheckedOnly = configData.FilterString.Value.ToLowerInvariant().Contains("checked");
             var configFreeOnly = configData.FilterString.Value.ToLowerInvariant().Contains("free");
 
-
             var movieListSearchUrl = SearchUrl;
-            var queryCollection = new NameValueCollection { { "json", "noredirect" } };
+            var queryCollection = new NameValueCollection
+            {
+                { "action", "advanced" },
+                { "json", "noredirect" },
+                { "grouping", "0" },
+            };
 
-            if (!string.IsNullOrEmpty(query.ImdbID))
-                queryCollection.Add("searchstr", query.ImdbID);
-            else if (!string.IsNullOrEmpty(query.GetQueryString()))
-                queryCollection.Add("searchstr", query.GetQueryString());
             if (configFreeOnly)
-                queryCollection.Add("freetorrent", "1");
+            {
+                queryCollection.Set("freetorrent", "1");
+            }
+
+            var searchQuery = query.ImdbID.IsNotNullOrWhiteSpace() ? query.ImdbID : query.GetQueryString();
+
+            if (searchQuery.IsNotNullOrWhiteSpace())
+            {
+                queryCollection.Set("searchstr", searchQuery);
+            }
+
+            var queryCats = MapTorznabCapsToTrackers(query).Select(int.Parse).Distinct().ToList();
+
+            if (searchQuery.IsNullOrWhiteSpace() && queryCats.Any())
+            {
+                queryCats.ForEach(cat => queryCollection.Set($"filter_cat[{cat}]", "1"));
+            }
+
+            if (query.Limit > 0 && query.Offset > 0)
+            {
+                var page = query.Offset / query.Limit + 1;
+                queryCollection.Set("page", page.ToString());
+            }
 
             movieListSearchUrl += "?" + queryCollection.GetQueryString();
 
@@ -127,7 +157,12 @@ namespace Jackett.Common.Indexers
 
             var results = await RequestWithCookiesAndRetryAsync(movieListSearchUrl, headers: authHeaders);
             if (results.IsRedirect) // untested
+            {
                 results = await RequestWithCookiesAndRetryAsync(movieListSearchUrl, headers: authHeaders);
+            }
+
+            var seasonRegex = new Regex(@"\bS\d{2,3}(E\d{2,3})?\b", RegexOptions.Compiled);
+
             try
             {
                 //Iterate over the releases for each movie
@@ -152,55 +187,79 @@ namespace Jackett.Common.Indexers
 
                         var releaseLinkQuery = new NameValueCollection
                         {
-                            {"action", "download"},
-                            {"id", torrentId},
-                            {"authkey", AuthKey},
-                            {"torrent_pass", PassKey}
+                            { "action", "download" },
+                            { "id", torrentId },
+                            { "authkey", AuthKey },
+                            { "torrent_pass", PassKey }
                         };
-                        var free = !(torrent["FreeleechType"] is null);
+
+                        var downloadVolumeFactor = torrent.Value<string>("FreeleechType")?.ToUpperInvariant() switch
+                        {
+                            "FREELEECH" => 0,
+                            "HALF LEECH" => 0.5,
+                            _ => 1
+                        };
 
                         bool.TryParse((string)torrent["GoldenPopcorn"], out var golden);
                         bool.TryParse((string)torrent["Scene"], out var scene);
                         bool.TryParse((string)torrent["Checked"], out var check);
 
                         if (configGoldenPopcornOnly && !golden)
+                        {
                             continue; //Skip release if user only wants GoldenPopcorn
+                        }
+
                         if (configSceneOnly && !scene)
+                        {
                             continue; //Skip release if user only wants Scene
+                        }
+
                         if (configCheckedOnly && !check)
+                        {
                             continue; //Skip release if user only wants Checked
-                        if (configFreeOnly && !free)
+                        }
+
+                        if (configFreeOnly && downloadVolumeFactor != 0.0)
+                        {
                             continue;
+                        }
+
                         var link = new Uri($"{SearchUrl}?{releaseLinkQuery.GetQueryString()}");
                         var seeders = int.Parse((string)torrent["Seeders"]);
                         var details = new Uri($"{SearchUrl}?id={WebUtility.UrlEncode(movieGroupId)}&torrentid={WebUtility.UrlEncode(torrentId)}");
                         var size = long.Parse((string)torrent["Size"]);
                         var grabs = long.Parse((string)torrent["Snatched"]);
-                        var publishDate = DateTime.ParseExact((string)torrent["UploadTime"],
-                                                              "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)
-                                                  .ToLocalTime();
+                        var publishDate = DateTime.ParseExact((string)torrent["UploadTime"], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToLocalTime();
                         var leechers = int.Parse((string)torrent["Leechers"]);
+
+                        var categories = new List<int> { TorznabCatType.Movies.ID };
+
+                        if (releaseName != null && seasonRegex.Match(releaseName).Success)
+                        {
+                            categories.Add(TorznabCatType.TV.ID);
+                        }
+
                         var release = new ReleaseInfo
                         {
+                            Guid = link,
+                            Link = link,
+                            Details = details,
                             Title = releaseName,
                             Description = $"Title: {movieTitle}",
+                            Year = int.Parse(year),
+                            Category = categories,
                             Poster = poster,
                             Imdb = movieImdbId,
-                            Details = details,
                             Size = size,
                             Grabs = grabs,
                             Seeders = seeders,
                             Peers = seeders + leechers,
                             PublishDate = publishDate,
-                            Link = link,
-                            Guid = link,
-                            MinimumRatio = 1,
-                            MinimumSeedTime = 345600,
-                            DownloadVolumeFactor = free ? 0 : 1,
+                            DownloadVolumeFactor = downloadVolumeFactor,
                             UploadVolumeFactor = 1,
-                            Category = new List<int> { TorznabCatType.Movies.ID }
+                            MinimumRatio = 1,
+                            MinimumSeedTime = 345600
                         };
-
 
                         var titleTags = new List<string>();
                         var quality = (string)torrent["Quality"];
@@ -211,9 +270,15 @@ namespace Jackett.Common.Indexers
                         var otherTags = (string)torrent["RemasterTitle"];
 
                         if (year != null)
+                        {
                             release.Description += $"<br>\nYear: {year}";
+                        }
+
                         if (quality != null)
+                        {
                             release.Description += $"<br>\nQuality: {quality}";
+                        }
+
                         if (resolution != null)
                         {
                             titleTags.Add(resolution);
@@ -251,10 +316,14 @@ namespace Jackett.Common.Indexers
                         }
 
                         if (otherTags != null)
+                        {
                             titleTags.Add(otherTags);
+                        }
 
-                        if (titleTags.Any())
+                        if (configData.AddAttributesToTitle.Value && titleTags.Any())
+                        {
                             release.Title += " [" + string.Join(" / ", titleTags) + "]";
+                        }
 
                         releases.Add(release);
                     }

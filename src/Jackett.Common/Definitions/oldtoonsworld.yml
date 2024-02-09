@@ -12,13 +12,14 @@ caps:
   categorymappings:
     - {id: 401, cat: TV/Anime, desc: "Anime"}
     - {id: 404, cat: TV, desc: "Cartoon"}
-    - {id: 405, cat: Audio, desc: "Audio"}
+    - {id: 405, cat: Audio/Audiobook, desc: "AudioBooks"}
     - {id: 402, cat: Books, desc: "Books"}
     - {id: 403, cat: Movies, desc: "Shorts"}
     - {id: 406, cat: TV, desc: "Adults"}
     - {id: 407, cat: Movies, desc: "Family/Teen"}
     - {id: 409, cat: Other, desc: "Misc"}
     - {id: 408, cat: PC/Games, desc: "Games"}
+    - {id: 412, cat: Audio, desc: "Music"}
 
   modes:
     search: [q]
@@ -86,6 +87,7 @@ login:
   error:
     - selector: td.embedded:has(h2:contains("Login failed!"))
     - selector: td.embedded:has(h2:contains("Failed"))
+    - selector: td.embedded:has(h2:contains("Login Locked!"))
   test:
     path: index.php
     selector: a[href="logout.php"]
@@ -106,6 +108,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: table.torrents > tbody > tr:has(a[href^="details.php?id="])
@@ -119,12 +122,11 @@ search:
           args: cat
     title_default:
       selector: a[href^="details.php?id="]
-    title_optional:
-      optional: true
+    title:
       selector: a[title][href^="details.php?id="]
       attribute: title
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      optional: true
+      default: "{{ .Result.title_default }}"
     details:
       selector: a[href^="details.php?id="]
       attribute: href
@@ -132,7 +134,7 @@ search:
       selector: a[href^="download.php?id="]
       attribute: href
     poster:
-      selector: img.nexus-lazy-load
+      selector: img[data-src]
       attribute: data-src
     imdbid:
       # site currently only has a badge and rating, the id is not present. just in case a future update.
@@ -147,7 +149,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_added:
       # time added
       selector: td.rowfollow:nth-child(4):not(:has(span))
@@ -156,7 +158,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     size:
@@ -191,4 +193,4 @@ search:
       remove: a, img, span
     description:
       text: "{{ .Result.genre }}"
-# NexusPHP 1.7.29 2022-10-13
+# NexusPHP v1.8.6 2023-08-18

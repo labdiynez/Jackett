@@ -12,6 +12,8 @@ legacylinks:
 
 caps:
   categorymappings:
+    - {id: 82, cat: TV/Sport, desc: "AEW Collision"}
+    - {id: 83, cat: TV/Sport, desc: "AEW Collision HD"}
     - {id: 74, cat: TV/Sport, desc: "AEW Dynamite"}
     - {id: 75, cat: TV/Sport, desc: "AEW Dynamite HD"}
     - {id: 78, cat: TV/Sport, desc: "AEW PPV's"}
@@ -171,7 +173,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="pic/freeleech.png"]: 0

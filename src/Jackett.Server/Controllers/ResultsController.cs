@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Jackett.Common;
+using Jackett.Common.Exceptions;
 using Jackett.Common.Indexers;
 using Jackett.Common.Indexers.Meta;
 using Jackett.Common.Models;
@@ -14,9 +15,11 @@ using Jackett.Common.Models.DTO;
 using Jackett.Common.Services.Interfaces;
 using Jackett.Common.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Net.Http.Headers;
 using NLog;
 
 namespace Jackett.Server.Controllers
@@ -186,6 +189,8 @@ namespace Jackett.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> Results([FromQuery] ApiSearch requestt)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             //TODO: Better way to parse querystring
 
             var request = new ApiSearch();
@@ -206,6 +211,26 @@ namespace Jackett.Server.Controllers
                 if (t.Key == "query")
                 {
                     request.Query = t.Value.ToString();
+                }
+
+                if (t.Key == "imdbid")
+                {
+                    request.ImdbId = t.Value.ToString();
+                }
+
+                if (t.Key == "tmdbid")
+                {
+                    request.TmdbId = int.Parse(t.Value.ToString());
+                }
+
+                if (t.Key == "tvdbid")
+                {
+                    request.TvdbId = int.Parse(t.Value.ToString());
+                }
+
+                if (t.Key == "tvmazeid")
+                {
+                    request.TvMazeId = int.Parse(t.Value.ToString());
                 }
             }
 
@@ -267,7 +292,7 @@ namespace Jackett.Server.Controllers
                 if (indexer != null)
                 {
                     resultIndexer.ID = indexer.Id;
-                    resultIndexer.Name = indexer.DisplayName;
+                    resultIndexer.Name = indexer.Name;
                 }
                 return resultIndexer;
             }).ToList();
@@ -280,7 +305,7 @@ namespace Jackett.Server.Controllers
                 return searchResults.Select(result =>
                 {
                     var item = MapperUtil.Mapper.Map<TrackerCacheResult>(result);
-                    item.Tracker = indexer.DisplayName;
+                    item.Tracker = indexer.Name;
                     item.TrackerId = indexer.Id;
                     item.TrackerType = indexer.Type;
                     item.Peers = item.Peers - item.Seeders; // Use peers as leechers
@@ -293,10 +318,13 @@ namespace Jackett.Server.Controllers
             // Log info
             var indexersName = string.Join(", ", manualResult.Indexers.Select(i => i.Name));
             var cacheStr = tasks.Where(t => t.Status == TaskStatus.RanToCompletion).Any(t => t.Result.IsFromCache) ? " (from cache)" : "";
+
+            stopwatch.Stop();
+
             if (string.IsNullOrWhiteSpace(CurrentQuery.SanitizedSearchTerm))
-                logger.Info($"Manual search in {indexersName} => Found {manualResult.Results.Count()} releases{cacheStr}");
+                logger.Info($"Manual search in {indexersName} => Found {manualResult.Results.Count()} releases{cacheStr} [{stopwatch.ElapsedMilliseconds:0}ms]");
             else
-                logger.Info($"Manual search in {indexersName} for {CurrentQuery.GetQueryString()} => Found {manualResult.Results.Count()} releases{cacheStr}");
+                logger.Info($"Manual search in {indexersName} for {CurrentQuery.GetQueryString()} => Found {manualResult.Results.Count()} releases{cacheStr} [{stopwatch.ElapsedMilliseconds:0}ms]");
 
             return Json(manualResult);
         }
@@ -315,7 +343,7 @@ namespace Jackett.Server.Controllers
             {
                 if (!(CurrentIndexer is BaseMetaIndexer)) // shouldn't be needed because CanHandleQuery should return false
                 {
-                    logger.Warn($"A search request with t=indexers from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.DisplayName} isn't a meta indexer.");
+                    logger.Warn($"A search request with t=indexers from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.Name} isn't a meta indexer.");
                     return GetErrorXML(203, "Function Not Available: this isn't a meta indexer");
                 }
                 var CurrentBaseMetaIndexer = (BaseMetaIndexer)CurrentIndexer;
@@ -332,8 +360,8 @@ namespace Jackett.Server.Controllers
                         select new XElement("indexer",
                             new XAttribute("id", i.Id),
                             new XAttribute("configured", i.IsConfigured),
-                            new XElement("title", i.DisplayName),
-                            new XElement("description", i.DisplayDescription),
+                            new XElement("title", i.Name),
+                            new XElement("description", i.Description),
                             new XElement("link", i.SiteLink),
                             new XElement("language", i.Language),
                             new XElement("type", i.Type),
@@ -345,6 +373,8 @@ namespace Jackett.Server.Controllers
                 return Content(xdoc.Declaration.ToString() + Environment.NewLine + xdoc.ToString(), "application/xml", Encoding.UTF8);
             }
 
+            var stopwatch = Stopwatch.StartNew();
+
             if (CurrentQuery.ImdbID != null)
             {
                 /* We should allow this (helpful in case of aggregate indexers)
@@ -355,7 +385,7 @@ namespace Jackett.Server.Controllers
                 }
                 */
 
-                CurrentQuery.ImdbID = ParseUtil.GetFullImdbID(CurrentQuery.ImdbID); // normalize ImdbID
+                CurrentQuery.ImdbID = ParseUtil.GetFullImdbId(CurrentQuery.ImdbID); // normalize ImdbID
                 if (CurrentQuery.ImdbID == null)
                 {
                     logger.Warn($"A search request from {Request.HttpContext.Connection.RemoteIpAddress} was made with an invalid imdbid.");
@@ -364,13 +394,13 @@ namespace Jackett.Server.Controllers
 
                 if (CurrentQuery.IsMovieSearch && !CurrentIndexer.TorznabCaps.MovieSearchImdbAvailable)
                 {
-                    logger.Warn($"A search request with imdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.DisplayName} doesn't support it.");
+                    logger.Warn($"A search request with imdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.Name} doesn't support it.");
                     return GetErrorXML(203, "Function Not Available: imdbid is not supported for movie search by this indexer");
                 }
 
                 if (CurrentQuery.IsTVSearch && !CurrentIndexer.TorznabCaps.TvSearchImdbAvailable)
                 {
-                    logger.Warn($"A search request with imdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.DisplayName} doesn't support it.");
+                    logger.Warn($"A search request with imdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.Name} doesn't support it.");
                     return GetErrorXML(203, "Function Not Available: imdbid is not supported for TV search by this indexer");
                 }
             }
@@ -379,13 +409,13 @@ namespace Jackett.Server.Controllers
             {
                 if (CurrentQuery.IsMovieSearch && !CurrentIndexer.TorznabCaps.MovieSearchTmdbAvailable)
                 {
-                    logger.Warn($"A search request with tmdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.DisplayName} doesn't support it.");
+                    logger.Warn($"A search request with tmdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.Name} doesn't support it.");
                     return GetErrorXML(203, "Function Not Available: tmdbid is not supported for movie search by this indexer");
                 }
 
                 if (CurrentQuery.IsTVSearch && !CurrentIndexer.TorznabCaps.TvSearchTmdbAvailable)
                 {
-                    logger.Warn($"A search request with tmdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.DisplayName} doesn't support it.");
+                    logger.Warn($"A search request with tmdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.Name} doesn't support it.");
                     return GetErrorXML(203, "Function Not Available: tmdbid is not supported for TV search by this indexer");
                 }
             }
@@ -394,7 +424,7 @@ namespace Jackett.Server.Controllers
             {
                 if (CurrentQuery.IsTVSearch && !CurrentIndexer.TorznabCaps.TvSearchAvailable)
                 {
-                    logger.Warn($"A search request with tvdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.DisplayName} doesn't support it.");
+                    logger.Warn($"A search request with tvdbid from {Request.HttpContext.Connection.RemoteIpAddress} was made but the indexer {CurrentIndexer.Name} doesn't support it.");
                     return GetErrorXML(203, "Function Not Available: tvdbid is not supported for movie search by this indexer");
                 }
             }
@@ -403,18 +433,11 @@ namespace Jackett.Server.Controllers
             {
                 var result = await CurrentIndexer.ResultsForQuery(CurrentQuery);
 
-                // Log info
-                var cacheStr = result.IsFromCache ? " (from cache)" : "";
-                if (string.IsNullOrWhiteSpace(CurrentQuery.SanitizedSearchTerm))
-                    logger.Info($"Torznab search in {CurrentIndexer.DisplayName} => Found {result.Releases.Count()} releases{cacheStr}");
-                else
-                    logger.Info($"Torznab search in {CurrentIndexer.DisplayName} for {CurrentQuery.GetQueryString()} => Found {result.Releases.Count()} releases{cacheStr}");
-
                 var serverUrl = serverService.GetServerUrl(Request);
                 var resultPage = new ResultPage(new ChannelInfo
                 {
-                    Title = CurrentIndexer.DisplayName,
-                    Description = CurrentIndexer.DisplayDescription,
+                    Title = CurrentIndexer.Name,
+                    Description = CurrentIndexer.Description,
                     Link = new Uri(CurrentIndexer.SiteLink)
                 });
 
@@ -427,10 +450,36 @@ namespace Jackett.Server.Controllers
 
                 resultPage.Releases = proxiedReleases.ToList();
 
-                var xml = resultPage.ToXml(new Uri(serverUrl));
-                // Force the return as XML
+                stopwatch.Stop();
 
+                // Log info
+                var cacheStr = result.IsFromCache ? " (from cache)" : "";
+                if (string.IsNullOrWhiteSpace(CurrentQuery.SanitizedSearchTerm))
+                    logger.Info($"Torznab search in {CurrentIndexer.Name} => Found {result.Releases.Count()} releases{cacheStr} [{stopwatch.ElapsedMilliseconds:0}ms]");
+                else
+                    logger.Info($"Torznab search in {CurrentIndexer.Name} for {CurrentQuery.GetQueryString()} => Found {result.Releases.Count()} releases{cacheStr} [{stopwatch.ElapsedMilliseconds:0}ms]");
+
+                var xml = resultPage.ToXml(new Uri(serverUrl));
+
+                // Force the return as XML
                 return Content(xml, "application/rss+xml", Encoding.UTF8);
+            }
+            catch (IndexerException ex) when (ex.InnerException is TooManyRequestsException tooManyRequestsException)
+            {
+                logger.Error(ex);
+
+                if (!HttpContext.Response.Headers.ContainsKey("Retry-After"))
+                {
+                    var retryTime = tooManyRequestsException.RetryAfter != TimeSpan.Zero ? tooManyRequestsException.RetryAfter : TimeSpan.FromMinutes(1);
+                    var retryAfter = Convert.ToInt32(retryTime.TotalSeconds);
+
+                    if (retryAfter > 0)
+                    {
+                        HttpContext.Response.Headers.Add("Retry-After", $"{retryAfter}");
+                    }
+                }
+
+                return GetErrorXML(900, ex.Message, StatusCodes.Status429TooManyRequests);
             }
             catch (Exception e)
             {
@@ -440,7 +489,18 @@ namespace Jackett.Server.Controllers
         }
 
         [Route("[action]/{ignored?}")]
-        public IActionResult GetErrorXML(int code, string description) => Content(CreateErrorXML(code, description), "application/xml", Encoding.UTF8);
+        public IActionResult GetErrorXML(int code, string description, int statusCode = StatusCodes.Status400BadRequest)
+        {
+            var mediaTypeHeaderValue = MediaTypeHeaderValue.Parse("application/xml");
+            mediaTypeHeaderValue.Encoding = Encoding.UTF8;
+
+            return new ContentResult
+            {
+                StatusCode = statusCode,
+                Content = CreateErrorXML(code, description),
+                ContentType = mediaTypeHeaderValue.ToString()
+            };
+        }
 
         public static string CreateErrorXML(int code, string description)
         {
@@ -497,9 +557,9 @@ namespace Jackett.Server.Controllers
             // Log info
             var cacheStr = result.IsFromCache ? " (from cache)" : "";
             if (string.IsNullOrWhiteSpace(CurrentQuery.SanitizedSearchTerm))
-                logger.Info($"Potato search in {CurrentIndexer.DisplayName} => Found {result.Releases.Count()} releases{cacheStr}");
+                logger.Info($"Potato search in {CurrentIndexer.Name} => Found {result.Releases.Count()} releases{cacheStr}");
             else
-                logger.Info($"Potato search in {CurrentIndexer.DisplayName} for {CurrentQuery.GetQueryString()} => Found {result.Releases.Count()} releases{cacheStr}");
+                logger.Info($"Potato search in {CurrentIndexer.Name} for {CurrentQuery.GetQueryString()} => Found {result.Releases.Count()} releases{cacheStr}");
 
             var serverUrl = serverService.GetServerUrl(Request);
             var potatoReleases = result.Releases.Where(r => r.Link != null || r.MagnetUri != null).Select(r =>
@@ -513,11 +573,11 @@ namespace Jackett.Server.Controllers
                 // characters are broken). We must use Uri.AbsoluteUri instead that handles encoding correctly
                 var item = new TorrentPotatoResponseItem()
                 {
-                    release_name = release.Title + "[" + CurrentIndexer.DisplayName + "]", // Suffix the indexer so we can see which tracker we are using in CPS as it just says torrentpotato >.>
+                    release_name = release.Title + "[" + CurrentIndexer.Name + "]", // Suffix the indexer so we can see which tracker we are using in CPS as it just says torrentpotato >.>
                     torrent_id = release.Guid.AbsoluteUri, // GUID and (Link or Magnet) are mandatory
                     details_url = release.Details?.AbsoluteUri,
                     download_url = (release.Link != null ? release.Link.AbsoluteUri : release.MagnetUri.AbsoluteUri),
-                    imdb_id = release.Imdb.HasValue ? ParseUtil.GetFullImdbID("tt" + release.Imdb) : null,
+                    imdb_id = release.Imdb.HasValue ? ParseUtil.GetFullImdbId("tt" + release.Imdb) : null,
                     freeleech = (release.DownloadVolumeFactor == 0 ? true : false),
                     type = "movie",
                     size = (long)release.Size / (1024 * 1024), // This is in MB

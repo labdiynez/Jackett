@@ -6,11 +6,13 @@ language: ru-RU
 type: semi-private
 encoding: UTF-8
 links:
-  - http://riperam.org/ # site does not support https ERR_CONNECTION_TIMED_OUT
+  - https://riperam.org/
+legacylinks:
+  - http://riperam.org/
 
 caps:
   categorymappings:
-    - {id: 238, cat: Movies, desc: "Новинки кино (2022). Новые фильмы скачать бесплатно"}
+    - {id: 238, cat: Movies, desc: "Новинки кино (2024). Новые фильмы скачать бесплатно"}
     - {id: 425, cat: Movies/HD, desc: "DVDRip / DVD-5/DVD-9"}
     - {id: 50, cat: Movies/HD, desc: "DVDRip"}
     - {id: 52, cat: Movies/HD, desc: "DVD-5/DVD-9"}
@@ -56,7 +58,7 @@ caps:
     - {id: 268, cat: TV, desc: "Следствие по телу / Body of Proof"}
     - {id: 160, cat: TV, desc: "Теория большого взрыва"}
     - {id: 20, cat: TV, desc: "Русские сериалы"}
-    - {id: 210, cat: TV, desc: "!!!   Полные завершенные сериалы   !!!"}
+    - {id: 210, cat: TV, desc: "!!! Полные завершенные сериалы !!!"}
     - {id: 969, cat: TV, desc: "13"}
     - {id: 707, cat: TV, desc: "Агент"}
     - {id: 1028, cat: TV, desc: "Белые волки"}
@@ -84,7 +86,6 @@ caps:
     - {id: 989, cat: TV, desc: "Курортная полиция"}
     - {id: 961, cat: TV, desc: "Личное дело"}
     - {id: 639, cat: TV, desc: "Ловушка"}
-    - {id: 703, cat: TV, desc: "Лорд. Пес-полицейский"}
     - {id: 1013, cat: TV, desc: "Лучшие враги"}
     - {id: 131, cat: TV, desc: "Майор полиции"}
     - {id: 727, cat: TV, desc: "Маяковский - Два дня"}
@@ -197,7 +198,6 @@ caps:
     - {id: 1136, cat: TV, desc: "Бородач"}
     - {id: 1184, cat: TV, desc: "Вижу - знаю"}
     - {id: 1127, cat: TV, desc: "Владимирская, 15"}
-    - {id: 781, cat: TV, desc: "Выжить после"}
     - {id: 1181, cat: TV, desc: "Вышибала"}
     - {id: 1165, cat: TV, desc: "Гастролеры (Беглецы)"}
     - {id: 1150, cat: TV, desc: "Гражданин Никто"}
@@ -223,7 +223,6 @@ caps:
     - {id: 1160, cat: TV, desc: "Невский"}
     - {id: 1224, cat: TV, desc: "Нити судьбы"}
     - {id: 1112, cat: TV, desc: "Озабоченные или любовь зла"}
-    - {id: 1139, cat: TV, desc: "Остров"}
     - {id: 1080, cat: TV, desc: "Отдел 44"}
     - {id: 761, cat: TV, desc: "Пасечник"}
     - {id: 1103, cat: TV, desc: "Патруль Самооборона"}
@@ -240,7 +239,6 @@ caps:
     - {id: 359, cat: TV, desc: "Светофор"}
     - {id: 1098, cat: TV, desc: "Семейный бизнес"}
     - {id: 1162, cat: TV, desc: "Следователь Тихонов"}
-    - {id: 1130, cat: TV, desc: "Сны"}
     - {id: 1138, cat: TV, desc: "Солнце в подарок"}
     - {id: 1180, cat: TV, desc: "Степные волки"}
     - {id: 1133, cat: TV, desc: "Сын моего отца"}
@@ -252,7 +250,6 @@ caps:
     - {id: 1191, cat: TV, desc: "Я работаю в суде"}
     - {id: 1235, cat: TV, desc: "Василиса"}
     - {id: 1154, cat: TV, desc: "Вечный отпуск"}
-    - {id: 555, cat: TV, desc: "Восьмидесятые"}
     - {id: 1231, cat: TV, desc: "Вы все меня бесите"}
     - {id: 152, cat: TV, desc: "Интерны"}
     - {id: 1156, cat: TV, desc: "Крыша мира"}
@@ -364,7 +361,6 @@ caps:
     - {id: 792, cat: TV, desc: "Правила моей кухни"}
     - {id: 547, cat: TV, desc: "Право на защиту"}
     - {id: 731, cat: TV, desc: "Про декор"}
-    - {id: 982, cat: TV, desc: "Реальная кухня"}
     - {id: 536, cat: TV, desc: "Самый умный"}
     - {id: 742, cat: TV, desc: "Свидание со звездой"}
     - {id: 544, cat: TV, desc: "Свобода и справедливость"}
@@ -392,8 +388,8 @@ caps:
     - {id: 477, cat: TV, desc: "Даешь молодежь"}
     - {id: 514, cat: TV, desc: "Ералаш"}
     - {id: 446, cat: TV, desc: "+100500"}
-    - {id: 693, cat: TV, desc: "Comedy Баттл. Без границ"}
     - {id: 1164, cat: TV, desc: "Битва риелторов"}
+    - {id: 693, cat: TV, desc: "Comedy Баттл. Без границ"}
     - {id: 1071, cat: TV, desc: "Взвешенные люди"}
     - {id: 229, cat: TV, desc: "Comedy Баттл. Отбор, турнир"}
     - {id: 1096, cat: TV, desc: "Время Г"}
@@ -448,7 +444,7 @@ caps:
     - {id: 765, cat: TV, desc: "Перезагрузка"}
     - {id: 493, cat: TV, desc: "Поле чудес"}
     - {id: 730, cat: TV, desc: "Поедем, поедим"}
-    - {id: 1146, cat: TV, desc: "Пока все дома"}
+    - {id: 1146, cat: TV, desc: "Когда все дома"}
     - {id: 1196, cat: TV, desc: "Проводник"}
     - {id: 588, cat: TV, desc: "Прямой эфир"}
     - {id: 348, cat: TV, desc: "Пусть говорят"}
@@ -478,6 +474,7 @@ caps:
     - {id: 1461, cat: TV/Documentary, desc: "Невероятно интересные истории"}
     - {id: 1477, cat: TV/Documentary, desc: "Последний герой"}
     - {id: 1478, cat: TV/Documentary, desc: "Бородина против Бузовой"}
+    - {id: 1488, cat: TV/Documentary, desc: "Док-ток"}
     - {id: 24, cat: TV/Documentary, desc: "Документальные передачи"}
     - {id: 1460, cat: TV/Documentary, desc: "Специальный репортаж (ТК Звезда)"}
     - {id: 728, cat: TV/Documentary, desc: "Чудо техники с Сергеем Малозёмовым"}
@@ -583,10 +580,10 @@ caps:
     - {id: 329, cat: TV/Sport, desc: "Сегодня. Итоговая программа"}
     - {id: 1100, cat: TV/Sport, desc: "Пропаганда"}
     - {id: 1084, cat: TV/Sport, desc: "'Точка' с Максимом Шевченко"}
-    - {id: 334, cat: TV/Sport, desc: "День  космических  историй"}
+    - {id: 334, cat: TV/Sport, desc: "День космических историй"}
     - {id: 1091, cat: TV/Sport, desc: "50 оттенков. Белова"}
     - {id: 298, cat: Console, desc: "Игры"}
-    - {id: 1202, cat: Console, desc: "Новинки repack 'ов"}
+    - {id: 1202, cat: Console, desc: "Горячие RePack'и"}
     - {id: 302, cat: Console, desc: "Горячие Новинки"}
     - {id: 1225, cat: Console, desc: "Denuvo"}
     - {id: 300, cat: Console, desc: "Игры для PC"}
@@ -612,7 +609,7 @@ caps:
     - {id: 812, cat: Console, desc: "Онлайновые игры"}
     - {id: 1215, cat: Console, desc: "Эротические игры"}
     - {id: 303, cat: Console, desc: "Мини-игры"}
-    - {id: 1208, cat: Console, desc: "Демо игры"}
+    - {id: 1208, cat: Console, desc: "Demo, Alpha, Beta версии"}
     - {id: 313, cat: Console, desc: "Прочее"}
     - {id: 864, cat: Console, desc: "Дополнения к играм"}
     - {id: 1209, cat: Console, desc: "NoCD/NoDVD"}
@@ -688,64 +685,64 @@ caps:
     - {id: 97, cat: Audio, desc: "Видеоклипы / Концерты"}
     - {id: 72, cat: Audio, desc: "Retro/Bandstand"}
     - {id: 1358, cat: Audio/Lossless, desc: "Retro/Bandstand - lossless"}
-    - {id: 1359, cat: Audio/MP3, desc: "Retro/Bandstand - Mp3"}
+    - {id: 1359, cat: Audio/MP3, desc: "Retro/Bandstand - MP3"}
     - {id: 71, cat: Audio, desc: "Disco"}
     - {id: 1356, cat: Audio/Lossless, desc: "Disco - lossless"}
-    - {id: 1357, cat: Audio/MP3, desc: "Disco - Mp3"}
+    - {id: 1357, cat: Audio/MP3, desc: "Disco - MP3"}
     - {id: 1354, cat: Audio/Lossless, desc: "Pop - lossless"}
-    - {id: 1355, cat: Audio/MP3, desc: "Pop - Mp3"}
+    - {id: 1355, cat: Audio/MP3, desc: "Pop - MP3"}
     - {id: 73, cat: Audio, desc: "Rock"}
     - {id: 98, cat: Audio, desc: "Видеоклипы / Концерты"}
     - {id: 1360, cat: Audio/Lossless, desc: "Rock - lossless"}
-    - {id: 1361, cat: Audio/MP3, desc: "Rock - Mp3"}
+    - {id: 1361, cat: Audio/MP3, desc: "Rock - MP3"}
     - {id: 74, cat: Audio, desc: "Alternative"}
     - {id: 99, cat: Audio, desc: "Видеоклипы / Концерты"}
     - {id: 1362, cat: Audio/Lossless, desc: "Alternative - lossless"}
-    - {id: 1363, cat: Audio/MP3, desc: "Alternative - Mp3"}
+    - {id: 1363, cat: Audio/MP3, desc: "Alternative - MP3"}
     - {id: 75, cat: Audio, desc: "Metal"}
     - {id: 100, cat: Audio, desc: "Видеоклипы / Концерты"}
-    - {id: 1364, cat: Audio/MP3, desc: "Metal - Mp3"}
+    - {id: 1364, cat: Audio/MP3, desc: "Metal - MP3"}
     - {id: 1365, cat: Audio/Lossless, desc: "Metal - lossless"}
     - {id: 76, cat: Audio, desc: "Rap, Hip-Hop, R'n'B"}
     - {id: 101, cat: Audio, desc: "Видеоклипы / Концерты"}
     - {id: 78, cat: Audio, desc: "Зарубежный"}
     - {id: 1368, cat: Audio/Lossless, desc: "Зарубежный - lossless"}
-    - {id: 1369, cat: Audio/MP3, desc: "Зарубежный - Mp3"}
+    - {id: 1369, cat: Audio/MP3, desc: "Зарубежный - MP3"}
     - {id: 77, cat: Audio, desc: "Отечественный"}
     - {id: 1370, cat: Audio/Lossless, desc: "Отечественный - lossless"}
-    - {id: 1371, cat: Audio/MP3, desc: "Отечественный - Mp3"}
+    - {id: 1371, cat: Audio/MP3, desc: "Отечественный - MP3"}
     - {id: 1366, cat: Audio/Lossless, desc: "Rap, Hip-Hop, R'n'B - lossless"}
-    - {id: 1367, cat: Audio/MP3, desc: "Rap, Hip-Hop, R'n'B - Mp3"}
+    - {id: 1367, cat: Audio/MP3, desc: "Rap, Hip-Hop, R'n'B - MP3"}
     - {id: 85, cat: Audio, desc: "Jazz, Blues"}
     - {id: 1380, cat: Audio/Lossless, desc: "Jazz, Blues - lossless"}
-    - {id: 1381, cat: Audio/MP3, desc: "Jazz, Blues - Mp3"}
+    - {id: 1381, cat: Audio/MP3, desc: "Jazz, Blues - MP3"}
     - {id: 82, cat: Audio, desc: "Chanson, Bard"}
     - {id: 1386, cat: Audio/Lossless, desc: "Chanson, Bard - lossless"}
-    - {id: 1387, cat: Audio/MP3, desc: "Chanson, Bard - Mp3"}
+    - {id: 1387, cat: Audio/MP3, desc: "Chanson, Bard - MP3"}
     - {id: 86, cat: Audio, desc: "Classical"}
     - {id: 1378, cat: Audio/Lossless, desc: "Classical - lossless"}
-    - {id: 1379, cat: Audio/MP3, desc: "Classical - Mp3"}
+    - {id: 1379, cat: Audio/MP3, desc: "Classical - MP3"}
     - {id: 79, cat: Audio, desc: "Electronic"}
     - {id: 102, cat: Audio, desc: "Видеоклипы / Концерты"}
     - {id: 1372, cat: Audio, desc: "Electronic - lossless"}
-    - {id: 1373, cat: Audio/MP3, desc: "Electronic - Mp3"}
+    - {id: 1373, cat: Audio/MP3, desc: "Electronic - MP3"}
     - {id: 80, cat: Audio, desc: "Other genres"}
     - {id: 103, cat: Audio, desc: "Видеоклипы / Концерты"}
     - {id: 87, cat: Audio, desc: "Военная песня"}
     - {id: 1376, cat: Audio/Lossless, desc: "Военная песня - lossless"}
-    - {id: 1377, cat: Audio/MP3, desc: "Военная песня - Mp3"}
+    - {id: 1377, cat: Audio/MP3, desc: "Военная песня - MP3"}
     - {id: 84, cat: Audio, desc: "Reggae, Ska, Dub"}
     - {id: 1382, cat: Audio/Lossless, desc: "Reggae, Ska, Dub - lossless"}
-    - {id: 1383, cat: Audio/MP3, desc: "Reggae, Ska, Dub - Mp3"}
+    - {id: 1383, cat: Audio/MP3, desc: "Reggae, Ska, Dub - MP3"}
     - {id: 83, cat: Audio, desc: "Funk, Soul, Country"}
     - {id: 1384, cat: Audio/Lossless, desc: "Funk, Soul, Country - lossless"}
-    - {id: 1385, cat: Audio/MP3, desc: "Funk, Soul, Country - Mp3"}
-    - {id: 81, cat: Audio, desc: "Folk, Ethnic, New Age, Meditative"}
-    - {id: 1388, cat: Audio/Lossless, desc: "Folk, Ethnic, New Age, Meditative - lossless"}
-    - {id: 1389, cat: Audio/MP3, desc: "Folk, Ethnic, New Age, Meditative - Mp3"}
+    - {id: 1385, cat: Audio/MP3, desc: "Funk, Soul, Country - MP3"}
+    - {id: 81, cat: Audio, desc: "Folk, Ethnic, New Age, Meditative, Punk"}
+    - {id: 1388, cat: Audio/Lossless, desc: "Folk, Ethnic, New Age, Meditative, Punk - lossless"}
+    - {id: 1389, cat: Audio/MP3, desc: "Folk, Ethnic, New Age, Meditative, Punk - MP3"}
     - {id: 1374, cat: Audio/Lossless, desc: "Other genres - lossless"}
-    - {id: 1375, cat: Audio/MP3, desc: "Other genres - Mp3"}
-    - {id: 663, cat: Books, desc: "Книги(Аудиокниги) и журналы"}
+    - {id: 1375, cat: Audio/MP3, desc: "Other genres - MP3"}
+    - {id: 663, cat: Books, desc: "Книги (Аудиокниги) и журналы"}
     - {id: 1036, cat: Books, desc: "Книги"}
     - {id: 1324, cat: Books, desc: "Новинки"}
     - {id: 1331, cat: Books, desc: "Детские книги"}
@@ -809,13 +806,13 @@ settings:
   - name: password
     type: password
     label: Password
-  - name: striprussian
+  - name: stripcyrillic
     type: checkbox
-    label: Strip Russian Letters
+    label: Strip Cyrillic Letters
     default: false
-  - name: addrussian
+  - name: addrussiantotitle
     type: checkbox
-    label: Add RUSSIAN to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.
+    label: Add RUS to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.
     default: false
   - name: sort
     type: select
@@ -858,7 +855,6 @@ search:
     keywords: "{{ if .Keywords }}{{ .Keywords }}{{ else }}{{ .Today.Year }}{{ end }}"
     terms: all
     fp: 0
-    author: ""
     sc: 1
     sf: titleonly
     sr: topics
@@ -867,63 +863,88 @@ search:
     st: 0
     ch: 300
     t: 0
+
   keywordsfilters:
-    - name: re_replace # S01 to 1
-      args: ["(?i)\\bS0*(\\d+)\\b", "$1"]
-    - name: re_replace # S01E01 to 1 1
-      args: ["(?i)\\bS0*(\\d+)E0*(\\d+)\\b", "$1 $2"]
+    # strip season and/or ep
+    - name: re_replace
+      args: ["(?i)\\b(?:[SE]\\d{1,4}){1,2}\\b\\s?", ""]
 
   rows:
     selector: li.row:has(a[href^="./download/file.php?id="])
-    filters:
-      - name: andmatch
 
   fields:
-    category:
-      text: 726
-    categorydesc|noappend:
+    categorydesc:
       selector: dt a:last-of-type
       optional: true
+      default: Разное
     title:
       selector: a.topictitle
       filters:
-        - name: replace
-          args: ["Кураж-Бамбей", "kurazh"]
-        - name: replace
-          args: ["Кубик в Кубе", "Kubik"]
-        - name: replace
-          args: ["Кравец", "Kravec"]
-        - name: replace
-          args: ["Пифагор", "Pifagor"]
-        - name: replace
-          args: ["Невафильм", "Nevafilm"]
-        - name: replace
-          args: ["Лицензия", "Lic"]
         # normalize to SXXEYY format
         - name: re_replace
-          args: ["(\\d+-*\\d*)\\s+[CСcс]езоны?[,:]?\\s+(\\d+-*\\d*)\\s+(?:[CСcс]ери[йия]|[Вв]ыпуски?(?:ов)?)(?:.*?\\d+)?(.*)\\[((?:[12][0-9]{3}-?){1,})(.*)", "$3 - S$1E$2 - $4 $5"]
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:-\\d+)?).+?(?:[CС]ери[ияй]|Эпизод|Выпуски?)[\\s:]*(\\d+(?:-\\d+)?)\\s*из\\s*(\\w?)", "S$1E$2 of $3"]
         - name: re_replace
-          args: ["(.*)[CСcс]езоны?[,:]?\\s+(\\d+-*\\d*).*(?:[CСcс]ери[йия]|[Вв]ыпуски?(?:ов)?)\\s+(\\d+-*\\d*)(?:.*?\\d+)?(.*)\\[((?:[12][0-9]{3}-?){1,})(.*)", "$1 $4 - S$2E$3 - $5 $6"]
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s*[CС]езоны?.+?(\\d+(?:-\\d+)?)\\s*из\\s*(\\w?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))?", "S$1E$2 of $3"]
         - name: re_replace
-          args: ["((\\d+-*\\d*)\\s+(?:[CСcс]ери[йия]|[Вв]ыпуски?(?:ов)?)(?:.*?\\d+))", "E$2 - "]
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s*[CС]езоны?.+?(\\d+(?:-\\d+)?)\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?)\\s+из\\s*(\\w?)", "S$1E$2 of $3"]
         - name: re_replace
-          args: ["((?:[CСcс]ери[йия]|[Вв]ыпуски?(?:ов)?)\\s+(\\d+-*\\d*)(?:.*?\\d+))", "E$2 - "]
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:-\\d+)?).+?(\\d+(?:-\\d+)?)\\s*из\\s*(\\w?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))?", "S$1E$2 of $3"]
         - name: re_replace
-          args: ["(\\([А-Яа-яЁё\\W]+\\))|(^[А-Яа-яЁё\\W\\d]+\\/ )|([а-яА-ЯЁё \\-]+,+)|([а-яА-ЯЁё]+)", "{{ if .Config.striprussian }}{{ else }}$0{{ end }}"]
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:-\\d+)?).+?(\\d+(?:-\\d+)?)\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?)\\s+из\\s*(\\w?)", "S$1E$2 of $3"]
         - name: re_replace
-          args: ["[\"«»()=!?.,:|\\[\\]\\/]", " "]
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:-\\d+)?).+?(?:[CС]ери[ияй]|Эпизод|Выпуски?)[\\s:]*(\\d+(?:-\\d+)?)", "S$1E$2"]
         - name: re_replace
-          args: ["^[-\\s]*", " "]
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s*[CС]езоны?.+?(\\d+(?:-\\d+)?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "S$1E$2"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:-\\d+)?).+?(\\d+(?:-\\d+)?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "S$1E$2"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:-\\d+)?)", "S$1"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s+[CС]езоны?", "S$1"]
+        - name: re_replace
+          args: ["(?i)(?:[CС]ери[ияй]|Эпизод|Выпуски?)[\\s:]*(\\d+(?:-\\d+)?)\\s*из\\s*(\\w?)", "E$1 of $2"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s*из\\s*(\\w?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "E$1 of $2"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s+(?:[CС]ери[ияй]|Эпизод|Выпуски?)\\s+из\\s*(\\w?)", "E$1 of $2"]
+        - name: re_replace
+          args: ["(?i)(?:[CС]ери[ияй]|Эпизод|Выпуски?)[\\s:]*(\\d+(?:-\\d+)?)", "E$1"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:-\\d+)?)\\s+(?:[CС]ери[ияй]|Эпизод|Выпуски?)", "E$1"]
+        - name: re_replace
+          args: ["(?i)\\bКураж-Бамбей\\b", "kurazh"]
+        - name: re_replace
+          args: ["(?i)\\bКубик в Кубе\\b", "Kubik"]
+        - name: re_replace
+          args: ["(?i)\\bКравец\\b", "Kravec"]
+        - name: re_replace
+          args: ["(?i)\\bПифагор\\b", "Pifagor"]
+        - name: re_replace
+          args: ["(?i)\\bНевафильм\\b", "Nevafilm"]
+        - name: re_replace
+          args: ["(?i)\\bЛицензия\\b", "Lic"]
+        - name: re_replace
+          args: ["(?i)\\bселезень\\b", "selezen"]
+        - name: re_replace
+          args: ["(\\([\\p{IsCyrillic}\\W]+\\))|(^[\\p{IsCyrillic}\\W\\d]+\\/ )|([\\p{IsCyrillic} \\-]+,+)|([\\p{IsCyrillic}]+)", "{{ if .Config.stripcyrillic }}{{ else }}$1$2$3$4{{ end }}"]
+        - name: re_replace
+          args: ["(?i)\\bHDTV[-\\s]?Rip\\b", "HDTV"]
+        - name: re_replace
+          args: ["(?i)\\bSAT[-\\s]?Rip\\b", "HDTV"]
+        - name: re_replace
+          args: ["(?i)\\bWEB[-\\s]?DL[-\\s]?Rip\\b", "WEB-DL"]
+        - name: re_replace
+          args: ["(?i)\\bWEB\\sRip\\b", "WEBRip"]
+        - name: re_replace
+          args: ["(?i)\\bWEB\\sDL\\b", "WEB-DL"]
+        - name: re_replace
+          args: ["[\\[\\(\\{<«][\\s\\W]*[\\]\\)\\}>»]", ""]
+        - name: re_replace
+          args: ["^[\\s&,\\.!\\?\\+\\-_\\|\\/':]+", ""]
+        - name: re_replace
+          args: ["(?i)^\\(\\s*([SE]\\d+.*?)\\s*\\)[\\s\\/\\|]*(.+)", "$2 $1"]
         - name: append
-          args: "{{ if .Config.addrussian }} - RUSSIAN{{ else }}{{ end }}"
-        - name: replace
-          args: ["-Rip", "Rip"]
-        - name: replace
-          args: ["WEB-DL", "WEBDL"]
-        - name: replace
-          args: ["WEBDLRip", "WEBDL"]
-        - name: replace
-          args: ["HDTVRip", "HDTV"]
+          args: "{{ if .Config.addrussiantotitle }} RUS{{ else }}{{ end }}"
     details:
       selector: a.topictitle
       attribute: href
@@ -984,7 +1005,7 @@ search:
         - name: replace
           args: ["дек", "Dec"]
         - name: dateparse
-          args: "02 Jan 2006, 15:04"
+          args: "dd MMM yyyy, HH:mm"
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

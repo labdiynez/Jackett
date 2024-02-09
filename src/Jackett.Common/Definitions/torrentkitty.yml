@@ -13,6 +13,8 @@ links:
   - https://www.torrentkitty.app/
   - https://www.torrentkitty.red/
   - https://www.torrentkitty.lol/
+  - https://www.torrentkitty.best/
+  - https://www.torrentkitty.ink/
 
 caps:
   categories:
@@ -57,7 +59,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "2006-01-02 -07:00"
+          args: "yyyy-MM-dd zzz"
     size:
       selector: td.size
     seeders:

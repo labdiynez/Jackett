@@ -19,8 +19,17 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class TVStore : BaseWebIndexer
+    public class TVStore : IndexerBase
     {
+        public override string Id => "tvstore";
+        public override string Name => "TV Store";
+        public override string Description => "TV Store is a HUNGARIAN Private Torrent Tracker for TV";
+        public override string SiteLink { get; protected set; } = "https://tvstore.me/";
+        public override string Language => "hu-HU";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private readonly Dictionary<int, long> _imdbLookup = new Dictionary<int, long>(); // _imdbLookup[internalId] = imdbId
 
         private readonly Dictionary<long, int>
@@ -32,37 +41,35 @@ namespace Jackett.Common.Indexers
         private readonly Regex _seriesInfoSearchRegex = new Regex(
             @"S(?<season>\d{1,3})(?:E(?<episode>\d{1,3}))?$", RegexOptions.IgnoreCase);
 
-        public TVStore(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs) :
-            base(id: "tvstore",
-                 name: "TV Store",
-                 description: "TV Store is a HUNGARIAN Private Torrent Tracker for TV",
-                 link: "https://tvstore.me/",
-                 caps: new TorznabCapabilities
-                 {
-                     TvSearchParams = new List<TvSearchParam>
-                     {
-                         TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
-                     },
-                     MovieSearchParams = new List<MovieSearchParam>
-                     {
-                         MovieSearchParam.Q, MovieSearchParam.ImdbId
-                     }
-                 },
-                 configService: configService,
+        public TVStore(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps, ICacheService cs) :
+            base(configService: configService,
                  client: wc,
                  logger: l,
                  p: ps,
                  cacheService: cs,
                  configData: new ConfigurationDataTVstore())
         {
-            Encoding = Encoding.UTF8;
-            Language = "hu-HU";
-            Type = "private";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.TV);
-            AddCategoryMapping(2, TorznabCatType.TVHD);
-            AddCategoryMapping(3, TorznabCatType.TVSD);
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.TV);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVHD);
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.TVSD);
+
+            return caps;
         }
 
         private string LoginUrl => SiteLink + "takelogin.php";
@@ -162,7 +169,7 @@ namespace Jackett.Common.Indexers
                     var downloadLink = new Uri(DownloadUrl + "?id=" + torrentId);
                     // the genre field is a html string, and we just want the text
                     var parser = new HtmlParser();
-                    var dom = parser.ParseDocument(row[(int)TorrentParts.Genre]);
+                    using var dom = parser.ParseDocument(row[(int)TorrentParts.Genre]);
                     var genres = dom.QuerySelector("*").TextContent.Replace("\xA0", "");
                     var description = "";
                     if (!string.IsNullOrWhiteSpace(genres))
@@ -212,7 +219,7 @@ namespace Jackett.Common.Indexers
                         Description = description,
                         MinimumRatio = 1,
                         MinimumSeedTime = 172800, // 48 hours
-                        DownloadVolumeFactor = 1,
+                        DownloadVolumeFactor = 0,
                         UploadVolumeFactor = UploadFactorCalculator(publishDate, isSeasonPack),
                         Imdb = imdbId
                     };

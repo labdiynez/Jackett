@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Html.Parser;
@@ -20,8 +19,21 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class NCore : BaseWebIndexer
+    public class NCore : IndexerBase
     {
+        public override string Id => "ncore";
+        public override string Name => "nCore";
+        public override string Description => "A Hungarian private torrent site.";
+        public override string SiteLink { get; protected set; } = "https://ncore.pro/";
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://ncore.cc/"
+        };
+        public override string Language => "hu-HU";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string LoginUrl => SiteLink + "login.php";
         private string SearchUrl => SiteLink + "torrents.php";
 
@@ -41,77 +53,72 @@ namespace Jackett.Common.Indexers
             "ebook"
         };
 
-        public override string[] LegacySiteLinks { get; protected set; } = {
-            "https://ncore.cc/"
-        };
-
         public NCore(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "ncore",
-                  name: "nCore",
-                  description: "A Hungarian private torrent site.",
-                  link: "https://ncore.pro/",
-                  caps: new TorznabCapabilities
-                  {
-                      TvSearchParams = new List<TvSearchParam>
-                      {
-                          TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
-                      },
-                      MovieSearchParams = new List<MovieSearchParam>
-                      {
-                          MovieSearchParam.Q, MovieSearchParam.ImdbId
-                      },
-                      MusicSearchParams = new List<MusicSearchParam>
-                      {
-                          MusicSearchParam.Q
-                      },
-                      BookSearchParams = new List<BookSearchParam>
-                      {
-                          BookSearchParam.Q
-                      }
-                  },
-                  configService: configService,
-                  client: wc,
-                  logger: l,
-                  p: ps,
-                  cacheService: cs,
-                  configData: new ConfigurationDataNCore())
+                     ICacheService cs)
+            : base(configService: configService,
+                   client: wc,
+                   logger: l,
+                   p: ps,
+                   cacheService: cs,
+                   configData: new ConfigurationDataNCore())
         {
-            Encoding = Encoding.UTF8;
-            Language = "hu-HU";
-            Type = "private";
+        }
 
-            AddCategoryMapping("xvid_hun", TorznabCatType.MoviesSD, "Film SD/HU");
-            AddCategoryMapping("xvid", TorznabCatType.MoviesSD, "Film SD/EN");
-            AddCategoryMapping("dvd_hun", TorznabCatType.MoviesDVD, "Film DVDR/HU");
-            AddCategoryMapping("dvd", TorznabCatType.MoviesDVD, "Film DVDR/EN");
-            AddCategoryMapping("dvd9_hun", TorznabCatType.MoviesDVD, "Film DVD9/HU");
-            AddCategoryMapping("dvd9", TorznabCatType.MoviesDVD, "Film DVD9/EN");
-            AddCategoryMapping("hd_hun", TorznabCatType.MoviesHD, "Film HD/HU");
-            AddCategoryMapping("hd", TorznabCatType.MoviesHD, "Film HD/EN");
-            AddCategoryMapping("xvidser_hun", TorznabCatType.TVSD, "Sorozat SD/HU");
-            AddCategoryMapping("xvidser", TorznabCatType.TVSD, "Sorozat SD/EN");
-            AddCategoryMapping("dvdser_hun", TorznabCatType.TVSD, "Sorozat DVDR/HU");
-            AddCategoryMapping("dvdser", TorznabCatType.TVSD, "Sorozat DVDR/EN");
-            AddCategoryMapping("hdser_hun", TorznabCatType.TVHD, "Sorozat HD/HU");
-            AddCategoryMapping("hdser", TorznabCatType.TVHD, "Sorozat HD/EN");
-            AddCategoryMapping("mp3_hun", TorznabCatType.AudioMP3, "Zene MP3/HU");
-            AddCategoryMapping("mp3", TorznabCatType.AudioMP3, "Zene MP3/EN");
-            AddCategoryMapping("lossless_hun", TorznabCatType.AudioLossless, "Zene Lossless/HU");
-            AddCategoryMapping("lossless", TorznabCatType.AudioLossless, "Zene Lossless/EN");
-            AddCategoryMapping("clip", TorznabCatType.AudioVideo, "Zene Klip");
-            AddCategoryMapping("xxx_xvid", TorznabCatType.XXXXviD, "XXX SD");
-            AddCategoryMapping("xxx_dvd", TorznabCatType.XXXDVD, "XXX DVDR");
-            AddCategoryMapping("xxx_imageset", TorznabCatType.XXXImageSet, "XXX Imageset");
-            AddCategoryMapping("xxx_hd", TorznabCatType.XXX, "XXX HD");
-            AddCategoryMapping("game_iso", TorznabCatType.PCGames, "Játék PC/ISO");
-            AddCategoryMapping("game_rip", TorznabCatType.PCGames, "Játék PC/RIP");
-            AddCategoryMapping("console", TorznabCatType.Console, "Játék Konzol");
-            AddCategoryMapping("iso", TorznabCatType.PCISO, "Program Prog/ISO");
-            AddCategoryMapping("misc", TorznabCatType.PC0day, "Program Prog/RIP");
-            AddCategoryMapping("mobil", TorznabCatType.PCMobileOther, "Program Prog/Mobil");
-            AddCategoryMapping("ebook_hun", TorznabCatType.Books, "Könyv eBook/HU");
-            AddCategoryMapping("ebook", TorznabCatType.Books, "Könyv eBook/EN");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping("xvid_hun", TorznabCatType.MoviesSD, "Film SD/HU");
+            caps.Categories.AddCategoryMapping("xvid", TorznabCatType.MoviesSD, "Film SD/EN");
+            caps.Categories.AddCategoryMapping("dvd_hun", TorznabCatType.MoviesDVD, "Film DVDR/HU");
+            caps.Categories.AddCategoryMapping("dvd", TorznabCatType.MoviesDVD, "Film DVDR/EN");
+            caps.Categories.AddCategoryMapping("dvd9_hun", TorznabCatType.MoviesDVD, "Film DVD9/HU");
+            caps.Categories.AddCategoryMapping("dvd9", TorznabCatType.MoviesDVD, "Film DVD9/EN");
+            caps.Categories.AddCategoryMapping("hd_hun", TorznabCatType.MoviesHD, "Film HD/HU");
+            caps.Categories.AddCategoryMapping("hd", TorznabCatType.MoviesHD, "Film HD/EN");
+            caps.Categories.AddCategoryMapping("xvidser_hun", TorznabCatType.TVSD, "Sorozat SD/HU");
+            caps.Categories.AddCategoryMapping("xvidser", TorznabCatType.TVSD, "Sorozat SD/EN");
+            caps.Categories.AddCategoryMapping("dvdser_hun", TorznabCatType.TVSD, "Sorozat DVDR/HU");
+            caps.Categories.AddCategoryMapping("dvdser", TorznabCatType.TVSD, "Sorozat DVDR/EN");
+            caps.Categories.AddCategoryMapping("hdser_hun", TorznabCatType.TVHD, "Sorozat HD/HU");
+            caps.Categories.AddCategoryMapping("hdser", TorznabCatType.TVHD, "Sorozat HD/EN");
+            caps.Categories.AddCategoryMapping("mp3_hun", TorznabCatType.AudioMP3, "Zene MP3/HU");
+            caps.Categories.AddCategoryMapping("mp3", TorznabCatType.AudioMP3, "Zene MP3/EN");
+            caps.Categories.AddCategoryMapping("lossless_hun", TorznabCatType.AudioLossless, "Zene Lossless/HU");
+            caps.Categories.AddCategoryMapping("lossless", TorznabCatType.AudioLossless, "Zene Lossless/EN");
+            caps.Categories.AddCategoryMapping("clip", TorznabCatType.AudioVideo, "Zene Klip");
+            caps.Categories.AddCategoryMapping("xxx_xvid", TorznabCatType.XXXXviD, "XXX SD");
+            caps.Categories.AddCategoryMapping("xxx_dvd", TorznabCatType.XXXDVD, "XXX DVDR");
+            caps.Categories.AddCategoryMapping("xxx_imageset", TorznabCatType.XXXImageSet, "XXX Imageset");
+            caps.Categories.AddCategoryMapping("xxx_hd", TorznabCatType.XXX, "XXX HD");
+            caps.Categories.AddCategoryMapping("game_iso", TorznabCatType.PCGames, "Játék PC/ISO");
+            caps.Categories.AddCategoryMapping("game_rip", TorznabCatType.PCGames, "Játék PC/RIP");
+            caps.Categories.AddCategoryMapping("console", TorznabCatType.Console, "Játék Konzol");
+            caps.Categories.AddCategoryMapping("iso", TorznabCatType.PCISO, "Program Prog/ISO");
+            caps.Categories.AddCategoryMapping("misc", TorznabCatType.PC0day, "Program Prog/RIP");
+            caps.Categories.AddCategoryMapping("mobil", TorznabCatType.PCMobileOther, "Program Prog/Mobil");
+            caps.Categories.AddCategoryMapping("ebook_hun", TorznabCatType.Books, "Könyv eBook/HU");
+            caps.Categories.AddCategoryMapping("ebook", TorznabCatType.Books, "Könyv eBook/EN");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -136,7 +143,7 @@ namespace Jackett.Common.Indexers
                 result.Cookies, result.ContentString?.Contains("profile.php") == true, () =>
                 {
                     var parser = new HtmlParser();
-                    var dom = parser.ParseDocument(result.ContentString);
+                    using var dom = parser.ParseDocument(result.ContentString);
                     var msgContainer = dom.QuerySelector("#hibauzenet table tbody tr")?.Children[1];
                     throw new ExceptionWithConfigData(msgContainer?.TextContent ?? "Error while trying to login.", configData);
                 });
@@ -189,7 +196,7 @@ namespace Jackett.Common.Indexers
             var results = await RequestWithCookiesAndRetryAsync(
                 SearchUrl, null, RequestType.POST, null, pairs.ToEnumerable(true));
             var parser = new HtmlParser();
-            var dom = parser.ParseDocument(results.ContentString);
+            using var dom = parser.ParseDocument(results.ContentString);
 
             // find number of torrents / page
             var torrentPerPage = dom.QuerySelectorAll(".box_torrent").Length;
@@ -236,7 +243,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var dom = parser.ParseDocument(results.ContentString);
+                using var dom = parser.ParseDocument(results.ContentString);
                 var rows = dom.QuerySelectorAll(".box_torrent").Skip(previouslyParsedOnPage).Take(limit - alreadyFound);
 
                 var key = ParseUtil.GetArgumentFromQueryString(
@@ -265,7 +272,7 @@ namespace Jackett.Common.Indexers
                             row.QuerySelector(".box_feltoltve2").InnerHtml.Replace("<br>", " "),
                             CultureInfo.InvariantCulture);
                         var sizeSplit = row.QuerySelector(".box_meret2").TextContent.Split(' ');
-                        var size = ReleaseInfo.GetBytes(sizeSplit[1].ToLower(), ParseUtil.CoerceFloat(sizeSplit[0]));
+                        var size = ParseUtil.GetBytes(sizeSplit[1].ToLower(), ParseUtil.CoerceFloat(sizeSplit[0]));
                         var catLink = row.QuerySelector("a:has(img[class='categ_link'])").GetAttribute("href");
                         var cat = ParseUtil.GetArgumentFromQueryString(catLink, "tipus");
                         var title = torrentTxt.GetAttribute("title");

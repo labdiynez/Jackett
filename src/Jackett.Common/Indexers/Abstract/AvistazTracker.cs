@@ -4,8 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
+using Jackett.Common.Exceptions;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig.Bespoke;
 using Jackett.Common.Services.Interfaces;
@@ -18,8 +18,15 @@ using WebClient = Jackett.Common.Utils.Clients.WebClient;
 namespace Jackett.Common.Indexers.Abstract
 {
     [ExcludeFromCodeCoverage]
-    public abstract class AvistazTracker : BaseWebIndexer
+    public abstract class AvistazTracker : IndexerBase
     {
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override bool SupportsPagination => false;
+
+        protected virtual string TimezoneOffset => "-05:00"; // Avistaz does not specify a timezone & returns server time
+
         private readonly Dictionary<string, string> AuthHeaders = new Dictionary<string, string>
         {
             {"Accept", "application/json"},
@@ -33,17 +40,27 @@ namespace Jackett.Common.Indexers.Abstract
         private new ConfigurationDataAvistazTracker configData => (ConfigurationDataAvistazTracker)base.configData;
 
         // hook to adjust the search term
-        protected virtual string GetSearchTerm(TorznabQuery query) => $"{query.SearchTerm} {query.GetEpisodeSearchString()}";
+        protected virtual string GetSearchTerm(TorznabQuery query) => $"{query.SearchTerm} {GetEpisodeSearchTerm(query)}".Trim();
+
+        protected virtual string GetEpisodeSearchTerm(TorznabQuery query) => query.GetEpisodeSearchString().Trim();
 
         // hook to adjust the search category
         protected virtual List<KeyValuePair<string, string>> GetSearchQueryParameters(TorznabQuery query)
         {
             var categoryMapping = MapTorznabCapsToTrackers(query).Distinct().ToList();
+
             var qc = new List<KeyValuePair<string, string>> // NameValueCollection don't support cat[]=19&cat[]=6
             {
-                {"in", "1"},
-                {"type", categoryMapping.Any() ? categoryMapping.First() : "0"}
+                { "in", "1" },
+                { "type", categoryMapping.FirstIfSingleOrDefault("0") },
+                { "limit", "50" }
             };
+
+            if (query.Limit > 0 && query.Offset > 0)
+            {
+                var page = query.Offset / query.Limit + 1;
+                qc.Add("page", page.ToString());
+            }
 
             // resolution filter to improve the search
             if (!query.Categories.Contains(TorznabCatType.Movies.ID) && !query.Categories.Contains(TorznabCatType.TV.ID) &&
@@ -65,7 +82,20 @@ namespace Jackett.Common.Indexers.Abstract
             // https://privatehd.to/api/v1/jackett/torrents?tmdb=1234
             // https://privatehd.to/api/v1/jackett/torrents?tvdb=3653
             if (query.IsImdbQuery)
+            {
                 qc.Add("imdb", query.ImdbID);
+                qc.Add("search", GetEpisodeSearchTerm(query));
+            }
+            else if (query.IsTmdbQuery)
+            {
+                qc.Add("tmdb", query.TmdbID.ToString());
+                qc.Add("search", GetEpisodeSearchTerm(query));
+            }
+            else if (query.IsTvdbQuery)
+            {
+                qc.Add("tvdb", query.TvdbID.ToString());
+                qc.Add("search", GetEpisodeSearchTerm(query));
+            }
             else
                 qc.Add("search", GetSearchTerm(query).Trim());
 
@@ -110,24 +140,15 @@ namespace Jackett.Common.Indexers.Abstract
             return cats;
         }
 
-        protected AvistazTracker(string link, string id, string name, string description,
-                                 IIndexerConfigurationService configService, WebClient client, Logger logger,
-                                 IProtectionService p, ICacheService cs, TorznabCapabilities caps)
-            : base(id: id,
-                   name: name,
-                   description: description,
-                   link: link,
-                   caps: caps,
-                   configService: configService,
+        protected AvistazTracker(IIndexerConfigurationService configService, WebClient client, Logger logger, IProtectionService p, ICacheService cs)
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: p,
                    cacheService: cs,
                    configData: new ConfigurationDataAvistazTracker())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
+            webclient.requestDelay = 6;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -164,38 +185,43 @@ namespace Jackett.Common.Indexers.Abstract
 
             var qc = GetSearchQueryParameters(query);
             var episodeSearchUrl = SearchUrl + "?" + qc.GetQueryString();
+
             var response = await RequestWithCookiesAndRetryAsync(episodeSearchUrl, headers: GetSearchHeaders());
+
             if (response.Status == HttpStatusCode.Unauthorized || response.Status == HttpStatusCode.PreconditionFailed)
             {
                 await RenewalTokenAsync();
                 response = await RequestWithCookiesAndRetryAsync(episodeSearchUrl, headers: GetSearchHeaders());
             }
-            else if (response.Status == HttpStatusCode.NotFound)
+
+            if (response.Status == HttpStatusCode.NotFound)
+            {
                 return releases; // search without results, eg CinemaZ: tt0075998
-            else if (response.Status != HttpStatusCode.OK)
-                throw new Exception($"Unknown error: {response.ContentString}");
+            }
+
+            if ((int)response.Status == 429)
+            {
+                throw new TooManyRequestsException("Rate limited", response);
+            }
+
+            if ((int)response.Status >= 400)
+            {
+                throw new Exception($"Invalid status code {(int)response.Status} ({response.Status}) received from indexer");
+            }
+
+            if (response.Status != HttpStatusCode.OK)
+            {
+                throw new Exception($"Unknown status code: {(int)response.Status} ({response.Status})");
+            }
 
             try
             {
                 var jsonContent = JToken.Parse(response.ContentString);
+
                 foreach (var row in jsonContent.Value<JArray>("data"))
                 {
                     var details = new Uri(row.Value<string>("url"));
                     var link = new Uri(row.Value<string>("download"));
-                    var publishDate = DateTime.ParseExact(row.Value<string>("created_at"), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-                    long? imdb = null;
-                    long? tvdb = null;
-                    long? tmdb = null;
-                    var jMovieTv = row.Value<JToken>("movie_tv");
-                    if (jMovieTv != null && jMovieTv.HasValues)
-                    {
-                        imdb = ParseUtil.GetImdbID(jMovieTv.Value<string>("imdb"));
-                        if (long.TryParse(jMovieTv.Value<string>("tvdb"), out var tvdbParsed))
-                            tvdb = tvdbParsed;
-                        if (long.TryParse(jMovieTv.Value<string>("tmdb"), out var tmdbParsed))
-                            tmdb = tmdbParsed;
-                    }
 
                     var description = "";
                     var jAudio = row.Value<JArray>("audio");
@@ -211,8 +237,6 @@ namespace Jackett.Common.Indexers.Abstract
                         description += $"<br/>Subtitles: {string.Join(", ", subtitleList)}";
                     }
 
-                    var cats = ParseCategories(query, row);
-
                     var release = new ReleaseInfo
                     {
                         Title = row.Value<string>("file_name"),
@@ -220,22 +244,46 @@ namespace Jackett.Common.Indexers.Abstract
                         InfoHash = row.Value<string>("info_hash"),
                         Details = details,
                         Guid = details,
-                        Category = cats,
-                        PublishDate = publishDate,
+                        Category = ParseCategories(query, row),
+                        PublishDate = DateTime.Parse($"{row.Value<string>("created_at")} {TimezoneOffset}", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal),
                         Description = description,
                         Size = row.Value<long>("file_size"),
                         Files = row.Value<long>("file_count"),
                         Grabs = row.Value<long>("completed"),
                         Seeders = row.Value<int>("seed"),
                         Peers = row.Value<int>("leech") + row.Value<int>("seed"),
-                        Imdb = imdb,
-                        TVDBId = tvdb,
-                        TMDb = tmdb,
                         DownloadVolumeFactor = row.Value<double>("download_multiply"),
                         UploadVolumeFactor = row.Value<double>("upload_multiply"),
                         MinimumRatio = 1,
-                        MinimumSeedTime = 172800 // 48 hours
+                        MinimumSeedTime = 259200, // 72 hours
+                        Languages = row.Value<JArray>("audio")?.Select(x => x.Value<string>("language")).ToList() ?? new List<string>(),
+                        Subs = row.Value<JArray>("subtitle")?.Select(x => x.Value<string>("language")).ToList() ?? new List<string>(),
                     };
+
+                    if (release.Size.HasValue && release.Size > 0)
+                    {
+                        var sizeGigabytes = release.Size.Value / Math.Pow(1024, 3);
+
+                        release.MinimumSeedTime = sizeGigabytes > 50.0
+                            ? (long)((100 * Math.Log(sizeGigabytes)) - 219.2023) * 3600
+                            : 259200 + (long)(sizeGigabytes * 7200);
+                    }
+
+                    var jMovieTv = row.Value<JToken>("movie_tv");
+                    if (jMovieTv != null && jMovieTv.HasValues)
+                    {
+                        release.Imdb = ParseUtil.GetImdbId(jMovieTv.Value<string>("imdb"));
+
+                        if (long.TryParse(jMovieTv.Value<string>("tvdb"), out var tvdbId))
+                        {
+                            release.TVDBId = tvdbId;
+                        }
+
+                        if (long.TryParse(jMovieTv.Value<string>("tmdb"), out var tmdbId))
+                        {
+                            release.TMDb = tmdbId;
+                        }
+                    }
 
                     releases.Add(release);
                 }
@@ -244,6 +292,7 @@ namespace Jackett.Common.Indexers.Abstract
             {
                 OnParseError(response.ContentString, ex);
             }
+
             return releases;
         }
 

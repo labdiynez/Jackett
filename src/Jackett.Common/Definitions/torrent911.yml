@@ -5,32 +5,18 @@ description: "Torrent911 is a French Public site for TV / MOVIES / GENERAL"
 language: fr-FR
 type: public
 encoding: UTF-8
-followredirect: true
-# to fetch current domain use https://www.protege-liens.com/T911 and https://www.protege-liens.com/Torrent911
+# to fetch current domain use https://www.protege-torrent.com/Torrent911 and https://www.protege-torrent.com/T911 and https://www.protege-torrent.com/Oxtorrent
 links:
-  - https://www.torrent911.tv/
-  - https://www.t911.tv/
+  - https://www.torrent911.vc/
+  - https://www.t911.ws/
+  - https://www.oxtorrent.pm/
   - https://oxtorrent.unblockninja.com/
+  - https://torrent911.ninjaproxy1.com/
+  - https://oxtorrent.proxyninja.org/
+  - https://torrent9.torrentbay.st/
 legacylinks:
   - https://www.protege-liens.com/
-  - https://www.oxtorrent.io/
-  - https://www.oxtorrent.cx/
-  - https://www.oxtorrent.nz/
-  - https://oxtorrent.nocensor.work/
-  - https://oxtorrent.unblockit.kim/
-  - https://www.oxtorrent.sh/
-  - https://www.oxtorrent.pl/
-  - https://oxtorrent.unblockit.bz/
-  - https://www.oxtorrent.vc/
-  - https://oxtorrent.unblockit.tv/
-  - https://oxtorrent.unblockit.how/
-  - https://www.oxtorrent.be/
-  - https://oxtorrent.unblockit.cam/
-  - https://oxtorrent.nocensor.biz/
-  - https://oxtorrent.unblockit.day/
-  - https://www.oxtorrent.re/
-  - https://oxtorrent.unblockit.llc/
-  - https://www.torrent911.com/
+  - https://www.rantop.org/
   - https://www.t911.net/
   - https://oxtorrent.unblockit.blue/ # proxy for *.co, a clone without derniers
   - https://oxtorrent.nocensor.sbs/ # proxy for *.co, a clone without derniers
@@ -38,18 +24,33 @@ legacylinks:
   - https://www.torrent911.org/
   - https://www.torrent911.cc/
   - https://www.t911.me/
+  - https://www.torrent911.tv/
+  - https://www.t911.tv/
+  - https://torrent911.ws/
+  - http://www.torrent911.ws/
+  - https://www.torrent911.ws/
+  - https://www.torrent911.me/
+  - https://t911.org/
+  - https://www.torrent911.io/
+  - https://www.torrent911.biz/
+  - https://www.torrent911.pw/
+  - https://www.torrent911.cx/
 
 caps:
   categorymappings:
     - {id: Films, cat: Movies, desc: "Movies"}
     - {id: Animes, cat: TV/Anime, desc: "Anime"}
+    - {id: Documentaires, cat: TV/Documentary, desc: "Documentaires"}
     - {id: Séries, cat: TV, desc: "TV"}
     - {id: Musiques, cat: Audio, desc: "Music"}
     - {id: Ebooks, cat: Books, desc: "Books"}
+    - {id: Livres, cat: Books, desc: "Livres"}
     - {id: Logiciels, cat: PC, desc: "Software"}
     - {id: Jeux-PC, cat: PC/Games, desc: "PC Games"}
     - {id: Jeux-Consoles, cat: Console/XBox 360, desc: "Console Games"}
     - {id: Porno, cat: XXX, desc: "Porno"}
+    - {id: Spectacles, cat: TV/Other, desc: "Spectacles"}
+    - {id: Sports, cat: TV/Sport, desc: "Sports"}
 
   modes:
     search: [q]
@@ -57,26 +58,27 @@ caps:
     movie-search: [q]
     music-search: [q]
     book-search: [q]
+  allowrawsearch: true
 
 settings:
   - name: multilang
     type: checkbox
-    label: Replace MULTI by another language in release name
+    label: Replace MULTi by another language in release name
     default: false
   - name: multilanguage
     type: select
-    label: Replace MULTI by this language
+    label: Replace MULTi by this language
     default: FRENCH
     options:
       FRENCH: FRENCH
-      MULTI.FRENCH: MULTI.FRENCH
+      MULTi FRENCH: MULTi FRENCH
       ENGLISH: ENGLISH
-      MULTI.ENGLISH: MULTI.ENGLISH
+      MULTi ENGLISH: MULTi ENGLISH
       VOSTFR: VOSTFR
-      MULTI.VOSTFR: MULTI.VOSTFR
+      MULTi VOSTFR: MULTi VOSTFR
   - name: vostfr
     type: checkbox
-    label: Replace VOSTFR with ENGLISH
+    label: Replace VOSTFR and SUBFRENCH with ENGLISH
     default: false
 
 download:
@@ -107,45 +109,25 @@ search:
     category:
       selector: td:nth-child(1) i, td:nth-child(1) div i
       attribute: class
-    _site_date:
-      selector: td:nth-child(1) a
-      filters:
-        # year is at the end of the title, so we get it and name it _site_date
-        - name: regexp
-          args: "(19|20\\d{2})$"
     title_phase1:
       selector: td:nth-child(1) a
       filters:
-        # now we put the date at the right place according scene naming rules using .Result._site_date
         - name: re_replace
-          args: ["(?i)( FRENCH)", " {{ .Result._site_date }} FRENCH"]
-        - name: re_replace
-          args: ["(?i)( MULTI)", " {{ .Result._site_date }} MULTI"]
-        - name: replace
-          args: ["(?i)( TRUEFRENCH)", " {{ .Result._site_date }} TRUEFRENCH"]
-        - name: re_replace
-          args: ["(?i)( VOSTFR)", " {{ .Result._site_date }} VOSTFR"]
-        - name: re_replace
-          args: ["(?i)( SUBFRENCH)", " {{ .Result._site_date }} SUBFRENCH"]
-        # and we delete it at the end
-        - name: re_replace
-          args: ["(19|20\\d{2})$", ""]
-    title_multilang:
+          args: ["(?i)\\b(FRENCH|MULTI|TRUEFRENCH|VOSTFR|SUBFRENCH)\\b(.+?)(\\b(19|20\\d{2})\\b)$", "$3 $1$2"]
+    title_vostfr:
       text: "{{ .Result.title_phase1 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\smulti\\s)", " {{ .Config.multilanguage }} "]
+          args: ["(?i)\\b(vostfr|subfrench)\\b", "ENGLISH"]
     title_phase2:
-      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
-    title_vostfr:
+      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
+    title_multilang:
       text: "{{ .Result.title_phase2 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\svostfr\\s)", " ENGLISH "]
-        - name: re_replace
-          args: ["(?i)(\\ssubfrench\\s)", " ENGLISH "]
+          args: ["(?i)\\b(MULTI(?!.*(?:FRENCH|ENGLISH|VOSTFR)))\\b", "{{ .Config.multilanguage }}"]
     title:
-      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
+      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
     details:
       selector: td:nth-child(1) a
       attribute: href

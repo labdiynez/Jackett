@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Jackett.Common.Models;
@@ -16,31 +15,38 @@ namespace Jackett.Common.Indexers.Feeds
     [ExcludeFromCodeCoverage]
     public class AnimeTosho : BaseNewznabIndexer
     {
-        public AnimeTosho(IIndexerConfigurationService configService, WebClient client, Logger logger,
-            IProtectionService ps, ICacheService cs)
-            : base(id: "animetosho",
-                   name: "Anime Tosho",
-                   description: "AnimeTosho (AT) is an automated service that provides torrent files, magnet links and DDL for all anime releases",
-                   link: "https://animetosho.org/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       }
-                   },
-                   configService: configService,
+        public override string Id => "animetosho";
+        public override string Name => "Anime Tosho";
+        public override string Description => "AnimeTosho (AT) is an automated service that provides torrent files, magnet links and DDL for all anime releases";
+        public override string SiteLink { get; protected set; } = "https://animetosho.org/";
+        public override string Language => "en-US";
+        public override string Type => "public";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
+        public AnimeTosho(IIndexerConfigurationService configService, WebClient client, Logger logger, IProtectionService ps, ICacheService cs)
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: ps,
                    cs: cs,
                    configData: new ConfigurationData())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "public";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.TVAnime);
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.TVAnime);
+
+            return caps;
         }
 
         protected override async Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query)
@@ -54,11 +60,11 @@ namespace Jackett.Common.Indexers.Feeds
         protected override ReleaseInfo ResultFromFeedItem(XElement item)
         {
             var release = base.ResultFromFeedItem(item);
-            var enclosures = item.Descendants("enclosure").Where(e => e.Attribute("type").Value == "application/x-bittorrent");
-            if (enclosures.Any())
+            var enclosure = item.Descendants("enclosure").FirstOrDefault(e => e.Attribute("type").Value == "application/x-bittorrent");
+            if (enclosure != null)
             {
-                var enclosure = enclosures.First().Attribute("url").Value;
-                release.Link = new Uri(enclosure);
+                var enclosureUrl = enclosure.Attribute("url").Value;
+                release.Link = new Uri(enclosureUrl);
             }
             // add some default values if none returned by feed
             release.Seeders = release.Seeders > 0 ? release.Seeders : 0;

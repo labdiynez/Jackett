@@ -31,7 +31,7 @@ settings:
   - name: info_key
     type: info
     label: About your API key
-    default: "Find or Generate a new API Key by accessing your <a href=\"https://anthelion.me/\" target =_blank>Anthelion</a> account <i>Settings</i> page and scrolling down to the <b>API Key</b> section.<br>Tick the <b>Search</b> and <b>Download</b> checkboxes and click the <b>save profile</b> button to generate the key."
+    default: "Find or Generate a new API Key by accessing your <a href=\"https://anthelion.me/\" target=\"_blank\">Anthelion</a> account <i>Settings</i> page and scrolling down to the <b>API Key</b> section.<br>Tick the <b>Search</b> and <b>Download</b> checkboxes and click the <b>save profile</b> button to generate the key."
 
 login:
   path: api.php
@@ -60,7 +60,8 @@ search:
     q: "{{ .Keywords }}"
     tmdb: "{{ .Query.TMDBID }}"
     imdb: "{{ .Query.IMDBIDShort }}"
-    cat: "{{ join .Categories \",\" }}"
+    # category filtering is disabled since it seems to rely on the AND operator that prevents some releases to show on search.
+    # cat: "{{ join .Categories \",\" }}"
     limit: 100
     offset: 0
 
@@ -108,20 +109,18 @@ search:
       optional: true
       filters:
         - name: trim
-    title:
+    title_optional:
       selector: title
       filters:
-        - name: replace
-          args: ["&#39;", "'"]
+        - name: htmldecode
         - name: append
-          args: " {{ .Result.year }} {{ .Result._codec }} {{ .Result._container }} {{ .Result._media }} {{ .Result._resolution }} {{ .Result._audioFormat }}{{ if .Result._subbing }} Subs{{ else }}{{ end }}{{ if .Result._flags }} {{ .Result._flags }}{{ else }}{{ end }}{{ if .Result._language }} {{ .Result._language }}{{ else }}{{ end }}{{ if and (.Result._releaseGroup) (ne .Result._releaseGroup \"NULL\") }} -{{ .Result._releaseGroup }}{{ else }}{{ end }}"
+          args: " {{ .Result.year }} {{ .Result._codec }} {{ .Result._container }} {{ .Result._media }} {{ .Result._resolution }} {{ .Result._audioFormat }}{{ if .Result._subbing }} Subs{{ else }}{{ end }}{{ if .Result._flags }} {{ .Result._flags }}{{ else }}{{ end }}{{ if .Result._language }} {{ .Result._language }}{{ else }}{{ end }}{{ if and (.Result._releaseGroup) (ne .Result._releaseGroup \"NULL\") }}-{{ .Result._releaseGroup }}{{ else }}{{ end }}"
     details:
       selector: guid
     download:
       selector: link
       filters:
-        - name: replace
-          args: ["&amp;", "&"]
+        - name: htmldecode
     infohash:
       selector: infohash
     imdbid:
@@ -157,4 +156,11 @@ search:
     minimumseedtime:
       # 3 day (as seconds = 3 x 24 x 60 x 60)
       text: 259200
+    _filename:
+      selector: "files[0].name"
+      filters:
+        - name: htmldecode
+      optional: true
+    title:
+      text: "{{ if and (eq .Result.files \"1\") (.Result._filename) }}{{ .Result._filename }}{{ else }}{{ .Result.title_optional }}{{ end }}"
 # json api

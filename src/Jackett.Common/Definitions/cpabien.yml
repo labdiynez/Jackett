@@ -7,32 +7,8 @@ type: public
 encoding: UTF-8
 followredirect: true
 links:
-  - https://cpasbiens3.fr/
+  - https://cpasbien-vf.pics/
 legacylinks:
-  - http://www.cpasbiens.cc/
-  - http://www.cpabien.cm/
-  - http://cpabien.cm/
-  - http://cpasbiens1.com/
-  - http://cpabien.mx/
-  - http://www.cpabien.bz/
-  - http://cpabien.org/
-  - http://cpabien.cc/
-  - http://cpabien.co/
-  - http://cpabien.la/
-  - http://cpabien.club/
-  - http://www.cpabien.io/
-  - https://ww1.cpabien.io/
-  - https://wvw.cpabien.cm/
-  - https://www.cpabien.io/
-  - https://www.cpabien9.net/
-  - https://wwv.cpabien.cm/
-  - http://www.cpabien.cx/
-  - https://www.cpasbien.blue/
-  - https://www.cpabien.cx/
-  - https://www.cpasbien.re/
-  - http://www.cpasbien.io/
-  - https://www.cpabien.bz/
-  - https://www.cpabien.link/
   - https://www.cpasbiens.cz/
   - https://www.cpasbiens.bz/
   - https://www.cpasbien.vg/
@@ -44,6 +20,11 @@ legacylinks:
   - https://www2.cpasbien-fr.fr/
   - https://www.cpasbien-fr.nz/
   - https://vwwvwvwvvw.cpasbien-fr.nz/
+  - https://cpasbiens3.fr/
+  - https://labastidevivante.fr/
+  - https://cpasbiens911.fr/
+  - https://jardattraction.fr/
+  - https://cpasbien-vf.fr/
 
 caps:
   categories:
@@ -65,22 +46,22 @@ settings:
     default: cpasbien does not return categories in its search results.</br>To add to your Apps' Torznab indexer, replace all categories with 8000(Other).
   - name: multilang
     type: checkbox
-    label: Replace MULTI by another language in release name
+    label: Replace MULTi by another language in release name
     default: false
   - name: multilanguage
     type: select
-    label: Replace MULTI by this language
+    label: Replace MULTi by this language
     default: FRENCH
     options:
       FRENCH: FRENCH
-      MULTI.FRENCH: MULTI.FRENCH
+      MULTi FRENCH: MULTi FRENCH
       ENGLISH: ENGLISH
-      MULTI.ENGLISH: MULTI.ENGLISH
+      MULTi ENGLISH: MULTi ENGLISH
       VOSTFR: VOSTFR
-      MULTI.VOSTFR: MULTI.VOSTFR
+      MULTi VOSTFR: MULTi VOSTFR
   - name: vostfr
     type: checkbox
-    label: Replace VOSTFR with ENGLISH
+    label: Replace VOSTFR and SUBFRENCH with ENGLISH
     default: false
 
 download:
@@ -92,81 +73,74 @@ search:
   paths:
     - path: "{{ if .Keywords }}index.php?do=search&subaction=search{{ else }}{{ end }}"
       method: post
+  # postData is mandatory FlareSolverr/FlareSolverr#789
+  allowEmptyInputs: true
   inputs:
     story: "{{ if .Keywords }}{{ .Keywords }}{{ else }}{{ end }}"
   # does not support imdbid search and does not return imdb link in results.
   keywordsfilters:
-    # if searching for season packs swith S01 to saison 1 #9712
+    # if searching for season packs with S01 to saison 1 #9712
     - name: re_replace
-      args: ["(?i)(S0)(\\d{1,2})$", "saison $2"]
-    - name: re_replace
-      args: ["(?i)(S)(\\d{1,3})$", "saison $2"]
+      args: ["(?i)\\b(?:S0?)(\\d{1,3})\\b", "saison $1"]
 
   rows:
-    selector: div#gauche > table > tbody > tr:has(a), div#dle-content > table > tbody > tr:has(a)
+    selector: div#gauche > table > tbody > tr:has(a), div#dle-content > a.cover2
 
   fields:
     category:
       text: Other
-    _site_date:
+    title_phase1_title:
       selector: a
+    title_phase1_url:
+      selector: a
+      attribute: href
       filters:
-        # date is at the end of the title, so we get it and name it _site_date
         - name: regexp
-          args: "(19|20\\d{2})$"
+          args: torrents\d+\/(.+?)\/
+        - name: replace
+          args: ["-", " "]
     title_phase1:
-      selector: a
+      text: "{{ if .Result.title_phase1_title }}{{ .Result.title_phase1_title }}{{ else }}{{ .Result.title_phase1_url }}{{ end }}"
       filters:
-        # now we put the date at the right place according scene naming rules using .Result._site_date
         - name: re_replace
-          args: ["(?i)( FRENCH)", " {{ .Result._site_date }} FRENCH"]
-        - name: re_replace
-          args: ["(?i)( MULTI)", " {{ .Result._site_date }} MULTI"]
-        - name: re_replace
-          args: ["(?i)( TRUEFRENCH)", " {{ .Result._site_date }} TRUEFRENCH"]
-        - name: re_replace
-          args: ["(?i)( VOSTFR)", " {{ .Result._site_date }} VOSTFR"]
-        - name: re_replace
-          args: ["(?i)( SUBFRENCH)", " {{ .Result._site_date }} SUBFRENCH"]
-        # and we delete it at the end
-        - name: re_replace
-          args: ["(19|20\\d{2})$", ""]
-    title_multilang:
+          args: ["(?i)\\b(FRENCH|MULTI|TRUEFRENCH|VOSTFR|SUBFRENCH)\\b(.+?)(\\b(19|20\\d{2})\\b)$", "$3 $1$2"]
+    title_vostfr:
       text: "{{ .Result.title_phase1 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\smulti\\s)", " {{ .Config.multilanguage }} "]
+          args: ["(?i)\\b(vostfr|subfrench)\\b", "ENGLISH"]
     title_phase2:
-      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
-    title_vostfr:
+      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
+    title_multilang:
       text: "{{ .Result.title_phase2 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\svostfr\\s)", " ENGLISH "]
-        - name: re_replace
-          args: ["(?i)(\\ssubfrench\\s)", " ENGLISH "]
+          args: ["(?i)\\b(MULTI(?!.*(?:FRENCH|ENGLISH|VOSTFR)))\\b", "{{ .Config.multilanguage }}"]
     title:
-      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
+      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
     details:
       selector: a
       attribute: href
     download:
       selector: a
       attribute: href
+    poster:
+      selector: img
+      attribute: src
     size:
       selector: div.poid
+      optional: true
+      default: "512 MB"
     date:
       text: now
-    seeders_optional:
+    seeders:
       selector: div.up
       optional: true
-    seeders:
-      text: "{{ if .Result.seeders_optional }}{{ .Result.seeders_optional }}{{ else }}0{{ end }}"
-    leechers_optional:
+      default: 0
+    leechers:
       selector: div.down
       optional: true
-    leechers:
-      text: "{{ if .Result.leechers_optional }}{{ .Result.leechers_optional }}{{ else }}0{{ end }}"
+      default: 0
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

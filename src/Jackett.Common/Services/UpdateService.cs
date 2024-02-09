@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Security;
-using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -63,7 +62,7 @@ namespace Jackett.Common.Services
             var delayHours = 1; // first check after 1 hour (for users not running jackett 24/7)
             while (true)
             {
-                locker.WaitOne((int)new TimeSpan(delayHours, 0, 0).TotalMilliseconds);
+                locker.WaitOne((int)TimeSpan.FromHours(delayHours).TotalMilliseconds);
                 locker.Reset();
                 await CheckForUpdates();
                 delayHours = 24; // following checks only once/24 hours

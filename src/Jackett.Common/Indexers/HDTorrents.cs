@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Html.Parser;
@@ -15,12 +14,29 @@ using Jackett.Common.Utils;
 using Jackett.Common.Utils.Clients;
 using Newtonsoft.Json.Linq;
 using NLog;
+using static Jackett.Common.Models.IndexerConfig.ConfigurationData;
 
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class HDTorrents : BaseWebIndexer
+    public class HDTorrents : IndexerBase
     {
+        public override string Id => "hdtorrents";
+        public override string Name => "HD-Torrents";
+        public override string Description => "HD-Torrents is a private torrent website with HD torrents and strict rules on their content.";
+        public override string SiteLink { get; protected set; } = "https://hdts.ru/"; // Domain https://hdts.ru/ seems more reliable
+        public override string[] AlternativeSiteLinks => new[]
+        {
+            "https://hdts.ru/",
+            "https://hd-torrents.org/",
+            "https://hd-torrents.net/",
+            "https://hd-torrents.me/"
+        };
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string SearchUrl => SiteLink + "torrents.php?";
         private string LoginUrl => SiteLink + "login.php";
         private readonly Regex _posterRegex = new Regex(@"src=\\'./([^']+)\\'", RegexOptions.IgnoreCase);
@@ -34,85 +50,73 @@ namespace Jackett.Common.Indexers
             "Owner"
         };
 
-        public override string[] AlternativeSiteLinks { get; protected set; } =
-        {
-            "https://hdts.ru/",
-            "https://hd-torrents.org/",
-            "https://hd-torrents.me/"
-        };
-
-        public override string[] LegacySiteLinks { get; protected set; } = {
-            "https://hd-torrents.net/"
-        };
-
         private new ConfigurationDataBasicLogin configData => (ConfigurationDataBasicLogin)base.configData;
 
         public HDTorrents(IIndexerConfigurationService configService, WebClient w, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "hdtorrents",
-                   name: "HD-Torrents",
-                   description: "HD-Torrents is a private torrent website with HD torrents and strict rules on their content.",
-                   link: "https://hdts.ru/", // Domain https://hdts.ru/ seems more reliable
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: w,
                    logger: l,
                    p: ps,
                    cacheService: cs,
-                   configData: new ConfigurationDataBasicLogin(
-                       "For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile."))
+                   configData: new ConfigurationDataBasicLogin("For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile."))
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
+            configData.AddDynamic("freeleech", new BoolConfigurationItem("Search freeleech only") { Value = false });
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                }
+            };
 
             // Movie
-            AddCategoryMapping("70", TorznabCatType.MoviesUHD, "Movie/UHD/Blu-Ray");
-            AddCategoryMapping("1", TorznabCatType.MoviesHD, "Movie/Blu-Ray");
-            AddCategoryMapping("71", TorznabCatType.MoviesUHD, "Movie/UHD/Remux");
-            AddCategoryMapping("2", TorznabCatType.MoviesHD, "Movie/Remux");
-            AddCategoryMapping("5", TorznabCatType.MoviesHD, "Movie/1080p/i");
-            AddCategoryMapping("3", TorznabCatType.MoviesHD, "Movie/720p");
-            AddCategoryMapping("64", TorznabCatType.MoviesUHD, "Movie/2160p");
-            AddCategoryMapping("63", TorznabCatType.Audio, "Movie/Audio Track");
+            caps.Categories.AddCategoryMapping("70", TorznabCatType.MoviesBluRay, "Movie/UHD/Blu-Ray");
+            caps.Categories.AddCategoryMapping("1", TorznabCatType.MoviesBluRay, "Movie/Blu-Ray");
+            caps.Categories.AddCategoryMapping("71", TorznabCatType.MoviesUHD, "Movie/UHD/Remux");
+            caps.Categories.AddCategoryMapping("2", TorznabCatType.MoviesHD, "Movie/Remux");
+            caps.Categories.AddCategoryMapping("5", TorznabCatType.MoviesHD, "Movie/1080p/i");
+            caps.Categories.AddCategoryMapping("3", TorznabCatType.MoviesHD, "Movie/720p");
+            caps.Categories.AddCategoryMapping("64", TorznabCatType.MoviesUHD, "Movie/2160p");
+            caps.Categories.AddCategoryMapping("63", TorznabCatType.Audio, "Movie/Audio Track");
 
             // TV Show
-            AddCategoryMapping("72", TorznabCatType.TVUHD, "TV Show/UHD/Blu-ray");
-            AddCategoryMapping("59", TorznabCatType.TVHD, "TV Show/Blu-ray");
-            AddCategoryMapping("73", TorznabCatType.TVUHD, "TV Show/UHD/Remux");
-            AddCategoryMapping("60", TorznabCatType.TVHD, "TV Show/Remux");
-            AddCategoryMapping("30", TorznabCatType.TVHD, "TV Show/1080p/i");
-            AddCategoryMapping("38", TorznabCatType.TVHD, "TV Show/720p");
-            AddCategoryMapping("65", TorznabCatType.TVUHD, "TV Show/2160p");
+            caps.Categories.AddCategoryMapping("72", TorznabCatType.TVUHD, "TV Show/UHD/Blu-ray");
+            caps.Categories.AddCategoryMapping("59", TorznabCatType.TVHD, "TV Show/Blu-ray");
+            caps.Categories.AddCategoryMapping("73", TorznabCatType.TVUHD, "TV Show/UHD/Remux");
+            caps.Categories.AddCategoryMapping("60", TorznabCatType.TVHD, "TV Show/Remux");
+            caps.Categories.AddCategoryMapping("30", TorznabCatType.TVHD, "TV Show/1080p/i");
+            caps.Categories.AddCategoryMapping("38", TorznabCatType.TVHD, "TV Show/720p");
+            caps.Categories.AddCategoryMapping("65", TorznabCatType.TVUHD, "TV Show/2160p");
 
             // Music
-            AddCategoryMapping("44", TorznabCatType.Audio, "Music/Album");
-            AddCategoryMapping("61", TorznabCatType.AudioVideo, "Music/Blu-Ray");
-            AddCategoryMapping("62", TorznabCatType.AudioVideo, "Music/Remux");
-            AddCategoryMapping("57", TorznabCatType.AudioVideo, "Music/1080p/i");
-            AddCategoryMapping("45", TorznabCatType.AudioVideo, "Music/720p");
-            AddCategoryMapping("66", TorznabCatType.AudioVideo, "Music/2160p");
+            caps.Categories.AddCategoryMapping("44", TorznabCatType.Audio, "Music/Album");
+            caps.Categories.AddCategoryMapping("61", TorznabCatType.AudioVideo, "Music/Blu-Ray");
+            caps.Categories.AddCategoryMapping("62", TorznabCatType.AudioVideo, "Music/Remux");
+            caps.Categories.AddCategoryMapping("57", TorznabCatType.AudioVideo, "Music/1080p/i");
+            caps.Categories.AddCategoryMapping("45", TorznabCatType.AudioVideo, "Music/720p");
+            caps.Categories.AddCategoryMapping("66", TorznabCatType.AudioVideo, "Music/2160p");
 
             // XXX
-            AddCategoryMapping("58", TorznabCatType.XXX, "XXX/Blu-ray");
-            AddCategoryMapping("74", TorznabCatType.XXX, "XXX/UHD/Blu-ray");
-            AddCategoryMapping("48", TorznabCatType.XXX, "XXX/1080p/i");
-            AddCategoryMapping("47", TorznabCatType.XXX, "XXX/720p");
-            AddCategoryMapping("67", TorznabCatType.XXX, "XXX/2160p");
+            caps.Categories.AddCategoryMapping("58", TorznabCatType.XXX, "XXX/Blu-ray");
+            caps.Categories.AddCategoryMapping("74", TorznabCatType.XXX, "XXX/UHD/Blu-ray");
+            caps.Categories.AddCategoryMapping("48", TorznabCatType.XXX, "XXX/1080p/i");
+            caps.Categories.AddCategoryMapping("47", TorznabCatType.XXX, "XXX/720p");
+            caps.Categories.AddCategoryMapping("67", TorznabCatType.XXX, "XXX/2160p");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -129,31 +133,48 @@ namespace Jackett.Common.Indexers
             var result = await RequestLoginAndFollowRedirect(LoginUrl, pairs, loginPage.Cookies, true, null, LoginUrl);
 
             await ConfigureIfOK(
-                result.Cookies, result.ContentString?.Contains("If your browser doesn't have javascript enabled") == true,
-                () => throw new ExceptionWithConfigData("Couldn't login", configData));
+                result.Cookies, result.ContentString?.Contains("If your browser doesn't have javascript enabled") == true, () =>
+                {
+                    var parser = new HtmlParser();
+                    using var dom = parser.ParseDocument(result.ContentString);
+
+                    var errorMessage = dom.QuerySelector("div > font[color=\"#FF0000\"]")?.TextContent.Trim();
+
+                    throw new ExceptionWithConfigData(errorMessage ?? "Couldn't login", configData);
+                });
+
             return IndexerConfigurationStatus.RequiresTesting;
         }
 
         protected override async Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query)
         {
             var releases = new List<ReleaseInfo>();
-            var searchUrl = SearchUrl + string.Join(
-                string.Empty, MapTorznabCapsToTrackers(query).Select(cat => $"category[]={cat}&"));
+
+            var searchUrl = SearchUrl + string.Join(string.Empty, MapTorznabCapsToTrackers(query).Select(cat => $"category[]={cat}&"));
+
             var queryCollection = new NameValueCollection
             {
-                {"search", query.ImdbID ?? query.GetQueryString()},
-                {"active", "0"},
-                {"options", "0"}
+                { "search", query.ImdbID ?? query.GetQueryString() },
+                { "active", ((BoolConfigurationItem)configData.GetDynamic("freeleech")).Value ? "5" : "0" },
+                { "options", "0" }
             };
 
             // manually url encode parenthesis to prevent "hacking" detection, remove . as not used in titles
             searchUrl += queryCollection.GetQueryString().Replace("(", "%28").Replace(")", "%29").Replace(".", " ");
 
             var results = await RequestWithCookiesAndRetryAsync(searchUrl);
+
+            // Occasionally the cookies become invalid, login again if that happens
+            if (results.ContentString.Contains("Error:You're not authorized"))
+            {
+                await ApplyConfiguration(null);
+                results = await RequestWithCookiesAndRetryAsync(searchUrl);
+            }
+
             try
             {
                 var parser = new HtmlParser();
-                var dom = parser.ParseDocument(results.ContentString);
+                using var dom = parser.ParseDocument(results.ContentString);
 
                 var userInfo = dom.QuerySelector("table.navus tr");
                 var userRank = userInfo.Children[1].TextContent.Replace("Rank:", string.Empty).Trim();
@@ -163,7 +184,10 @@ namespace Jackett.Common.Indexers
                 foreach (var row in rows.Skip(1))
                 {
                     if (row.Children.Length == 2)
-                        continue; // fix bug with search: cohen
+                    {
+                        // fix bug with search: cohen
+                        continue;
+                    }
 
                     var mainLink = row.Children[2].QuerySelector("a");
                     var title = mainLink.TextContent;
@@ -173,15 +197,14 @@ namespace Jackett.Common.Indexers
                     var poster = posterMatch.Success ? new Uri(SiteLink + posterMatch.Groups[1].Value.Replace("\\", "/")) : null;
 
                     var link = new Uri(SiteLink + row.Children[4].FirstElementChild.GetAttribute("href"));
-                    var description = row.Children[2].QuerySelector("span").TextContent;
-                    var size = ReleaseInfo.GetBytes(row.Children[7].TextContent);
+                    var description = row.Children[2].QuerySelector("span")?.TextContent.Trim();
+                    var size = ParseUtil.GetBytes(row.Children[7].TextContent);
 
-                    var dateTag = row.Children[6].FirstElementChild;
-                    var dateString = string.Join(" ", dateTag.Attributes.Select(attr => attr.Name));
-                    var publishDate = DateTime.ParseExact(dateString, "dd MMM yyyy HH:mm:ss zz00", CultureInfo.InvariantCulture).ToLocalTime();
+                    var dateAdded = string.Join(" ", row.Children[6].FirstElementChild.Attributes.Select(a => a.Name).Take(4));
+                    var publishDate = DateTime.ParseExact(dateAdded, "dd MMM yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
-                    var catStr = row.FirstElementChild.FirstElementChild.GetAttribute("href").Split('=')[1];
-                    var cat = MapTrackerCatToNewznab(catStr);
+                    var categoryLink = row.FirstElementChild.FirstElementChild.GetAttribute("href");
+                    var cat = ParseUtil.GetArgumentFromQueryString(categoryLink, "category");
 
                     // Sometimes the uploader column is missing, so seeders, leechers, and grabs may be at a different index.
                     // There's room for improvement, but this works for now.
@@ -233,7 +256,7 @@ namespace Jackett.Common.Indexers
                         Guid = details,
                         Link = link,
                         PublishDate = publishDate,
-                        Category = cat,
+                        Category = MapTrackerCatToNewznab(cat),
                         Description = description,
                         Poster = poster,
                         Imdb = imdb,

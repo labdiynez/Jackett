@@ -18,8 +18,8 @@ caps:
 
   modes:
     search: [q]
-    tv-search: [q, season, ep, genre]
-    movie-search: [q, genre]
+    tv-search: [q, season, ep, imdbid, genre]
+    movie-search: [q, imdbid, genre]
 
 settings:
   - name: info_2fa
@@ -76,7 +76,7 @@ search:
     - path: torrents.php
   inputs:
     $raw: "{{ range .Categories }}filter_cat[{{.}}]=1&{{end}}"
-    searchtext: "{{ .Keywords }}"
+    searchtext: "{{ if .Query.IMDBID }}{{ .Query.IMDBID }}{{ else }}{{ .Keywords }}{{ end }}"
     order_by: "{{ .Config.sort }}"
     order_way: "{{ .Config.type }}"
     action: advanced
@@ -91,8 +91,6 @@ search:
 
   rows:
     selector: table#torrent_table > tbody > tr[class^="torrent row"]:has(a[href*="action=download"])
-    filters:
-      - name: andmatch
 
   fields:
     category:
@@ -104,12 +102,18 @@ search:
     title:
       selector: a[href^="/torrents.php?id="]
       filters:
-        - name: re_replace # Seasons X-Y --> SX-SY
-          args: ["(?i)seasons?\\s*(\\d+)\\s*-\\s*(\\d+)", "S$1-S$2"]
+        - name: re_replace # Seasons X-Y --> S0X-S0Y
+          args: ["(?i)\\bSeasons?\\s*(\\d)\\s*-\\s*(\\d)\\b", "S0$1-S0$2"]
+        - name: re_replace # Seasons X-YY --> S0X-SYY
+          args: ["(?i)\\bSeasons?\\s*(\\d)\\s*-\\s*(\\d+)\\b", "S0$1-S$2"]
+        - name: re_replace # Seasons XX-YY --> SXX-SYY
+          args: ["(?i)\\bSeasons?\\s*(\\d+)\\s*-\\s*(\\d+)\\b", "S$1-S$2"]
         - name: re_replace # Season X --> S0X
-          args: ["(?i)season\\s*(\\d+)", "S$1"]
+          args: ["(?i)\\bSeasons?\\s*(\\d)\\b", "S0$1"]
+        - name: re_replace # Season XX --> SXX
+          args: ["(?i)\\bSeasons?\\s*(\\d+)\\b", "S$1"]
         - name: re_replace
-          args: ["(?i)Complete\\s+Series", ""]
+          args: ["(?i)\\bComplete\\s+Series\\b", ""]
     details:
       selector: a[href^="/torrents.php?id="]
       attribute: href
@@ -121,8 +125,12 @@ search:
       filters:
         - name: validate
           args: "Action, Adventure, Animation, Comedy, Crime, Documentary, Drama, Family, Fantasy, History, Horror, Kids, Music, Mystery, News, Reality, Romance, SciFi, Soap, Talk, Thriller, War, Western"
+    description_tags:
+      selector: div.tags
     description:
-      text: "{{ .Result.genre }}"
+      case:
+        span.icon_okay: "Verified: {{ .Result.description_tags }}"
+        "*": "Unverified: {{ .Result.description_tags }}"
     poster:
       selector: td:nth-child(2) > script
       filters:
@@ -140,7 +148,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "Jan 02 2006, 15:04"
+          args: "MMM dd yyyy, HH:mm"
     size:
       selector: td:nth-child(6)
     grabs:

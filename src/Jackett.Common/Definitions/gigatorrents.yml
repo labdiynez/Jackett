@@ -58,6 +58,10 @@ settings:
   - name: password
     type: password
     label: Password
+  - name: freeleech
+    type: checkbox
+    label: Search freeleech only
+    default: false
   - name: sort
     type: select
     label: Sort requested from site
@@ -89,7 +93,8 @@ login:
   error:
     - selector: div.box:has(div.title:contains("bejelentkez"))
   test:
-    path: torrentek.php
+    path: index.php
+    selector: a[href^="logout.php"]
 
 search:
   paths:
@@ -97,7 +102,8 @@ search:
   inputs:
     $raw: "{{ range .Categories }}c{{.}}=1&{{end}}"
     search: "{{ .Keywords }}"
-    incldead: 1
+    # 0 active, 1 incldead, 2 onlydead, 5 freeleech, 6 2x upload, 7 highlighted
+    incldead: "{{ if .Config.freeleech }}5{{ else }}1{{ end }}"
     blah: 0
     order: "{{ .Config.sort }}"
     by: "{{ .Config.type }}"
@@ -145,22 +151,24 @@ search:
       selector: td:nth-child(7)
     files:
       selector: td:nth-child(4)
-    downloadvolumefactor_optional:
+    description:
+      case:
+        img[src="pic/staff/yes.png"]: Verified
+        "*": Unverified
+    downloadvolumefactor:
       selector: td:nth-child(6) > span:nth-last-child(2)
       optional: true
+      default: 1
       filters:
         - name: trim
-          args: "x"
-    downloadvolumefactor:
-      text: "{{ if .Result.downloadvolumefactor_optional }}{{ .Result.downloadvolumefactor_optional }}{{ else }}1{{ end }}"
-    uploadvolumefactor_optional:
+          args: x
+    uploadvolumefactor:
       selector: td:nth-child(6) > span:nth-last-child(1)
       optional: true
+      default: 1
       filters:
         - name: trim
-          args: "x"
-    uploadvolumefactor:
-      text: "{{ if .Result.uploadvolumefactor_optional }}{{ .Result.uploadvolumefactor_optional }}{{ else }}1{{ end }}"
+          args: x
     minimumratio:
       text: 0.5
     minimumseedtime:

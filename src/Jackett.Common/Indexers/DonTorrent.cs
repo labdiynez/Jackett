@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -21,8 +20,45 @@ using WebClient = Jackett.Common.Utils.Clients.WebClient;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class DonTorrent : BaseWebIndexer
+    public class DonTorrent : IndexerBase
     {
+        public override string Id => "dontorrent";
+        public override string Name => "DonTorrent";
+        public override string Description => "DonTorrent is a SPANISH public tracker for MOVIES / TV / GENERAL";
+        // in the event the redirect is inactive https://t.me/s/dontorrent should have the latest working domain
+        public override string SiteLink { get; protected set; } = "https://dontorrent.band/";
+        public override string[] AlternativeSiteLinks => new[]
+        {
+            "https://dontorrent.band/",
+            "https://todotorrents.org/",
+            "https://tomadivx.net/",
+            "https://seriesblanco.one/",
+            "https://verdetorrent.com/",
+            "https://naranjatorrent.com/"
+        };
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://dontorrent.nexus/",
+            "https://dontorrent.bond/",
+            "https://dontorrent.tokyo/",
+            "https://dontorrent.boston/",
+            "https://dontorrent.rodeo/",
+            "https://dontorrent.durban/",
+            "https://dontorrent.party/",
+            "https://dontorrent.joburg/",
+            "https://dontorrent.wales/",
+            "https://dontorrent.nagoya/",
+            "https://dontorrent.contact/",
+            "https://dontorrent.cymru/",
+            "https://dontorrent.capetown/",
+            "https://dontorrent.yokohama/",
+            "https://dontorrent.makeup/",
+        };
+        public override string Language => "es-ES";
+        public override string Type => "public";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private static class DonTorrentCatType
         {
             public static string Pelicula => "pelicula";
@@ -38,33 +74,6 @@ namespace Jackett.Common.Indexers
         private const string NewTorrentsUrl = "ultimos";
         private const string SearchUrl = "buscar/";
 
-        public override string[] AlternativeSiteLinks { get; protected set; } = {
-            "https://dontorrent.army/",
-            "https://todotorrents.net/",
-            "https://tomadivx.net/",
-            "https://seriesblanco.one/",
-            "https://verdetorrent.com/",
-            "https://naranjatorrent.com/"
-        };
-
-        public override string[] LegacySiteLinks { get; protected set; } = {
-            "https://dontorrent.moe/",
-            "https://dontorrent.pub/",
-            "https://dontorrent.tf/",
-            "https://dontorrent.vin/",
-            "https://dontorrent.ist/",
-            "https://dontorrent.uno/",
-            "https://dontorrent.fans/",
-            "https://dontorrent.ltd/",
-            "https://dontorrent.me/",
-            "https://dontorrent.gs/",
-            "https://dontorrent.gy/",
-            "https://dontorrent.click/",
-            "https://dontorrent.fail/",
-            "https://dontorrent.futbol/",
-            "https://dontorrent.mba/"
-        };
-
         private static Dictionary<string, string> CategoriesMap => new Dictionary<string, string>
             {
                 { "/pelicula/", DonTorrentCatType.Pelicula },
@@ -77,44 +86,45 @@ namespace Jackett.Common.Indexers
 
         public DonTorrent(IIndexerConfigurationService configService, WebClient w, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "dontorrent",
-                   name: "DonTorrent",
-                   description: "DonTorrent is a SPANISH public tracker for MOVIES / TV / GENERAL",
-                   link: "https://dontorrent.army/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q,
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: w,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationData())
         {
-            Encoding = Encoding.UTF8;
-            Language = "es-ES";
-            Type = "public";
+            // avoid CLoudflare too many requests limiter
+            webclient.requestDelay = 2.1;
 
             var matchWords = new BoolConfigurationItem("Match words in title") { Value = true };
             configData.AddDynamic("MatchWords", matchWords);
+        }
 
-            AddCategoryMapping(DonTorrentCatType.Pelicula, TorznabCatType.Movies, "Pelicula");
-            AddCategoryMapping(DonTorrentCatType.Pelicula4K, TorznabCatType.MoviesUHD, "Peliculas 4K");
-            AddCategoryMapping(DonTorrentCatType.Serie, TorznabCatType.TVSD, "Serie");
-            AddCategoryMapping(DonTorrentCatType.SerieHD, TorznabCatType.TVHD, "Serie HD");
-            AddCategoryMapping(DonTorrentCatType.Musica, TorznabCatType.Audio, "Música");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q,
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(DonTorrentCatType.Pelicula, TorznabCatType.Movies, "Pelicula");
+            caps.Categories.AddCategoryMapping(DonTorrentCatType.Pelicula4K, TorznabCatType.MoviesUHD, "Peliculas 4K");
+            caps.Categories.AddCategoryMapping(DonTorrentCatType.Serie, TorznabCatType.TVSD, "Serie");
+            caps.Categories.AddCategoryMapping(DonTorrentCatType.SerieHD, TorznabCatType.TVHD, "Serie HD");
+            caps.Categories.AddCategoryMapping(DonTorrentCatType.Musica, TorznabCatType.Audio, "Música");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -157,7 +167,7 @@ namespace Jackett.Common.Indexers
             var result = await RequestWithCookiesAsync(downloadUrl);
             if (result.Status != HttpStatusCode.OK)
                 throw new ExceptionWithConfigData(result.ContentString, configData);
-            var dom = parser.ParseDocument(result.ContentString);
+            using var dom = parser.ParseDocument(result.ContentString);
 
             //var info = dom.QuerySelectorAll("div.descargar > div.card > div.card-body").First();
             //var title = info.QuerySelector("h2.descargarTitulo").TextContent;
@@ -182,7 +192,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var searchResultParser = new HtmlParser();
-                var doc = searchResultParser.ParseDocument(result.ContentString);
+                using var doc = searchResultParser.ParseDocument(result.ContentString);
 
                 var rows = doc.QuerySelector("div.seccion#ultimos_torrents > div.card > div.card-body > div");
 
@@ -274,7 +284,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var searchResultParser = new HtmlParser();
-                var doc = searchResultParser.ParseDocument(result.ContentString);
+                using var doc = searchResultParser.ParseDocument(result.ContentString);
 
                 var rows = doc.QuerySelectorAll("div.seccion#buscador > div.card > div.card-body > p");
 
@@ -365,7 +375,7 @@ namespace Jackett.Common.Indexers
                 throw new ExceptionWithConfigData(result.ContentString, configData);
 
             var searchResultParser = new HtmlParser();
-            var doc = searchResultParser.ParseDocument(result.ContentString);
+            using var doc = searchResultParser.ParseDocument(result.ContentString);
 
             var data = doc.QuerySelector("div.descargar > div.card > div.card-body");
 
@@ -381,7 +391,7 @@ namespace Jackett.Common.Indexers
             var sizeStr = data3[1].TextContent; //"Tamaño: {0}" -- needs trimming, contains number of episodes available
 
             var publishDate = TryToParseDate(publishStr, DateTime.Now);
-            var size = ReleaseInfo.GetBytes(sizeStr);
+            var size = ParseUtil.GetBytes(sizeStr);
 
             var release = GenerateRelease(title, link, link, GetCategory(title, link), publishDate, size);
             releases.Add(release);
@@ -394,7 +404,7 @@ namespace Jackett.Common.Indexers
                 throw new ExceptionWithConfigData(result.ContentString, configData);
 
             var searchResultParser = new HtmlParser();
-            var doc = searchResultParser.ParseDocument(result.ContentString);
+            using var doc = searchResultParser.ParseDocument(result.ContentString);
 
             var data = doc.QuerySelector("div.descargar > div.card > div.card-body");
 
@@ -447,7 +457,7 @@ namespace Jackett.Common.Indexers
                 throw new ExceptionWithConfigData(result.ContentString, configData);
 
             var searchResultParser = new HtmlParser();
-            var doc = searchResultParser.ParseDocument(result.ContentString);
+            using var doc = searchResultParser.ParseDocument(result.ContentString);
 
             // parse tags in title, we need to put the year after the real title (before the tags)
             // Harry Potter And The Deathly Hallows: Part 1 [subs. Integrados]
@@ -495,7 +505,7 @@ namespace Jackett.Common.Indexers
             // guess size
             long size;
             if (moreinfo.Length == 2)
-                size = ReleaseInfo.GetBytes(moreinfo[1].QuerySelector("p").TextContent);
+                size = ParseUtil.GetBytes(moreinfo[1].QuerySelector("p").TextContent);
             else if (title.ToLower().Contains("4k"))
                 size = 53687091200L; // 50 GB
             else if (title.ToLower().Contains("1080p"))

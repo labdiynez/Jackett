@@ -7,23 +7,23 @@ type: public
 encoding: UTF-8
 followredirect: true
 links:
-  - https://torrentwiz51.com/
+  - https://torrentwiz64.com/
 legacylinks:
-  - https://torrentwiz35.com/
-  - https://torrentwiz36.com/
-  - https://torrentwiz37.com/
-  - https://torrentwiz38.com/
-  - https://torrentwiz39.com/
-  - https://torrentwiz40.com/
-  - https://torrentwiz41.com/
-  - https://torrentwiz42.com/
-  - https://torrentwiz43.com/
-  - https://torrentwiz45.com/
-  - https://torrentwiz47.com/
-  - https://torrentwiz48.com/.
   - https://torrentwiz48.com/
   - https://torrentwiz49.com/
   - https://torrentwiz50.com/
+  - https://torrentwiz51.com/
+  - https://torrentwiz52.com/
+  - https://torrentwiz54.com/
+  - https://torrentwiz55.com/
+  - https://torrentwiz56.com/
+  - https://torrentwiz57.com/
+  - https://torrentwiz58.com/
+  - https://torrentwiz59.com/
+  - https://torrentwiz60.com/
+  - https://torrentwiz61.com/
+  - https://torrentwiz62.com/
+  - https://torrentwiz63.com/
 
 caps:
   categorymappings:
@@ -40,7 +40,6 @@ caps:
     tv-search: [q, season, ep]
     movie-search: [q]
     music-search: [q]
-    book-search: [q]
 
 settings:
   - name: flaresolverr

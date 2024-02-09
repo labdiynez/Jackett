@@ -4,11 +4,11 @@ using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
+using Jackett.Common.Extensions;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig;
 using Jackett.Common.Services.Interfaces;
@@ -20,20 +20,26 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class BJShare : BaseWebIndexer
+    public class BJShare : IndexerBase
     {
+        public override string Id => "bjshare";
+        public override string Name => "BJ-Share";
+        public override string Description => "A brazilian tracker.";
+        public override string SiteLink { get; protected set; } = "https://bj-share.info/";
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://bj-share.me/"
+        };
+        public override string Language => "pt-BR";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string BrowseUrl => SiteLink + "torrents.php";
         private string TodayUrl => SiteLink + "torrents.php?action=today";
         private static readonly Regex _EpisodeRegex = new Regex(@"(?:[SsEe]\d{2,4}){1,2}");
 
-        public override string[] LegacySiteLinks { get; protected set; } =
-        {
-            "https://bj-share.me/"
-        };
-
         private new ConfigurationDataCookieUA configData => (ConfigurationDataCookieUA)base.configData;
-
-
 
         private readonly List<string> _absoluteNumbering = new List<string>
         {
@@ -61,63 +67,63 @@ namespace Jackett.Common.Indexers
 
         public BJShare(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "bjshare",
-                    name: "BJ-Share",
-                    description: "A brazilian tracker.",
-                    link: "https://bj-share.info/",
-                    caps: new TorznabCapabilities
-                    {
-                        TvSearchParams = new List<TvSearchParam>
-                        {
-                            TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                        },
-                        MovieSearchParams = new List<MovieSearchParam>
-                        {
-                            MovieSearchParam.Q, MovieSearchParam.ImdbId
-                        },
-                        MusicSearchParams = new List<MusicSearchParam>
-                        {
-                            MusicSearchParam.Q
-                        },
-                        BookSearchParams = new List<BookSearchParam>
-                        {
-                            BookSearchParam.Q
-                        }
-                    },
-                    configService: configService,
+            : base(configService: configService,
                     client: wc,
                     logger: l,
                     p: ps,
                     cacheService: cs,
                     configData: new ConfigurationDataCookieUA())
         {
-            Encoding = Encoding.UTF8;
-            Language = "pt-BR";
-            Type = "private";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.Movies, "Filmes");
-            AddCategoryMapping(2, TorznabCatType.TV, "Seriados");
-            AddCategoryMapping(3, TorznabCatType.PC, "Aplicativos");
-            AddCategoryMapping(4, TorznabCatType.PCGames, "Jogos");
-            AddCategoryMapping(5, TorznabCatType.BooksComics, "Mangás");
-            AddCategoryMapping(6, TorznabCatType.TV, "Vídeos de TV");
-            AddCategoryMapping(7, TorznabCatType.Other, "Outros");
-            AddCategoryMapping(8, TorznabCatType.TVSport, "Esportes");
-            AddCategoryMapping(9, TorznabCatType.BooksMags, "Revistas");
-            AddCategoryMapping(10, TorznabCatType.BooksEBook, "E-Books");
-            AddCategoryMapping(11, TorznabCatType.AudioAudiobook, "Audiobook");
-            AddCategoryMapping(12, TorznabCatType.BooksComics, "HQs");
-            AddCategoryMapping(13, TorznabCatType.TVOther, "Stand Up Comedy");
-            AddCategoryMapping(14, TorznabCatType.TVAnime, "Animes");
-            AddCategoryMapping(15, TorznabCatType.XXXImageSet, "Fotos Adultas");
-            AddCategoryMapping(16, TorznabCatType.TVOther, "Desenhos Animado");
-            AddCategoryMapping(17, TorznabCatType.TVDocumentary, "Documentários");
-            AddCategoryMapping(18, TorznabCatType.Other, "Cursos");
-            AddCategoryMapping(19, TorznabCatType.XXX, "Filmes Adultos");
-            AddCategoryMapping(20, TorznabCatType.XXXOther, "Jogos Adultos");
-            AddCategoryMapping(21, TorznabCatType.XXXOther, "Mangás Adultos");
-            AddCategoryMapping(22, TorznabCatType.XXXOther, "Animes Adultos");
-            AddCategoryMapping(23, TorznabCatType.XXXOther, "HQs Adultos");
+        private TorznabCapabilities SetCapabilities()
+        {
+
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.Movies, "Filmes");
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TV, "Seriados");
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.PC, "Aplicativos");
+            caps.Categories.AddCategoryMapping(4, TorznabCatType.PCGames, "Jogos");
+            caps.Categories.AddCategoryMapping(5, TorznabCatType.BooksComics, "Mangás");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.TV, "Vídeos de TV");
+            caps.Categories.AddCategoryMapping(7, TorznabCatType.Other, "Outros");
+            caps.Categories.AddCategoryMapping(8, TorznabCatType.TVSport, "Esportes");
+            caps.Categories.AddCategoryMapping(9, TorznabCatType.BooksMags, "Revistas");
+            caps.Categories.AddCategoryMapping(10, TorznabCatType.BooksEBook, "E-Books");
+            caps.Categories.AddCategoryMapping(11, TorznabCatType.AudioAudiobook, "Audiobook");
+            caps.Categories.AddCategoryMapping(12, TorznabCatType.BooksComics, "HQs");
+            caps.Categories.AddCategoryMapping(13, TorznabCatType.TVOther, "Stand Up Comedy");
+            caps.Categories.AddCategoryMapping(14, TorznabCatType.TVAnime, "Animes");
+            caps.Categories.AddCategoryMapping(15, TorznabCatType.XXXImageSet, "Fotos Adultas");
+            caps.Categories.AddCategoryMapping(16, TorznabCatType.TVOther, "Desenhos Animado");
+            caps.Categories.AddCategoryMapping(17, TorznabCatType.TVDocumentary, "Documentários");
+            caps.Categories.AddCategoryMapping(18, TorznabCatType.Other, "Cursos");
+            caps.Categories.AddCategoryMapping(19, TorznabCatType.XXX, "Filmes Adultos");
+            caps.Categories.AddCategoryMapping(20, TorznabCatType.XXXOther, "Jogos Adultos");
+            caps.Categories.AddCategoryMapping(21, TorznabCatType.XXXOther, "Mangás Adultos");
+            caps.Categories.AddCategoryMapping(22, TorznabCatType.XXXOther, "Animes Adultos");
+            caps.Categories.AddCategoryMapping(23, TorznabCatType.XXXOther, "HQs Adultos");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -232,20 +238,13 @@ namespace Jackett.Common.Indexers
 
         private bool IsSessionIsClosed(WebResult result) => result.IsRedirect && result.RedirectingTo.Contains("login.php");
 
-        private string FixSearchTerm(TorznabQuery query)
-        {
-            if (query.IsImdbQuery)
-                return query.ImdbID;
-            return _commonSearchTerms.Aggregate(
-                query.GetQueryString(),
-                (current, searchTerm) => current.ToLower().Replace(searchTerm.Key.ToLower(), searchTerm.Value));
-        }
+        private string FixSearchTerm(TorznabQuery query) => _commonSearchTerms.Aggregate(
+            query.GetQueryString(),
+            (current, searchTerm) => current.ToLower().Replace(searchTerm.Key.ToLower(), searchTerm.Value));
 
         // if the search string is empty use the "last 24h torrents" view
         protected override async Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query) =>
-            (string.IsNullOrWhiteSpace(query.SearchTerm) && !query.IsImdbQuery)
-                ? await ParseLast24HoursAsync()
-                : await ParseUserSearchAsync(query);
+            query.SearchTerm.IsNullOrWhiteSpace() ? await ParseLast24HoursAsync() : await ParseUserSearchAsync(query);
 
         private async Task<List<ReleaseInfo>> ParseUserSearchAsync(TorznabQuery query)
         {
@@ -267,8 +266,10 @@ namespace Jackett.Common.Indexers
 
             if (!string.IsNullOrEmpty(configData.UserAgent.Value))
             {
-                headers = new Dictionary<string, string>();
-                headers.Add("User-Agent", configData.UserAgent.Value);
+                headers = new Dictionary<string, string>
+                {
+                    { "User-Agent", configData.UserAgent.Value }
+                };
             }
 
             foreach (var cat in MapTorznabCapsToTrackers(query))
@@ -288,7 +289,7 @@ namespace Jackett.Common.Indexers
             {
                 const string rowsSelector = "table.torrent_table > tbody > tr:not(tr.colhead)";
                 var searchResultParser = new HtmlParser();
-                var searchResultDocument = searchResultParser.ParseDocument(results.ContentString);
+                using var searchResultDocument = searchResultParser.ParseDocument(results.ContentString);
                 var rows = searchResultDocument.QuerySelectorAll(rowsSelector);
                 ICollection<int> groupCategory = null;
                 string groupTitle = null;
@@ -412,10 +413,13 @@ namespace Jackett.Common.Indexers
                         release.PublishDate = DateTime.Today;
 
                         // check for previously stripped search terms
-                        if (!query.IsImdbQuery && !query.MatchQueryStringAND(release.Title, null, searchTerm))
+                        if (!query.MatchQueryStringAND(release.Title, null, searchTerm))
+                        {
                             continue;
+                        }
+
                         var size = qSize.TextContent;
-                        release.Size = ReleaseInfo.GetBytes(size);
+                        release.Size = ParseUtil.GetBytes(size);
                         release.Link = new Uri(SiteLink + qDlLink.GetAttribute("href"));
                         release.Details = new Uri(SiteLink + qDetailsLink.GetAttribute("href"));
                         release.Guid = release.Link;
@@ -453,7 +457,7 @@ namespace Jackett.Common.Indexers
             {
                 const string rowsSelector = "table.torrent_table > tbody > tr:not(tr.colhead)";
                 var searchResultParser = new HtmlParser();
-                var searchResultDocument = searchResultParser.ParseDocument(results.ContentString);
+                using var searchResultDocument = searchResultParser.ParseDocument(results.ContentString);
                 var rows = searchResultDocument.QuerySelectorAll(rowsSelector);
                 foreach (var row in rows)
                     try
@@ -488,7 +492,7 @@ namespace Jackett.Common.Indexers
                             if (line.StartsWith("Tamanho:"))
                             {
                                 var size = line.Substring("Tamanho: ".Length);
-                                release.Size = ReleaseInfo.GetBytes(size);
+                                release.Size = ParseUtil.GetBytes(size);
                             }
                             else if (line.StartsWith("Lançado em: "))
                             {

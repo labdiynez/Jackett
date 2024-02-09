@@ -2,28 +2,49 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Jackett.Common.Exceptions;
+using Jackett.Common.Extensions;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig.Bespoke;
+using Jackett.Common.Serializer;
 using Jackett.Common.Services.Interfaces;
 using Jackett.Common.Utils;
 using Jackett.Common.Utils.Clients;
 using Newtonsoft.Json.Linq;
 using NLog;
+using WebClient = Jackett.Common.Utils.Clients.WebClient;
 
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class FileList : BaseWebIndexer
+    public class FileList : IndexerBase
     {
-        public override string[] LegacySiteLinks { get; protected set; } =
+        public override string Id => "filelist";
+        public override string Name => "FileList";
+        public override string Description => "The best Romanian site.";
+        public override string SiteLink { get; protected set; } = "https://filelist.io/";
+        public override string[] AlternativeSiteLinks => new[]
         {
-            "http://filelist.ro/",
-            "https://filelist.ro/",
-            "https://flro.org/",
-            "http://flro.org/"
+            "https://filelist.io/"
         };
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://filelist.ro/",
+            "http://filelist.ro/",
+            "http://flro.org/",
+            "https://flro.org/"
+        };
+        public override Encoding Encoding => Encoding.UTF8;
+        public override string Language => "ro-RO";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
 
         private string ApiUrl => SiteLink + "api.php";
         private string DetailsUrl => SiteLink + "details.php";
@@ -32,131 +53,143 @@ namespace Jackett.Common.Indexers
 
         public FileList(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "filelist",
-                   name: "FileList",
-                   description: "The best Romanian site.",
-                   link: "https://filelist.io/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q
-                       },
-                       BookSearchParams = new List<BookSearchParam>
-                       {
-                           BookSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationDataFileList())
         {
-            Encoding = Encoding.UTF8;
-            Language = "ro-RO";
-            Type = "private";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.MoviesSD, "Filme SD");
-            AddCategoryMapping(2, TorznabCatType.MoviesDVD, "Filme DVD");
-            AddCategoryMapping(3, TorznabCatType.MoviesForeign, "Filme DVD-RO");
-            AddCategoryMapping(4, TorznabCatType.MoviesHD, "Filme HD");
-            AddCategoryMapping(5, TorznabCatType.AudioLossless, "FLAC");
-            AddCategoryMapping(6, TorznabCatType.MoviesUHD, "Filme 4K");
-            AddCategoryMapping(7, TorznabCatType.XXX, "XXX");
-            AddCategoryMapping(8, TorznabCatType.PC, "Programe");
-            AddCategoryMapping(9, TorznabCatType.PCGames, "Jocuri PC");
-            AddCategoryMapping(10, TorznabCatType.Console, "Jocuri Console");
-            AddCategoryMapping(11, TorznabCatType.Audio, "Audio");
-            AddCategoryMapping(12, TorznabCatType.AudioVideo, "Videoclip");
-            AddCategoryMapping(13, TorznabCatType.TVSport, "Sport");
-            AddCategoryMapping(15, TorznabCatType.TV, "Desene");
-            AddCategoryMapping(16, TorznabCatType.Books, "Docs");
-            AddCategoryMapping(17, TorznabCatType.PC, "Linux");
-            AddCategoryMapping(18, TorznabCatType.Other, "Diverse");
-            AddCategoryMapping(19, TorznabCatType.MoviesForeign, "Filme HD-RO");
-            AddCategoryMapping(20, TorznabCatType.MoviesBluRay, "Filme Blu-Ray");
-            AddCategoryMapping(21, TorznabCatType.TVHD, "Seriale HD");
-            AddCategoryMapping(22, TorznabCatType.PCMobileOther, "Mobile");
-            AddCategoryMapping(23, TorznabCatType.TVSD, "Seriale SD");
-            AddCategoryMapping(24, TorznabCatType.TVAnime, "Anime");
-            AddCategoryMapping(25, TorznabCatType.Movies3D, "Filme 3D");
-            AddCategoryMapping(26, TorznabCatType.MoviesBluRay, "Filme 4K Blu-Ray");
-            AddCategoryMapping(27, TorznabCatType.TVUHD, "Seriale 4K");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                },
+                TvSearchImdbAvailable = true
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesSD, "Filme SD");
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.MoviesDVD, "Filme DVD");
+            caps.Categories.AddCategoryMapping(3, TorznabCatType.MoviesForeign, "Filme DVD-RO");
+            caps.Categories.AddCategoryMapping(4, TorznabCatType.MoviesHD, "Filme HD");
+            caps.Categories.AddCategoryMapping(5, TorznabCatType.AudioLossless, "FLAC");
+            caps.Categories.AddCategoryMapping(6, TorznabCatType.MoviesUHD, "Filme 4K");
+            caps.Categories.AddCategoryMapping(7, TorznabCatType.XXX, "XXX");
+            caps.Categories.AddCategoryMapping(8, TorznabCatType.PC, "Programe");
+            caps.Categories.AddCategoryMapping(9, TorznabCatType.PCGames, "Jocuri PC");
+            caps.Categories.AddCategoryMapping(10, TorznabCatType.Console, "Jocuri Console");
+            caps.Categories.AddCategoryMapping(11, TorznabCatType.Audio, "Audio");
+            caps.Categories.AddCategoryMapping(12, TorznabCatType.AudioVideo, "Videoclip");
+            caps.Categories.AddCategoryMapping(13, TorznabCatType.TVSport, "Sport");
+            caps.Categories.AddCategoryMapping(15, TorznabCatType.TV, "Desene");
+            caps.Categories.AddCategoryMapping(16, TorznabCatType.Books, "Docs");
+            caps.Categories.AddCategoryMapping(17, TorznabCatType.PC, "Linux");
+            caps.Categories.AddCategoryMapping(18, TorznabCatType.Other, "Diverse");
+            caps.Categories.AddCategoryMapping(19, TorznabCatType.MoviesForeign, "Filme HD-RO");
+            caps.Categories.AddCategoryMapping(20, TorznabCatType.MoviesBluRay, "Filme Blu-Ray");
+            caps.Categories.AddCategoryMapping(21, TorznabCatType.TVHD, "Seriale HD");
+            caps.Categories.AddCategoryMapping(22, TorznabCatType.PCMobileOther, "Mobile");
+            caps.Categories.AddCategoryMapping(23, TorznabCatType.TVSD, "Seriale SD");
+            caps.Categories.AddCategoryMapping(24, TorznabCatType.TVAnime, "Anime");
+            caps.Categories.AddCategoryMapping(25, TorznabCatType.Movies3D, "Filme 3D");
+            caps.Categories.AddCategoryMapping(26, TorznabCatType.MoviesBluRay, "Filme 4K Blu-Ray");
+            caps.Categories.AddCategoryMapping(27, TorznabCatType.TVUHD, "Seriale 4K");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
         {
             LoadValuesFromJson(configJson);
-            var pingResponse = await CallProviderAsync(new TorznabQuery());
 
-            try
-            {
-                var json = JArray.Parse(pingResponse);
-                if (json.Count > 0)
-                {
-                    IsConfigured = true;
-                    SaveConfig();
-                    return IndexerConfigurationStatus.Completed;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new ExceptionWithConfigData(ex.Message, configData);
-            }
+            var releases = await PerformQuery(new TorznabQuery());
+            await ConfigureIfOK(string.Empty, releases.Any(),
+                                () => throw new Exception("Could not find releases."));
 
-            return IndexerConfigurationStatus.RequiresTesting;
+            return IndexerConfigurationStatus.Completed;
         }
 
         protected override async Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query)
         {
             var releases = new List<ReleaseInfo>();
-            var response = await CallProviderAsync(query);
 
-            if (response.StartsWith("{\"error\""))
-                throw new ExceptionWithConfigData(response, configData);
+            var indexerResponse = await CallProviderAsync(query);
+
+            if (indexerResponse == null)
+            {
+                return releases;
+            }
+
+            var response = indexerResponse.ContentString;
+
+            if ((int)indexerResponse.Status == 429)
+            {
+                throw new TooManyRequestsException("Rate limited", indexerResponse);
+            }
+
+            if (response.StartsWith("{\"error\"") && STJson.TryDeserialize<FileListErrorResponse>(response, out var errorResponse))
+            {
+                throw new ExceptionWithConfigData(errorResponse.Error, configData);
+            }
+
+            if (indexerResponse.Status != HttpStatusCode.OK)
+            {
+                throw new Exception($"Unknown status code: {(int)indexerResponse.Status} ({indexerResponse.Status})");
+            }
 
             try
             {
-                var json = JArray.Parse(response);
-                foreach (var row in json)
+                var results = STJson.Deserialize<List<FileListTorrent>>(response);
+
+                foreach (var row in results)
                 {
-                    var detailsUri = new Uri(DetailsUrl + "?id=" + (string)row["id"]);
-                    var seeders = (int)row["seeders"];
-                    var peers = seeders + (int)row["leechers"];
-                    var publishDate = DateTimeUtil.FromFuzzyTime((string)row["upload_date"] + " +0200");
-                    var downloadVolumeFactor = (int)row["freeleech"] == 1 ? 0 : 1;
-                    var uploadVolumeFactor = (int)row["doubleup"] == 1 ? 2 : 1;
-                    var imdbId = ((JObject)row).ContainsKey("imdb") ? ParseUtil.GetImdbID((string)row["imdb"]) : null;
-                    var link = new Uri((string)row["download_link"]);
+                    var isFreeleech = row.FreeLeech;
+
+                    // skip non-freeleech results when freeleech only is set
+                    if (configData.Freeleech.Value && !isFreeleech)
+                    {
+                        continue;
+                    }
+
+                    var detailsUri = new Uri($"{DetailsUrl}?id={row.Id}");
+                    var link = new Uri(row.DownloadLink);
+                    var imdbId = row.ImdbId.IsNotNullOrWhiteSpace() ? ParseUtil.GetImdbId(row.ImdbId) : null;
 
                     var release = new ReleaseInfo
                     {
-                        Title = (string)row["name"],
+                        Guid = detailsUri,
                         Details = detailsUri,
                         Link = link,
-                        Category = MapTrackerCatDescToNewznab((string)row["category"]),
-                        Size = (long)row["size"],
-                        Files = (long)row["files"],
-                        Grabs = (long)row["times_completed"],
-                        Seeders = seeders,
-                        Peers = peers,
+                        Title = row.Name.Trim(),
+                        Category = MapTrackerCatDescToNewznab(row.Category),
+                        Size = row.Size,
+                        Files = row.Files,
+                        Grabs = row.TimesCompleted,
+                        Seeders = row.Seeders,
+                        Peers = row.Seeders + row.Leechers,
+                        Imdb = imdbId,
+                        PublishDate = DateTime.Parse(row.UploadDate + " +0200", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal),
+                        DownloadVolumeFactor = isFreeleech ? 0 : 1,
+                        UploadVolumeFactor = row.DoubleUp ? 2 : 1,
                         MinimumRatio = 1,
-                        MinimumSeedTime = 172800, //48 hours
-                        PublishDate = publishDate,
-                        DownloadVolumeFactor = downloadVolumeFactor,
-                        UploadVolumeFactor = uploadVolumeFactor,
-                        Guid = detailsUri,
-                        Imdb = imdbId
+                        MinimumSeedTime = 172800 // 48 hours
                     };
 
                     releases.Add(release);
@@ -172,32 +205,66 @@ namespace Jackett.Common.Indexers
             return releases;
         }
 
-        private async Task<string> CallProviderAsync(TorznabQuery query)
+        private async Task<WebResult> CallProviderAsync(TorznabQuery query)
         {
             var searchUrl = ApiUrl;
-            var searchString = query.GetQueryString();
-            var cat = string.Join(",", MapTorznabCapsToTrackers(query));
+            var searchQuery = query.SanitizedSearchTerm.Trim();
+
             var queryCollection = new NameValueCollection
             {
-                {"category", cat}
+                {"category", string.Join(",", MapTorznabCapsToTrackers(query))}
             };
 
-            if (query.IsImdbQuery)
+            if (configData.Freeleech.Value)
             {
-                queryCollection.Add("type", "imdb");
-                queryCollection.Add("query", query.ImdbID);
-                queryCollection.Add("action", "search-torrents");
+                queryCollection.Set("freeleech", "1");
             }
-            else if (!string.IsNullOrWhiteSpace(searchString))
+
+            if (query.IsImdbQuery || searchQuery.IsNotNullOrWhiteSpace())
             {
-                queryCollection.Add("type", "name");
-                queryCollection.Add("query", searchString);
-                queryCollection.Add("action", "search-torrents");
+                queryCollection.Set("action", "search-torrents");
+
+                if (DateTime.TryParseExact($"{query.Season} {query.Episode}", "yyyy MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var showDate))
+                {
+                    if (query.IsImdbQuery)
+                    {
+                        // Skip ID searches for daily episodes
+                        return await Task.FromResult<WebResult>(null);
+                    }
+
+                    searchQuery = $"{searchQuery} {showDate:yyyy.MM.dd}".Trim();
+                }
+                else
+                {
+                    if (query.Season > 0)
+                    {
+                        queryCollection.Set("season", query.Season.ToString());
+                    }
+
+                    if (query.Episode.IsNotNullOrWhiteSpace())
+                    {
+                        queryCollection.Set("episode", query.Episode);
+                    }
+                }
+
+                if (query.IsImdbQuery)
+                {
+                    queryCollection.Set("type", "imdb");
+                    queryCollection.Set("query", query.ImdbID);
+                }
+                else if (searchQuery.IsNotNullOrWhiteSpace())
+                {
+                    queryCollection.Set("type", "name");
+                    queryCollection.Set("query", searchQuery);
+                }
             }
             else
-                queryCollection.Add("action", "latest-torrents");
+            {
+                queryCollection.Set("action", "latest-torrents");
+            }
 
             searchUrl += "?" + queryCollection.GetQueryString();
+
             try
             {
                 var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(configData.Username.Value + ":" + configData.Passkey.Value));
@@ -205,13 +272,58 @@ namespace Jackett.Common.Indexers
                 {
                     {"Authorization", "Basic " + auth}
                 };
-                var response = await RequestWithCookiesAsync(searchUrl, headers: headers);
-                return response.ContentString;
+
+                return await RequestWithCookiesAsync(searchUrl, headers: headers);
             }
             catch (Exception inner)
             {
                 throw new Exception("Error calling provider filelist", inner);
             }
         }
+    }
+
+    public class FileListTorrent
+    {
+        public uint Id { get; set; }
+
+        public string Name { get; set; }
+
+        [JsonPropertyName("download_link")]
+        public string DownloadLink { get; set; }
+
+        public long Size { get; set; }
+
+        public int Leechers { get; set; }
+
+        public int Seeders { get; set; }
+
+        [JsonPropertyName("times_completed")]
+        public uint TimesCompleted { get; set; }
+
+        public uint Files { get; set; }
+
+        [JsonPropertyName("imdb")]
+        public string ImdbId { get; set; }
+
+        public bool Internal { get; set; }
+
+        [JsonPropertyName("freeleech")]
+        public bool FreeLeech { get; set; }
+
+        [JsonPropertyName("doubleup")]
+        public bool DoubleUp { get; set; }
+
+        [JsonPropertyName("upload_date")]
+        public string UploadDate { get; set; }
+
+        public string Category { get; set; }
+
+        [JsonPropertyName("small_description")]
+        public string SmallDescription { get; set; }
+    }
+
+    public class FileListErrorResponse
+    {
+        public string Error { get; set; }
     }
 }

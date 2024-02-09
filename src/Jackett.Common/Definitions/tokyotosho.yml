@@ -7,10 +7,7 @@ type: public
 encoding: UTF-8
 links:
   - https://www.tokyotosho.info/
-  - https://tokyotosho.nocensor.lol/
 legacylinks:
-  - https://tokyotosho.black-mirror.xyz/
-  - https://tokyotosho.unblocked.casa/
   - https://tokyotosho.proxyportal.fun/
   - https://tokyotosho.uk-unblock.xyz/
   - https://tokyotosho.ind-unblock.xyz/
@@ -24,6 +21,13 @@ legacylinks:
   - https://tokyotosho.nocensor.biz/
   - https://tokyotosho.nocensor.sbs/
   - https://tokyotosho.nocensor.world/
+  - https://tokyotosho.nocensor.lol/
+  - https://tokyotosho.nocensor.art/
+  - https://tokyotosho.mrunblock.guru/
+  - https://tokyotosho.mrunblock.life/
+  - https://tokyotosho.nocensor.click/
+  - https://tokyotosho.mrunblock.bond/
+  - https://tokyotosho.nocensor.cloud/
 
 settings:
   - name: cat
@@ -118,7 +122,7 @@ search:
         - name: replace
           args: ["UTC", "+00:00"]
         - name: dateparse
-          args: "2006-01-02 15:04 -07:00"
+          args: "yyyy-MM-dd HH:mm zzz"
     seeders:
       selector: td.stats > span:nth-child(1)
     leechers:

@@ -5,34 +5,34 @@ description: "Torrent Downloads (TD) is a Public torrent site for all kinds of c
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 links:
-  - https://www.torrentdownloads.info/
   - https://www.torrentdownloads.pro/
-  - https://torrentdownloads.unblockit.pet/
-  - https://torrentdownloads.nocensor.lol/
+  - https://torrentdownloads.unblockit.dad/
   - https://torrentdownloads.unblockninja.com/
+  - https://torrentdownloads.ninjaproxy1.com/
+  - https://torrentdownloads.proxyninja.org/
 legacylinks:
   - https://www.torrentdownloads.me/
-  - https://torrentdownloads.nocensor.space/
-  - https://torrentdownloads.nocensor.work/
-  - https://torrentdownloads.unblockit.kim/
-  - https://torrentdownloads.unblockit.bz/
-  - https://torrentdownloads.unblockit.tv/
-  - https://torrentdownloads.unblockit.how/
-  - https://torrentdownloads.unblockit.cam/
-  - https://torrentdownloads.nocensor.biz/
-  - https://torrentdownloads.unblockit.day/
-  - https://torrentdownloads.unblockit.llc/
-  - https://torrentdownloads.unblockit.blue/
-  - https://torrentdownloads.unblockit.name/
-  - https://torrentdownloads.nocensor.sbs/
-  - https://torrentdownloads.unblockit.ist/
-  - https://torrentdownloads.unblockit.bet/
-  - https://torrentdownloads.unblockit.cat/
-  - https://torrentdownloads.unblockit.nz/
-  - https://torrentdownloads.nocensor.world/
-  - https://torrentdownloads.unblockit.page/
+  - https://torrentdownloads.nocensor.lol/
+  - https://torrentdownloads.unblockit.ink/
+  - https://torrentdownloads.unblockit.bio/
+  - https://torrentdownloads.unblockit.boo/
+  - https://www.torrentdownloads.info/
+  - https://torrentdownloads.mrunblock.guru/
+  - https://torrentdownloads.unblockit.click/
+  - https://torrentdownloads.unblockit.asia/
+  - https://torrentdownloads.unblockit.mov/
+  - https://torrentdownloads.mrunblock.life/
+  - https://torrentdownloads.unblockit.rsvp/
+  - https://torrentdownloads.nocensor.click/
+  - https://torrentdownloads.unblockit.vegas/
+  - https://torrentdownloads.unblockit.esq/
+  - https://torrentdownloads.unblockit.zip/
+  - https://torrentdownloads.unblockit.foo/
+  - https://torrentdownloads.unblockit.ing/
+  - https://torrentdownloads.mrunblock.bond/
+  - https://torrentdownloads.nocensor.cloud/
+  - https://torrentdownloads.unblockit.date/
 
 caps:
   categorymappings:
@@ -53,6 +53,7 @@ caps:
     movie-search: [q]
     music-search: [q]
     book-search: [q]
+  allowrawsearch: true
 
 settings:
   - name: downloadlink
@@ -88,6 +89,11 @@ search:
   inputs:
     $raw: "{{ range .Categories }}s_cat={{.}}&{{end}}"
     search: "{{ .Keywords }}"
+
+  keywordsfilters:
+    - name: re_replace
+      args: ["\\W+", " "]
+    - name: trim
 
   rows:
     selector: div.inner_container > div:has(p:has(a[href^="/torrent/"])):not(:has(span.__cf_email__))

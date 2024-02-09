@@ -2,7 +2,7 @@
 id: chilebt
 name: ChileBT
 description: "ChileBT is a CHILEAN Private Torrent Tracker for MOVIES / TV / GENERAL"
-language: es-419
+language: es-CL
 type: private
 encoding: UTF-8
 links:
@@ -83,15 +83,12 @@ search:
   inputs:
     $raw: "{{ range .Categories }}categories[]={{.}}&{{end}}"
     search: "{{ if .Query.IMDBID }}{{ else }}{{ .Keywords }}{{ end }}" # for dashboard imdbid search
-    description: ""
-    uploader: ""
     imdb: "{{ .Query.IMDBIDShort }}"
     tvdb: "{{ .Query.TVDBID }}"
     tmdb: "{{ .Query.TMDBID }}"
-    mal: ""
     sorting: "{{ .Config.sort }}"
     direction: "{{ .Config.type }}"
-    qty: 100
+    qty: 50
     page: 0
     view: list
     freeleech: "{{ if .Config.freeleech }}1{{ else }}{{ end }}"

@@ -11,39 +11,50 @@ namespace Jackett.Common.Indexers
     [ExcludeFromCodeCoverage]
     public class CinemaZ : AvistazTracker
     {
-        public CinemaZ(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "cinemaz",
-                   name: "CinemaZ",
-                   description: "Part of the Avistaz network.",
-                   link: "https://cinemaz.to/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.Genre
-                       },
-                       MovieSearchParams = new List<MovieSearchParam> {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.Genre
+        public override string Id => "cinemaz";
+        public override string Name => "CinemaZ";
+        public override string Description => "Part of the Avistaz network.";
+        public override string SiteLink { get; protected set; } = "https://cinemaz.to/";
 
-                       }
-                   },
-                   configService: configService,
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
+        public CinemaZ(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
+                       ICacheService cs)
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cs: cs
                    )
         {
-            AddCategoryMapping(1, TorznabCatType.Movies);
-            AddCategoryMapping(1, TorznabCatType.MoviesUHD);
-            AddCategoryMapping(1, TorznabCatType.MoviesHD);
-            AddCategoryMapping(1, TorznabCatType.MoviesSD);
-            AddCategoryMapping(2, TorznabCatType.TV);
-            AddCategoryMapping(2, TorznabCatType.TVUHD);
-            AddCategoryMapping(2, TorznabCatType.TVHD);
-            AddCategoryMapping(2, TorznabCatType.TVSD);
-            AddCategoryMapping(3, TorznabCatType.Audio);
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                LimitsDefault = 50,
+                LimitsMax = 50,
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.Genre
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.Genre
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.Movies);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesUHD);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesHD);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesSD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TV);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVUHD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVHD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVSD);
+
+            return caps;
         }
     }
 }

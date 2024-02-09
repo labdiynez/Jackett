@@ -1,35 +1,34 @@
 ---
 id: torrentdownload
 name: TorrentDownload
-description: "TorrentDownload is a Public general torrent index"
+description: "TorrentDownload is a Public torrent meta-search engine"
 language: en-US
-type: semi-private
+type: public
 encoding: UTF-8
-followredirect: true
 links:
   - https://www.torrentdownload.info/
+  - https://torrentdownload.unblockit.dad/
+legacylinks:
   - https://torrentdownload.unblockit.pet/
   - https://torrentdownload.nocensor.lol/
-legacylinks:
-  - https://torrentdownload.nocensor.space/
-  - https://torrentdownload.nocensor.work/
-  - https://torrentdownload.unblockit.kim/
-  - https://torrentdownload.unblockit.bz/
-  - https://torrentdownload.unblockit.tv/
-  - https://torrentdownload.unblockit.how/
-  - https://torrentdownload.unblockit.cam/
-  - https://torrentdownload.nocensor.biz/
-  - https://torrentdownload.unblockit.day/
-  - https://torrentdownload.unblockit.llc/
-  - https://torrentdownload.unblockit.blue/
-  - https://torrentdownload.unblockit.name/
-  - https://torrentdownload.nocensor.sbs/
-  - https://torrentdownload.unblockit.ist/
-  - https://torrentdownload.unblockit.bet/
-  - https://torrentdownload.unblockit.cat/
-  - https://torrentdownload.unblockit.nz/
-  - https://torrentdownload.nocensor.world/
-  - https://torrentdownload.unblockit.page/
+  - https://torrentdownload.unblockit.ink/
+  - https://torrentdownload.unblockit.bio/
+  - https://torrentdownload.unblockit.boo/
+  - https://torrentdownload.mrunblock.guru/
+  - https://torrentdownload.unblockit.click/
+  - https://torrentdownload.unblockit.asia/
+  - https://torrentdownload.unblockit.mov/
+  - https://torrentdownload.mrunblock.life/
+  - https://torrentdownload.unblockit.rsvp/
+  - https://torrentdownload.nocensor.click/
+  - https://torrentdownload.unblockit.vegas/
+  - https://torrentdownload.unblockit.esq/
+  - https://torrentdownload.unblockit.zip/
+  - https://torrentdownload.unblockit.foo/
+  - https://torrentdownload.unblockit.ing/
+  - https://torrentdownload.mrunblock.bond/
+  - https://torrentdownload.nocensor.cloud/
+  - https://torrentdownload.unblockit.date/
 
 caps:
   categorymappings:
@@ -42,9 +41,11 @@ caps:
     - {id: AnimeAnimeOther, cat: TV/Anime, desc: "Anime Other"}
     - {id: Applications, cat: PC/0day, desc: Applications}
     - {id: ApplicationsAndroid, cat: PC/Mobile-Android, desc: "Applications Android"}
+    - {id: ApplicationsWindows, cat: PC/0day, desc: "Applications Windows"}
     - {id: AudioBooks, cat: Audio/Audiobook, desc: "Books Audiobooks"}
     - {id: AudioAudiobooks, cat: Audio/Audiobook, desc: "Books Audiobooks"}
     - {id: AudioLossless, cat: Audio/Lossless, desc: "Audio Lossless"}
+    - {id: AudioMusic, cat: Audio/MP3, desc: "Audio Music"}
     - {id: BooksAcademic, cat: Books, desc: "Books Academic"}
     - {id: BooksComics, cat: Books/Comics, desc: "Books Comics"}
     - {id: BooksEbooks, cat: Books/EBook, desc: "Books Ebooks"}
@@ -52,6 +53,7 @@ caps:
     - {id: BooksMagazines, cat: Books/Mags, desc: "Books Magazines"}
     - {id: BooksFiction, cat: Books, desc: "Books Fiction"}
     - {id: BooksNonfiction, cat: Books, desc: "Books Nonfiction"}
+    - {id: BooksTextbooks, cat: Books, desc: "Books Textbooks"}
     - {id: Ebooks, cat: Books/EBook, desc: "Books Ebooks"}
     - {id: Games, cat: Console, desc: Games}
     - {id: GamesWindows, cat: PC/Games, desc: "Games Windows"}
@@ -61,7 +63,9 @@ caps:
     - {id: MoviesCrime, cat: Movies, desc: "Movies Crime"}
     - {id: MoviesDocumentary, cat: TV/Documentary, desc: "Movies Documentary"}
     - {id: MoviesDubbedMovies, cat: Movies, desc: "Movies Dubbed Movies"}
+    - {id: MoviesHighresMovies, cat: Movies, desc: "Movies Highres Movies"}
     - {id: MoviesMusicvideos, cat: Audio/Video, desc: "Movies Musicvideos"}
+    - {id: MoviesThriller, cat: Movies, desc: "Movies Thriller"}
     - {id: Music, cat: Audio, desc: Music}
     - {id: MusicHardrock, cat: Audio, desc: "Music Hardrock"}
     - {id: MusicMp, cat: Audio/MP3, desc: "Music Mp3"}
@@ -70,11 +74,13 @@ caps:
     - {id: MusicRB, cat: Audio, desc: "Music R&B"}
     - {id: MusicTranceHouseDance, cat: Audio, desc: "Music Trance House Dance"}
     - {id: Other, cat: Other, desc: Other}
+    - {id: OtherEbooks, cat: Books/EBook, desc: "Other Ebooks"}
     - {id: OtherComics, cat: Other, desc: "Other Comics"}
     - {id: OtherTutorials, cat: Other, desc: "Other Tutorials"}
     - {id: OtherUnsorted, cat: Other, desc: "Other Unsorted"}
     - {id: PicturesPicturesOther, cat: Other/Misc, desc: "Pictures Other"}
     - {id: PicturesWallpapers, cat: Other/Misc, desc: "Pictures Wallpapers"}
+    - {id: Software, cat: PC/0day, desc: "Software"}
     - {id: TV, cat: TV, desc: TV}
     - {id: TVBBC, cat: TV, desc: "TV BBC"}
     - {id: TVEllenDeGeneres, cat: TV, desc: "TV Ellen DeGeneres"}
@@ -82,6 +88,8 @@ caps:
     - {id: TVshows, cat: TV, desc: "TV shows"}
     - {id: Television, cat: TV, desc: Television}
     - {id: VideoMobile, cat: Movies, desc: "Movies Video Mobile"}
+    - {id: VideoMovies, cat: Movies, desc: "Video Movies"}
+    - {id: VideoMusic, cat: Audio/Video, desc: "Video Music"}
     - {id: XXX, cat: XXX, desc: XXX}
     - {id: XXXVideo, cat: XXX, desc: "XXX Video"}
     - {id: XXXHDVideo, cat: XXX, desc: "XXX HD Video"}
@@ -95,36 +103,22 @@ caps:
     book-search: [q]
 
 settings:
-  - name: cookie
-    type: text
-    label: Cookie
-  - name: info
-    type: info
-    label: How to get the Cookie
-    default: "<ol><li>Access this tracker with your browser<li>Solve the challenge<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button<li>Refresh the page by pressing <b>F5</b><li>Select the <b>Headers</b> tab<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
   - name: sort
     type: select
     label: Sort requested from site (Applies only to Search with Keywords)
     default: d
     options:
       d: created
-      s: seeders
-      _: size
+      _: seeders
 
 download:
   selectors:
     - selector: a[href^="magnet:?xt="]
       attribute: href
 
-login:
-  method: cookie
-  test:
-    path: /
-
 search:
-  # home page no longer has torrents. /latest would be ideal but has not categories. resorting to /top for keywordless searches.
   paths:
-    - path: "{{ if .Keywords }}search{{ re_replace .Config.sort \"_\" \"\" }}?q={{ .Keywords }}{{ else }}top{{ end }}"
+    - path: "search{{ re_replace .Config.sort \"_\" \"\" }}?q={{ if .Keywords }}{{ .Keywords }}{{ else }}{{ .Today.Year }}{{ end }}"
 
   rows:
     selector: table.table2 > tbody > tr:has(span.smallish)

@@ -49,8 +49,8 @@ namespace Jackett.Common.Indexers.Meta
             }
             else
             {
-                wrongResults = new ReleaseInfo[] { };
-                perfectResults = new ReleaseInfo[] { };
+                wrongResults = Array.Empty<ReleaseInfo>();
+                perfectResults = Array.Empty<ReleaseInfo>();
             }
 
             var remainingResults = results.Except(wrongResults).Except(perfectResults);
@@ -100,7 +100,10 @@ namespace Jackett.Common.Indexers.Meta
 
     public class ImdbTitleResultFilterProvider : IResultFilterProvider
     {
-        public ImdbTitleResultFilterProvider(IImdbResolver resolver) => this.resolver = resolver;
+        public ImdbTitleResultFilterProvider(IImdbResolver resolver)
+        {
+            this.resolver = resolver;
+        }
 
         public IEnumerable<IResultFilter> FiltersForQuery(TorznabQuery query)
         {

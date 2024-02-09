@@ -194,7 +194,7 @@ caps:
     - {id: 776, cat: Other, desc: "Hardstyle"}
     - {id: 777, cat: Other, desc: "House"}
     - {id: 778, cat: Other, desc: "Trance"}
-    - {id: 779, cat: Other, desc: "Drum &amp; Bass / Jungle / Breakbeat / Dubstep / IDM"}
+    - {id: 779, cat: Other, desc: "Drum & Bass / Jungle / Breakbeat / Dubstep / IDM"}
     - {id: 898, cat: Other, desc: "Дискографии"}
     - {id: 886, cat: Other, desc: "Поп музыка"}
     - {id: 895, cat: Other, desc: "Смешанные сборники"}
@@ -587,7 +587,7 @@ caps:
     - {id: 823, cat: Other, desc: "Картинки"}
     - {id: 1008, cat: Other, desc: "Pron"}
     - {id: 687, cat: Other, desc: "Общение и Обсуждение порноиндустрии"}
-    - {id: 694, cat: Other, desc: "Правила, Инструкции, FAQ-и / Rules &amp; FAQ's"}
+    - {id: 694, cat: Other, desc: "Правила, Инструкции, FAQ-и / Rules & FAQ's"}
     - {id: 695, cat: Other, desc: "Общение"}
     - {id: 696, cat: Other, desc: "Актеры"}
     - {id: 697, cat: Other, desc: "Ищу"}
@@ -596,11 +596,11 @@ caps:
     - {id: 699, cat: Other, desc: "101 Величайший Порно Фильм 20 Века"}
     - {id: 700, cat: Other, desc: "Самые популярные / Bestseller"}
     - {id: 701, cat: Other, desc: "Классические фильмы / Classic"}
-    - {id: 702, cat: Other, desc: "Фильмы с сюжетом / Feature &amp; Vignettes"}
+    - {id: 702, cat: Other, desc: "Фильмы с сюжетом / Feature & Vignettes"}
     - {id: 703, cat: Other, desc: "Гонзо-фильмы / Gonzo"}
     - {id: 704, cat: Other, desc: "Зарубежный Pron (DVD, HD Video)"}
-    - {id: 705, cat: Other, desc: "Фильмы без сюжета / All Sex &amp; Amateur"}
-    - {id: 706, cat: Other, desc: "Лесбо-фильмы / All Girl &amp; Solo"}
+    - {id: 705, cat: Other, desc: "Фильмы без сюжета / All Sex & Amateur"}
+    - {id: 706, cat: Other, desc: "Лесбо-фильмы / All Girl & Solo"}
     - {id: 707, cat: Other, desc: "Этнические фильмы / Ethnic-Themed"}
     - {id: 708, cat: Other, desc: "Японские фильмы / Japan"}
     - {id: 709, cat: Other, desc: "Архив (Зарубежные порнофильмы)"}
@@ -618,7 +618,7 @@ caps:
     - {id: 717, cat: Other, desc: "Русские Порнофильмы / Russian Full Length Movies"}
     - {id: 718, cat: Other, desc: "Паки русских порнороликов / Russian Clips Packs"}
     - {id: 719, cat: Other, desc: "HD Фильмы и ролики"}
-    - {id: 720, cat: Other, desc: "Сцены из фильмов и Сайтрипы с русскими актрисами / Russian Movie Scenes &amp; SiteRip's"}
+    - {id: 720, cat: Other, desc: "Сцены из фильмов и Сайтрипы с русскими актрисами / Russian Movie Scenes & SiteRip's"}
     - {id: 691, cat: Other, desc: "Эротические студии и фото, журналы и комиксы"}
     - {id: 725, cat: Other, desc: "Фотографии в высоком качестве / Foto High Quality"}
     - {id: 726, cat: Other, desc: "Любительское фото / Amateur Picture Gallery"}
@@ -626,7 +626,7 @@ caps:
     - {id: 728, cat: Other, desc: "Подборки сайтрипов / SiteRip's Picture Packs"}
     - {id: 729, cat: Other, desc: "Фото Разное / Picture Gallery (various)"}
     - {id: 730, cat: Other, desc: "Журналы, комиксы, манга и рисунки / Magazines, Comics, Manga and Artwork"}
-    - {id: 731, cat: Other, desc: "Тематическое и нетрадиционное фото / Misc &amp; Special Interest Picture Packs"}
+    - {id: 731, cat: Other, desc: "Тематическое и нетрадиционное фото / Misc & Special Interest Picture Packs"}
     - {id: 732, cat: Other, desc: "Архив (Эротические студии и фото, журналы и комиксы)"}
     - {id: 692, cat: Other, desc: "Обучающие материалы"}
     - {id: 733, cat: Other, desc: "Обучающие материалы (Pron)"}
@@ -637,7 +637,7 @@ caps:
     - {id: 737, cat: Other, desc: "Транссексуалы / Transsexual"}
     - {id: 738, cat: Other, desc: "БДСМ / BDSM"}
     - {id: 739, cat: Other, desc: "Бисексуалы / Bisexual"}
-    - {id: 740, cat: Other, desc: "Женское доминирование и страпон / Femdom &amp; Strapon"}
+    - {id: 740, cat: Other, desc: "Женское доминирование и страпон / Femdom & Strapon"}
     - {id: 741, cat: Other, desc: "Подглядывание / Voyeur"}
     - {id: 742, cat: Other, desc: "Архив (Нетрадиционное порно)"}
     - {id: 743, cat: Other, desc: "Разное"}
@@ -654,13 +654,13 @@ caps:
     book-search: [q]
 
 settings:
-  - name: striprussian
+  - name: stripcyrillic
     type: checkbox
-    label: Strip Russian Letters
+    label: Strip Cyrillic Letters
     default: false
-  - name: addrussian
+  - name: addrussiantotitle
     type: checkbox
-    label: Add RUSSIAN to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.
+    label: Add RUS to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.
     default: false
   - name: sort
     type: select
@@ -698,6 +698,11 @@ search:
     keywords: "{{ if .Keywords }}{{ .Keywords }}{{ else }}{{ .Today.Year }}{{ end }}"
     $raw: "{{ range .Categories }}&fid[]={{.}}{{end}}"
 
+  keywordsfilters:
+    # strip season and/or ep
+    - name: re_replace
+      args: ["(?i)\\b(?:[SE]\\d{1,4}){1,2}\\b\\s?", ""]
+
   rows:
     selector: table.tablebg tr.col_line
 
@@ -711,34 +716,69 @@ search:
     title:
       selector: a.topictitle
       filters:
-        - name: replace
-          args: ["Кураж-Бамбей", "kurazh"]
-        - name: replace
-          args: ["Кубик в Кубе", "Kubik"]
-        - name: replace
-          args: ["Кравец", "Kravec"]
-        - name: replace
-          args: ["Пифагор", "Pifagor"]
-        - name: replace
-          args: ["Невафильм", "Nevafilm"]
-        - name: replace
-          args: ["Лицензия", "Lic"]
-        - name: replace
-          args: ["селезень", "selezen"]
+        # normalize to SXXEYY format
         - name: re_replace
-          args: ["(\\([А-Яа-яЁё\\W]+\\))|(^[А-Яа-яЁё\\W\\d]+\\/ )|([а-яА-ЯЁё \\-]+,+)|([а-яА-ЯЁё]+)", "{{ if .Config.striprussian }}{{ else }}$1$2$3$4{{ end }}"]
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:(?:-|–)\\d+)?).+?(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))[\\s:]*(\\d+(?:(?:-|–)\\d+)?)\\s*из\\s*(\\w?)", "S$1E$2 of $3"]
         - name: re_replace
-          args: ["[\\:\\-\\/\\|\\[\\]]", " "]
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s*[CС]езоны?.+?(\\d+(?:(?:-|–)\\d+)?)\\s*из\\s*(\\w?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))?", "S$1E$2 of $3"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s*[CС]езоны?.+?(\\d+(?:(?:-|–)\\d+)?)\\s*(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))\\s+из\\s*(\\w?)", "S$1E$2 of $3"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:(?:-|–)\\d+)?).+?(\\d+(?:(?:-|–)\\d+)?)\\s*из\\s*(\\w?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))?", "S$1E$2 of $3"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:(?:-|–)\\d+)?).+?(\\d+(?:(?:-|–)\\d+)?)\\s*(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))\\s+из\\s*(\\w?)", "S$1E$2 of $3"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:(?:-|–)\\d+)?).+?(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))[\\s:]*(\\d+(?:(?:-|–)\\d+)?)", "S$1E$2"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s*[CС]езоны?.+?(\\d+(?:(?:-|–)\\d+)?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "S$1E$2"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:(?:-|–)\\d+)?).+?(\\d+(?:(?:-|–)\\d+)?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "S$1E$2"]
+        - name: re_replace
+          args: ["(?i)[CС]езоны?[\\s:]*(\\d+(?:(?:-|–)\\d+)?)", "S$1"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s+[CС]езоны?", "S$1"]
+        - name: re_replace
+          args: ["(?i)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))[\\s:]*(\\d+(?:(?:-|–)\\d+)?)\\s*из\\s*(\\w?)", "E$1 of $2"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s*из\\s*(\\w?)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "E$1 of $2"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s+(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))\\s+из\\s*(\\w?)", "E$1 of $2"]
+        - name: re_replace
+          args: ["(?i)(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))[\\s:]*(\\d+(?:(?:-|–)\\d+)?)", "E$1"]
+        - name: re_replace
+          args: ["(?i)(\\d+(?:(?:-|–)\\d+)?)\\s+(?:\\s*(?:[CС]ери[ияй]|Эпизод|Выпуски?))", "E$1"]
+        - name: re_replace
+          args: ["(?i)\\bКураж-Бамбей\\b", "kurazh"]
+        - name: re_replace
+          args: ["(?i)\\bКубик в Кубе\\b", "Kubik"]
+        - name: re_replace
+          args: ["(?i)\\bКравец\\b", "Kravec"]
+        - name: re_replace
+          args: ["(?i)\\bПифагор\\b", "Pifagor"]
+        - name: re_replace
+          args: ["(?i)\\bНевафильм\\b", "Nevafilm"]
+        - name: re_replace
+          args: ["(?i)\\bЛицензия\\b", "Lic"]
+        - name: re_replace
+          args: ["(?i)\\bселезень\\b", "selezen"]
+        - name: re_replace
+          args: ["(\\([\\p{IsCyrillic}\\W]+\\))|(^[\\p{IsCyrillic}\\W\\d]+\\/ )|([\\p{IsCyrillic} \\-]+,+)|([\\p{IsCyrillic}]+)", "{{ if .Config.stripcyrillic }}{{ else }}$1$2$3$4{{ end }}"]
+        - name: re_replace
+          args: ["(?i)\\bHDTV[-\\s]?Rip\\b", "HDTV"]
+        - name: re_replace
+          args: ["(?i)\\bSAT[-\\s]?Rip\\b", "HDTV"]
+        - name: re_replace
+          args: ["(?i)\\bWEB[-\\s]?DL[-\\s]?Rip\\b", "WEB-DL"]
+        - name: re_replace
+          args: ["(?i)\\bWEB\\sRip\\b", "WEBRip"]
+        - name: re_replace
+          args: ["(?i)\\bWEB\\sDL\\b", "WEB-DL"]
+        - name: re_replace
+          args: ["[\\[\\(\\{<«][\\s\\W]*[\\]\\)\\}>»]", ""]
+        - name: re_replace
+          args: ["^[\\s&,\\.!\\?\\+\\-_\\|\\/':]+", ""]
         - name: append
-          args: "{{ if .Config.addrussian }} - RUSSIAN{{ else }}{{ end }}"
-        - name: replace
-          args: [" Rip", "Rip"]
-        - name: replace
-          args: ["WEB DL", "WEBDL"]
-        - name: replace
-          args: ["WEBDLRip", "WEBDL"]
-        - name: replace
-          args: ["HDTVRip", "HDTV"]
+          args: "{{ if .Config.addrussiantotitle }} RUS{{ else }}{{ end }}"
     details:
       selector: a.topictitle
       attribute: href
@@ -792,9 +832,11 @@ search:
         - name: append
           args: " +03:00" # MSK
         - name: dateparse
-          args: "02 Jan 2006 -07:00"
+          args: "dd MMM yyyy zzz"
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:
       text: 1
+    description:
+      selector: a.topictitle
 # phpBB

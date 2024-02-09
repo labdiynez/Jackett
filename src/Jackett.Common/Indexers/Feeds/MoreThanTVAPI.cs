@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Jackett.Common.Models;
@@ -20,46 +19,53 @@ namespace Jackett.Common.Indexers.Feeds
     [ExcludeFromCodeCoverage]
     public class MoreThanTVAPI : BaseNewznabIndexer
     {
+        public override string Id => "morethantv-api";
+        public override string Name => "MoreThanTV (API)";
+        public override string Description => "Private torrent tracker for TV / MOVIES";
+        public override string SiteLink { get; protected set; } = "https://www.morethantv.me/";
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private new ConfigurationDataAPIKey configData => (ConfigurationDataAPIKey)base.configData;
 
         public MoreThanTVAPI(IIndexerConfigurationService configService, WebClient client, Logger logger,
             IProtectionService ps, ICacheService cs)
-            : base(id: "morethantv-api",
-                   name: "MoreThanTV (API)",
-                   description: "Private torrent tracker for TV / MOVIES",
-                   link: "https://www.morethantv.me/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.TvdbId
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: ps,
                    cs: cs,
                    configData: new ConfigurationDataAPIKey())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
-
-            AddCategoryMapping(TorznabCatType.TVSD.ID, TorznabCatType.TVSD);
-            AddCategoryMapping(TorznabCatType.TVHD.ID, TorznabCatType.TVHD);
-            AddCategoryMapping(TorznabCatType.TVUHD.ID, TorznabCatType.TVUHD);
-            AddCategoryMapping(TorznabCatType.TVSport.ID, TorznabCatType.TVSport);
-            AddCategoryMapping(TorznabCatType.MoviesSD.ID, TorznabCatType.MoviesSD);
-            AddCategoryMapping(TorznabCatType.MoviesHD.ID, TorznabCatType.MoviesHD);
-            AddCategoryMapping(TorznabCatType.MoviesUHD.ID, TorznabCatType.MoviesUHD);
-            AddCategoryMapping(TorznabCatType.MoviesBluRay.ID, TorznabCatType.MoviesBluRay);
-
             configData.AddDynamic("keyInfo", new DisplayInfoConfigurationItem(String.Empty, "Find or Generate a new API Key by accessing your <a href=\"https://www.morethantv.me/user/security\" target =_blank>MoreThanTV</a> account <i>User Security</i> page and scrolling to the <b>API Keys</b> section."));
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.TvdbId
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(TorznabCatType.TVSD.ID, TorznabCatType.TVSD);
+            caps.Categories.AddCategoryMapping(TorznabCatType.TVHD.ID, TorznabCatType.TVHD);
+            caps.Categories.AddCategoryMapping(TorznabCatType.TVUHD.ID, TorznabCatType.TVUHD);
+            caps.Categories.AddCategoryMapping(TorznabCatType.TVSport.ID, TorznabCatType.TVSport);
+            caps.Categories.AddCategoryMapping(TorznabCatType.MoviesSD.ID, TorznabCatType.MoviesSD);
+            caps.Categories.AddCategoryMapping(TorznabCatType.MoviesHD.ID, TorznabCatType.MoviesHD);
+            caps.Categories.AddCategoryMapping(TorznabCatType.MoviesUHD.ID, TorznabCatType.MoviesUHD);
+            caps.Categories.AddCategoryMapping(TorznabCatType.MoviesBluRay.ID, TorznabCatType.MoviesBluRay);
+
+            return caps;
         }
 
         public override Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -126,11 +132,11 @@ namespace Jackett.Common.Indexers.Feeds
         protected override ReleaseInfo ResultFromFeedItem(XElement item)
         {
             var release = base.ResultFromFeedItem(item);
-            var enclosures = item.Descendants("enclosure").Where(e => e.Attribute("type").Value == "application/x-bittorrent");
-            if (enclosures.Any())
+            var enclosure = item.Descendants("enclosure").FirstOrDefault(e => e.Attribute("type").Value == "application/x-bittorrent");
+            if (enclosure != null)
             {
-                var enclosure = enclosures.First().Attribute("url").Value;
-                release.Link = new Uri(enclosure);
+                var enclosureUrl = enclosure.Attribute("url").Value;
+                release.Link = new Uri(enclosureUrl);
             }
             // add some default values if none returned by feed
             release.Seeders = release.Seeders > 0 ? release.Seeders : 0;

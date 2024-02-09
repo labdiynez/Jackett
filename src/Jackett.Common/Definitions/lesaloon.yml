@@ -6,9 +6,11 @@ language: fr-FR
 type: private
 encoding: UTF-8
 links:
+  - https://lesaloonv2-0.lol/
   - https://lesaloonv2-0.net/
 legacylinks:
   - http://lesaloonv2-0.net/ # site forces https
+  - https://lesaloonv2-0.xyz/
 
 caps:
   categorymappings:
@@ -96,32 +98,32 @@ settings:
     type: checkbox
     label: Search freeleech only
     default: false
-  - name: vfq
-    type: checkbox
-    label: Replace VFQ with FRENCH in release name
-    default: false
   - name: multilang
     type: checkbox
-    label: Replace MULTI by another language in release name
+    label: Replace MULTi by another language in release name
     default: false
   - name: multilanguage
     type: select
-    label: Replace MULTI by this language
+    label: Replace MULTi by this language
     default: FRENCH
     options:
       FRENCH: FRENCH
-      MULTI.FRENCH: MULTI.FRENCH
+      MULTi FRENCH: MULTi FRENCH
       ENGLISH: ENGLISH
-      MULTI.ENGLISH: MULTI.ENGLISH
+      MULTi ENGLISH: MULTi ENGLISH
       VOSTFR: VOSTFR
-      MULTI.VOSTFR: MULTI.VOSTFR
+      MULTi VOSTFR: MULTi VOSTFR
   - name: vostfr
     type: checkbox
-    label: Replace VOSTFR with ENGLISH
+    label: Replace VOSTFR and SUBFRENCH with ENGLISH
+    default: false
+  - name: vfq
+    type: checkbox
+    label: Replace VFQ with FRENCH
     default: false
 
 login:
-  # https://lesaloonv2-0.net/yupy_login.php
+  # https://lesaloonv2-0.xyz/yupy_login.php
   path: yupy_login.php
   method: form
   form: form[action^="login"]
@@ -137,7 +139,7 @@ login:
 
 search:
   paths:
-    # http://lesaloonv2-0.net/index.php?page=torrents&search=supernatural+s13e20&parentcategory=0&category=0&genre=0&options=0&active=0
+    # http://lesaloonv2-0.xyz/index.php?page=torrents&search=supernatural+s13e20&parentcategory=0&category=0&genre=0&options=0&active=0
     - path: index.php
   inputs:
     page: torrents
@@ -161,34 +163,29 @@ search:
       filters:
         - name: querystring
           args: category
-    title_original:
+    title_phase1:
       selector: td a[href^="index.php?page=torrent-details"]
-      filters:
-        - name: replace
-          args: [".", " "]
     title_vfq:
-      text: "{{ .Result.title_original }}"
+      text: "{{ .Result.title_phase1 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\sVFQ\\s)", " FRENCH "]
-    title_step2:
-      text: "{{ if .Config.vfq }}{{ .Result.title_vfq }}{{ else }}{{ .Result.title_original }}{{ end }}"
-    title_multilang:
-      text: "{{ .Result.title_step2 }}"
-      filters:
-        - name: re_replace
-          args: ["(?i)(\\smulti\\s)", " {{ .Config.multilanguage }} "]
-    title_step3:
-      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_step2 }}{{ end }}"
+          args: ["(?i)\\b(VFQ)\\b", "FRENCH"]
+    title_phase2:
+      text: "{{ if .Config.vfq }}{{ .Result.title_vfq }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
     title_vostfr:
-      text: "{{ .Result.title_step3 }}"
+      text: "{{ .Result.title_phase2 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\svostfr\\s)", " ENGLISH "]
+          args: ["(?i)\\b(vostfr|subfrench)\\b", "ENGLISH"]
+    title_phase3:
+      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
+    title_multilang:
+      text: "{{ .Result.title_phase3 }}"
+      filters:
         - name: re_replace
-          args: ["(?i)(\\ssubfrench\\s)", " ENGLISH "]
+          args: ["(?i)\\b(MULTI(?!.*(?:FRENCH|ENGLISH|VOSTFR)))\\b", "{{ .Config.multilanguage }}"]
     title:
-      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_step3 }}{{ end }}"
+      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase3 }}{{ end }}"
     details:
       selector: td a[href^="index.php?page=torrent-details"]
       attribute: href
@@ -208,7 +205,7 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "02/01/2006 15:04:05 -07:00"
+          args: "dd/MM/yyyy HH:mm:ss zzz"
     seeders:
       selector: td:nth-child(8)
     leechers:

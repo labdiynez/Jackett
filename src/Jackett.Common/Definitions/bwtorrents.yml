@@ -7,6 +7,9 @@ type: private
 encoding: UTF-8
 links:
   - https://bwtorrents.tv/
+  - https://bwtorrents.co/
+  - https://bwtorrents.cc/
+legacylinks:
   - https://bwtorrents.fun/
   - https://bwtorrents.xyz/
   - https://bwtorrents.us/
@@ -120,6 +123,8 @@ caps:
     - {id: 217, cat: Movies, desc: "Tamil-Movies | Remuxes BluRay"}
     - {id: 218, cat: TV, desc: "TV-Ishara TV"}
     - {id: 219, cat: TV, desc: "TV-Bengali Tv"}
+    - {id: 220, cat: TV, desc: "TV-Shemaroo Umang"}
+    - {id: 221, cat: TV, desc: "TV-JioTv"}
 
   modes:
     search: [q]
@@ -187,7 +192,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "02-01-200615:04:05"
+          args: "dd-MM-yyyyHH:mm:ss"
     size:
       selector: td:nth-child(6)
     download:

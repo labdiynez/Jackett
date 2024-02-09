@@ -36,6 +36,7 @@ login:
     - selector: :contains("密码错误")
   test:
     path: index.php
+    selector: a[href="logout.php"]
 
 search:
   paths:
@@ -78,7 +79,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     imdbid:
       selector: div.torrent-imdb
       attribute: href

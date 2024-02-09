@@ -15,16 +15,10 @@ namespace Jackett.Common.Indexers.Feeds
     [ExcludeFromCodeCoverage]
     public abstract class BaseNewznabIndexer : BaseFeedIndexer
     {
-        protected BaseNewznabIndexer(string link, string id, string name, string description,
-                                     IIndexerConfigurationService configService, WebClient client, Logger logger,
+        protected BaseNewznabIndexer(IIndexerConfigurationService configService, WebClient client, Logger logger,
                                      ConfigurationData configData, IProtectionService p, ICacheService cs,
-                                     TorznabCapabilities caps = null, string downloadBase = null)
-            : base(id: id,
-                   name: name,
-                   description: description,
-                   link: link,
-                   caps: caps,
-                   configService: configService,
+                                     string downloadBase = null)
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: p,

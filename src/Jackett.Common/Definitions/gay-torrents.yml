@@ -36,6 +36,10 @@ settings:
     options:
       0: desc
       1: asc
+  - name: whisparrv2
+    type: checkbox
+    label: Strip release date from queries (for Whisparr v2 compatibility)
+    default: false
 
 caps:
   categorymappings:
@@ -131,6 +135,8 @@ search:
     freeleech: "{{ if .Config.freeleech }}1{{ else }}0{{ end }}"
   keywordsfilters:
     - name: re_replace
+      args: ["(\\d{2}\\.\\d{2}\\.\\d{2})", "{{ if .Config.whisparrv2 }}{{ else }}$1{{ end }}"] # strip release date from query for whisparr v2 compatibility
+    - name: re_replace
       args: ["(\\w+)", "+$1"] # prepend + to each word
 
   rows:
@@ -169,7 +175,7 @@ search:
         - name: append
           args: " +02:00" # EET
         - name: dateparse
-          args: "15:04 02-Jan-2006 -07:00"
+          args: "HH:mm dd-MMM-yyyy zzz"
     downloadvolumefactor:
       case:
         "a:contains(\"[FFL]\")": 0

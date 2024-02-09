@@ -180,15 +180,19 @@ caps:
     - {id: 244, cat: Other, desc: "GFXNEWS OTHER GRAPHICS Zbrush, Substance tools"}
     - {id: 216, cat: Other, desc: "GFXNEWS PHOTOSTOCK"}
     - {id: 220, cat: Other, desc: "GFXNEWS PHOTOGRAPHY - ART"}
-    - {id: 227, cat: Other, desc: "GFXNEWS PHOTOSHOP"}
-    - {id: 228, cat: Other, desc: "GFXNEWS PHOTOSHOP Actions, Pattern & Styles"}
-    - {id: 229, cat: Other, desc: "GFXNEWS PHOTOSHOP Background & PSD Source"}
-    - {id: 230, cat: Other, desc: "GFXNEWS PHOTOSHOP Brushes & Gradient"}
-    - {id: 231, cat: Other, desc: "GFXNEWS PHOTOSHOP Toolkits, Papers & Objects"}
-    - {id: 245, cat: Other, desc: "GFXNEWS PLUGINS"}
-    - {id: 225, cat: Other, desc: "GFXNEWS PLUGINS LINUX"}
-    - {id: 223, cat: Other, desc: "GFXNEWS PLUGINS MAC"}
+    - {id: 227, cat: Other, desc: "GFXNEWS 2D Graphics"}
+    - {id: 250, cat: Other, desc: "GFXNEWS 2D Graphics Effects"}
+    - {id: 228, cat: Other, desc: "GFXNEWS 2D Graphics Actions, Pattern & Styles"}
+    - {id: 229, cat: Other, desc: "GFXNEWS 2D Graphics Background & PSD Source"}
+    - {id: 230, cat: Other, desc: "GFXNEWS 2D Graphics Brushes & Gradient"}
+    - {id: 246, cat: Other, desc: "GFXNEWS 2D Graphics Mockup"}
+    - {id: 247, cat: Other, desc: "GFXNEWS 2D Graphics Overlays"}
+    - {id: 249, cat: Other, desc: "GFXNEWS 2D Graphics Preset"}
+    - {id: 231, cat: Other, desc: "GFXNEWS 2D Graphics Toolkits, Papers & Objects"}
+    - {id: 245, cat: Other, desc: "GFXNEWS GFX Plugins"}
     - {id: 210, cat: Other, desc: "GFXNEWS PLUGINS WIN"}
+    - {id: 223, cat: Other, desc: "GFXNEWS PLUGINS MAC"}
+    - {id: 225, cat: Other, desc: "GFXNEWS PLUGINS LINUX"}
     - {id: 217, cat: Other, desc: "GFXNEWS SCRIPTS - WEB PROGRAMMING"}
     - {id: 218, cat: Other, desc: "GFXNEWS TEMPLATES"}
     - {id: 232, cat: Other, desc: "GFXNEWS TEXTURES"}
@@ -280,7 +284,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "01-02-2006 -07:00"
+          args: "MM-dd-yyyy zzz"
 
   fields:
     title:
@@ -297,26 +301,26 @@ search:
       filters:
         - name: querystring
           args: f
-    size_optional:
-      optional: true
-      selector: td:contains(\00a0GB), td:contains(\00a0MB), td:contains(\00a0kB), td:contains(\00a0B)
     size:
-      text: "{{ if .Result.size_optional }}{{ .Result.size_optional }}{{ else }}0 B{{ end }}"
-    seeders_optional:
+      selector: td:contains(\00a0GB), td:contains(\00a0MB), td:contains(\00a0kB), td:contains(\00a0B)
       optional: true
-      selector: td[title="Seeders"]
+      default: 0
     seeders:
-      text: "{{ if .Result.seeders_optional }}{{ .Result.seeders_optional }}{{ else }}0{{ end }}"
-    leechers_optional:
+      selector: td[title="Seeders"]
       optional: true
-      selector: td[title="Leechers"]
+      default: 0
     leechers:
-      text: "{{ if .Result.leechers_optional }}{{ .Result.leechers_optional }}{{ else }}0{{ end }}"
-    grabs_optional:
+      selector: td[title="Leechers"]
       optional: true
-      selector: td[title^="Replies:"]
+      default: 0
     grabs:
-      text: "{{ if .Result.grabs_optional }}{{ .Result.grabs_optional }}{{ else }}0{{ end }}"
+      selector: td[title^="Replies:"]
+      optional: true
+      default: 0
+    description:
+      case:
+        span.tor-approved: Verified
+        span.tor-not-approved: Unverified
     downloadvolumefactor:
       text: 1
     uploadvolumefactor:

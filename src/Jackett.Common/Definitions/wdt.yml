@@ -158,7 +158,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "Jan 2 2006 03:04 PM"
+          args: "MMM d yyyy hh:mm tt"
     size:
       selector: td:nth-child(8)
     grabs:
@@ -167,6 +167,10 @@ search:
       selector: td:nth-child(10)
     leechers:
       selector: td:nth-child(11)
+    description:
+      case:
+        img[src="./pic/mod.gif"]: Verified
+        "*": Unverified
     downloadvolumefactor:
       case:
         "a.info:contains(\"[FREE]\")": 0
@@ -177,6 +181,6 @@ search:
     minimumratio:
       text: 1.0
     minimumseedtime:
-      # 2 days (as seconds = 2 x 24 x 60 x 60)
-      text: 172800
+      # 12 hours (as seconds = 12 x 60 x 60)
+      text: 43200
 # U-232 V5

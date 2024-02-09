@@ -10,7 +10,17 @@ links:
 
 caps:
   categorymappings:
-    - {id: 1, cat: XXX, desc: "PRON"}
+    - {id: 11, cat: XXX, desc: "Asian"}
+    - {id: 3, cat: XXX, desc: "Gay"}
+    - {id: 4, cat: XXX, desc: "Interracial"}
+    - {id: 5, cat: XXX, desc: "Lesbian"}
+    - {id: 6, cat: XXX, desc: "Onlyfans"}
+    - {id: 9, cat: XXX, desc: "Packs"}
+    - {id: 10, cat: XXX, desc: "Pics"}
+    - {id: 1, cat: XXX, desc: "Pron"}
+    - {id: 8, cat: XXX, desc: "Retro"}
+    - {id: 12, cat: XXX, desc: "Transsexual"}
+    - {id: 7, cat: XXX, desc: "VR"}
 
   modes:
     search: [q]
@@ -66,21 +76,22 @@ search:
     - path: torrents.php
   inputs:
     $raw: "{{ range .Categories }}filter_cat[{{.}}]=1&{{end}}"
-    searchtext: ""
     title: "{{ .Keywords }}"
     order_by: "{{ .Config.sort }}"
     order_way: "{{ .Config.type }}"
     action: advanced
     filter_freeleech: "{{ if .Config.freeleech }}1{{ else }}{{ end }}"
-    filelist: ""
-    taglist: ""
 
   rows:
-    selector: table#torrent_table > tbody > tr[class^="torrent row"]
+    selector: table#torrent_table > tbody > tr[class^="torrent row"]:has(a[href*="action=download"])
 
   fields:
     category:
-      text: 1
+      selector: a[href^="/torrents.php?filter_cat["]
+      attribute: href
+      filters:
+        - name: regexp
+          args: \[(\d+)\]
     title:
       selector: a[href^="/torrents.php?id="]
     details:
@@ -89,9 +100,12 @@ search:
     download:
       selector: a[href^="torrents.php?action=download&id="]
       attribute: href
-    description:
-      optional: true
+    description_tags:
       selector: div.tags
+    description:
+      case:
+        span.icon_okay: "Verified: {{ .Result.description_tags }}"
+        "*": "Unverified: {{ .Result.description_tags }}"
     poster:
       selector: td:nth-child(2) > script
       filters:
@@ -109,7 +123,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "Jan 02 2006, 15:04"
+          args: "MMM dd yyyy, HH:mm"
     size:
       selector: td:nth-child(6)
     grabs:
@@ -124,7 +138,10 @@ search:
         "img[alt=\"Freeleech\"]": 0
         "*": 1
     uploadvolumefactor:
-      text: 1
+      case:
+        span.icon[title*="DoubleSeed"]: 2
+        "img[alt=\"DoubleSeed\"]": 2
+        "*": 1
     minimumratio:
       text: 0.5
     minimumseedtime:

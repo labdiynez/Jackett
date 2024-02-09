@@ -5,35 +5,34 @@ description: "GloDLS is a Public Torrent Tracker for MOVIES / TV / GENERAL"
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 links:
   - https://glodls.to/
-  - https://gtdb.cc/
-  - https://www.gtdb.to/
-  - https://glotorrents.unblockit.pet/
-  - https://glotorrents.nocensor.lol/
+  - https://gtso.cc/
+  - https://glotorrents.unblockit.dad/
   - https://glodls.unblockninja.com/
+  - https://glodls.ninjaproxy1.com/
 legacylinks:
   - https://glodls.rocks/
   - https://gtdb.to/
-  - https://glotorrents.nocensor.work/
-  - https://glotorrents.unblockit.kim/
-  - https://glotorrents.unblockit.bz/
-  - https://glotorrents.unblockit.tv/
-  - https://glotorrents.unblockit.how/
-  - https://glotorrents.unblockit.cam/
-  - https://glotorrents.nocensor.biz/
-  - https://glotorrents.unblockit.day/
-  - https://glotorrents.unblockit.llc/
-  - https://glotorrents.unblockit.blue/
-  - https://glotorrents.unblockit.name/
-  - https://glotorrents.nocensor.sbs/
-  - https://glotorrents.unblockit.ist/
-  - https://glotorrents.unblockit.bet/
-  - https://glotorrents.unblockit.cat/
-  - https://glotorrents.unblockit.nz/
-  - https://glotorrents.nocensor.world/
-  - https://glotorrents.unblockit.page/
+  - https://glotorrents.unblockit.bio/
+  - https://glotorrents.unblockit.boo/
+  - https://glotorrents.mrunblock.guru/
+  - https://glotorrents.unblockit.click/
+  - https://glotorrents.unblockit.asia/
+  - https://glotorrents.unblockit.mov/
+  - https://glotorrents.mrunblock.life/
+  - https://glotorrents.unblockit.rsvp/
+  - https://glotorrents.nocensor.click/
+  - https://gtdb.cc/
+  - https://glotorrents.unblockit.vegas/
+  - https://glotorrents.unblockit.esq/
+  - https://glotorrents.unblockit.zip/
+  - https://glotorrents.unblockit.foo/
+  - https://glotorrents.unblockit.ing/
+  - https://www.gtdb.to/
+  - https://glotorrents.mrunblock.bond/
+  - https://glotorrents.nocensor.cloud/
+  - https://glotorrents.unblockit.date/
 
 caps:
   categorymappings:
@@ -106,11 +105,10 @@ search:
 
   fields:
     category:
-      text: 33 # issue #7113
-    category|noappend:
-      optional: true
       selector: a[href^="/search.php?cat="]
       attribute: href
+      optional: true
+      default: 33
       filters:
         - name: querystring
           args: cat

@@ -5,8 +5,7 @@ description: "JPopSuki is a Private Torrent Tracker for ASIAN MUSIC"
 language: en-US
 type: private
 encoding: UTF-8
-certificates:
-  - 23b2a81c132d993d90cb5c7f1a28225bb8ab6d83 # expired 7th Oct 2022
+requestDelay: 3
 links:
   - https://jpopsuki.eu/
 
@@ -68,7 +67,8 @@ login:
   error:
     - selector: form#loginform > span.warning, font[color="red"]
   test:
-    path: torrents.php
+    path: index.php
+    selector: a[href^="logout.php?auth="]
 
 search:
     # https://jpopsuki.eu/ajax.php?section=torrents&artistname=&action=advanced&torrentname=snow+man&remastertitle=&filelist=&bitrate=&format=&media=&year=&freeleech=&remastered=&searchtags=&tags_type=0&order_by=s3&order_way=desc&enablegrouping=1
@@ -76,7 +76,7 @@ search:
     - path: ajax.php
   inputs:
     $raw: "{{ range .Categories }}filter_cat[{{.}}]=1&{{end}}{{ if or .Query.Album .Query.Artist .Keywords }}action=advanced{{ else }}searchtags=japanese&tags_type=0{{ end }}"
-    artistname: "{{ if .Query.Artist }}{{ .Query.Artist }}{{ else }}{{ end }}"
+    artistname: "{{ .Query.Artist }}"
     torrentname: "{{ if .Query.Album }}{{ .Query.Album }}{{ else }}{{ .Keywords }}{{ end }}"
     freeleech: "{{ if .Config.freeleech }}1{{ else }}{{ end }}"
     order_by: "{{ .Config.sort }}"
@@ -131,7 +131,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "Jan 02 2006, 15:04"
+          args: "MMM dd yyyy, HH:mm"
     size:
       selector: td:nth-last-child(4)
     grabs:

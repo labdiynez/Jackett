@@ -66,10 +66,18 @@ settings:
   - name: info
     type: info
     label: How to get the Cookie
-    default: "<ol><li>Login to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
+    default: "<ol><li>Login to this tracker with your browser</li><li>Open the <b>DevTools</b> panel by pressing <b>F12</b></li><li>Select the <b>Network</b> tab</li><li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)</li><li>Refresh the page by pressing <b>F5</b></li><li>Click on the first row entry</li><li>Select the <b>Headers</b> tab on the Right panel</li><li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: freeleech
     type: checkbox
     label: Search freeleech only
+    default: false
+  - name: p2p_releases_only
+    type: checkbox
+    label: Search P2P releases only
+    default: false
+  - name: unrar_releases_only
+    type: checkbox
+    label: Search UNRAR releases only
     default: false
   - name: sort
     type: select
@@ -109,15 +117,19 @@ search:
     index: 0
     limit: 100
     order: "{{ .Config.type }}"
+    p2p: "{{ if .Config.p2p_releases_only }}true{{ else }}{{ end }}"
     page: search
     searchText: "{{ if .Query.IMDBID }}{{ .Query.IMDBID }} {{ else }}{{ end }}{{ .Keywords }}"
     section: all
     sort: "{{ .Config.sort }}"
     stereoscopic: false
+    unrar: "{{ if .Config.unrar_releases_only }}true{{ else }}{{ end }}"
     watchview: false
 
   rows:
     selector: $
+    filters:
+      - name: andmatch
 
   fields:
     category:
@@ -127,9 +139,9 @@ search:
     _id:
       selector: id
     details:
-      text: "{{ .Config.sitelink }}torrent/{{ .Result._id }}/"
+      text: "/torrent/{{ .Result._id }}/"
     download:
-      text: "{{ .Config.sitelink }}api/v1/torrents/download/{{ .Result._id }}"
+      text: "/api/v1/torrents/download/{{ .Result._id }}"
     imdbid:
       selector: imdbid2
     imdbid_full:
@@ -140,7 +152,7 @@ search:
       selector: firstpic
     poster_imdb:
       optional: true
-      text: "{{ if .Result.imdbid }}{{ .Config.sitelink }}img/imdb/{{ .Result.imdbid_full }}.jpg{{ else }}{{ end }}"
+      text: "{{ if .Result.imdbid }}/img/imdb/{{ .Result.imdbid_full }}.jpg{{ else }}{{ end }}"
     poster:
       text: "{{ if .Result.poster_imdb }}{{ .Result.poster_imdb }}{{ else }}{{ .Result.poster_normal }}{{ end }}"
     date:
@@ -148,9 +160,9 @@ search:
       selector: added
       filters:
         - name: append
-          args: " +01:00" # CET
+          args: " +02:00" # EET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     size:
       selector: size
     files:
@@ -177,7 +189,7 @@ search:
     title_desc:
       optional: true
       selector: title
-    year_desc:
+    year:
       optional: true
       selector: year
     genre:
@@ -193,7 +205,7 @@ search:
       selector: rating
       filters:
         - name: re_replace
-          args: ["0", ""]
+          args: ["^0$", ""]
     _section_desc:
       optional: true
       selector: section
@@ -207,6 +219,12 @@ search:
       case:
         0: ""
         1: P2P
+    _unrartag:
+      selector: unrar
+      case:
+        0: ""
+        1: UNRAR
+      optional: true
     _packtag:
       selector: pack
       case:
@@ -219,10 +237,10 @@ search:
         "*": Request
     _tag_desc:
       optional: true
-      text: "{{ if .Result._p2ptag }}{{ .Result._p2ptag }}, {{ else }}{{ end }}{{ if .Result._packtag }}{{ .Result._packtag }}, {{ else }}{{ end }}{{ if .Result._reqidtag }}{{ .Result._reqidtag }}{{ else }}{{ end }}"
+      text: "{{ if .Result._p2ptag }}{{ .Result._p2ptag }}, {{ else }}{{ end }}{{ if .Result._unrartag }}{{ .Result._unrartag }}, {{ else }}{{ end }}{{ if .Result._packtag }}{{ .Result._packtag }}, {{ else }}{{ end }}{{ if .Result._reqidtag }}{{ .Result._reqidtag }}{{ else }}{{ end }}"
       filters:
         - name: regexp
           args: "(.+?), $"
     description:
-      text: "{{ if .Result.title_desc }}Title: {{ .Result.title_desc }}</br>{{ else }}{{ end }}{{ if .Result.year_desc }}Year: {{ .Result.year_desc }}</br>{{ else }}{{ end }}{{ if .Result.genre }}Genres: {{ .Result.genre }}</br>{{ else }}{{ end }}{{ if .Result._tagline_desc }}Tagline: {{ .Result._tagline_desc }}</br>{{ else }}{{ end }}{{ if .Result._cast_desc }}Cast: {{ .Result._cast_desc }}</br>{{ else }}{{ end }}{{ if .Result._rating_desc }}Rating: {{ .Result._rating_desc }}</br>{{ else }}{{ end }}{{ if .Result._tag_desc }}Tags: {{ .Result._tag_desc }}</br>{{ else }}{{ end }}{{ if .Result._predate_desc }}PRE: {{ .Result._predate_desc }}</br>{{ else }}{{ end }}{{ if .Result._section_desc }}Section: {{ .Result._section_desc }}{{ else }}{{ end }}"
+      text: "{{ if .Result.title_desc }}Title: {{ .Result.title_desc }}</br>{{ else }}{{ end }}{{ if .Result.year }}Year: {{ .Result.year }}</br>{{ else }}{{ end }}{{ if .Result.genre }}Genres: {{ .Result.genre }}</br>{{ else }}{{ end }}{{ if .Result._tagline_desc }}Tagline: {{ .Result._tagline_desc }}</br>{{ else }}{{ end }}{{ if .Result._cast_desc }}Cast: {{ .Result._cast_desc }}</br>{{ else }}{{ end }}{{ if .Result._rating_desc }}Rating: {{ .Result._rating_desc }}</br>{{ else }}{{ end }}{{ if .Result._tag_desc }}Tags: {{ .Result._tag_desc }}</br>{{ else }}{{ end }}{{ if .Result._predate_desc }}PRE: {{ .Result._predate_desc }}</br>{{ else }}{{ end }}{{ if .Result._section_desc }}Section: {{ .Result._section_desc }}{{ else }}{{ end }}"
 # json rartracker api v1

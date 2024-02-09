@@ -63,7 +63,8 @@ login:
     password: "{{ .Config.password }}"
     keeplogged: 1
   test:
-    path: my.php
+    path: index.php
+    selector: a[href^="logout.php"]
 
 search:
   paths:
@@ -116,9 +117,9 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     downloadvolumefactor:
-      text: 1
+      text: 0
     uploadvolumefactor:
       text: 1
 # engine n/a

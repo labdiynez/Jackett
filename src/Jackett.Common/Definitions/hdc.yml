@@ -39,7 +39,7 @@ settings:
   - name: info
     type: info
     label: How to get the Cookie
-    default: "<ol><li>Login to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
+    default: "<ol><li>Login to this tracker with your browser</li><li>Open the <b>DevTools</b> panel by pressing <b>F12</b></li><li>Select the <b>Network</b> tab</li><li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)</li><li>Refresh the page by pressing <b>F5</b></li><li>Click on the first row entry</li><li>Select the <b>Headers</b> tab on the Right panel</li><li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: freeleech
     type: checkbox
     label: Search freeleech only
@@ -62,7 +62,7 @@ settings:
   - name: info_Results
     type: info
     label: Settings for Results
-    default: "To use this indexer please set the following on your HDC account <b>profile</b>:<li><i>Site Language:</i><b> English</b><li><i>Torrent List Profile: </i><b>Default Modern [preview]</b><li><i>Time Type: </i><b>Time Added</b><li><i>Torrents per page:</i><b> 100</b>"
+    default: "To use this indexer please set the following on your HDC account <b>profile</b>:<ul><li><i>Site Language:</i><b> English</b></li><li><i>Torrent List Profile:</i> <b>Default Modern [preview]</b></li><li><i>Time Type: </i><b>Time Added</b></li><li><i>Torrents per page:</i><b> 100</b></li></ul>"
 
 login:
   method: cookie
@@ -90,6 +90,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: div.trblock
@@ -118,30 +119,27 @@ search:
     size:
       selector: div.trbo div:nth-last-child(8)
       remove: i
-    seeders_optional:
+    seeders:
       selector: div.trbo div:nth-last-child(7)
       optional: true
-      filters:
-        - name: re_replace
-          args: ["\\s", "0"]
-    seeders:
-      text: "{{ if .Result.seeders_optional }}{{ .Result.seeders_optional }}{{ else }}0{{ end }}"
-    leechers_optional:
-      selector: div.trbo div:nth-last-child(6)
-      optional: true
+      default: 0
       filters:
         - name: re_replace
           args: ["\\s", "0"]
     leechers:
-      text: "{{ if .Result.leechers_optional }}{{ .Result.leechers_optional }}{{ else }}0{{ end }}"
-    grabs_optional:
-      selector: div.trbo div:nth-last-child(5)
+      selector: div.trbo div:nth-last-child(6)
       optional: true
+      default: 0
       filters:
         - name: re_replace
           args: ["\\s", "0"]
     grabs:
-      text: "{{ if .Result.grabs_optional }}{{ .Result.grabs_optional }}{{ else }}0{{ end }}"
+      selector: div.trbo div:nth-last-child(5)
+      optional: true
+      default: 0
+      filters:
+        - name: re_replace
+          args: ["\\s", "0"]
     date:
       remove: a, span
       selector: div[style="float:right;"]
@@ -151,7 +149,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img.pro_free: 0

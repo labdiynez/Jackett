@@ -17,8 +17,18 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class RevolutionTT : BaseWebIndexer
+    public class RevolutionTT : IndexerBase
     {
+        public override string Id => "revolutiontt";
+        public override string Name => "RevolutionTT";
+        public override string Description => "The Revolution has begun";
+        public override string SiteLink { get; protected set; } = "https://revolutiontt.me/";
+        public override Encoding Encoding => Encoding.GetEncoding("iso-8859-1");
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string LandingPageURL => SiteLink + "login.php";
         private string LoginUrl => SiteLink + "takelogin.php";
         private string SearchUrl => SiteLink + "browse.php";
@@ -27,72 +37,71 @@ namespace Jackett.Common.Indexers
 
         public RevolutionTT(IIndexerConfigurationService configService, Utils.Clients.WebClient wc, Logger l,
             IProtectionService ps, ICacheService cs)
-            : base(id: "revolutiontt",
-                   name: "RevolutionTT",
-                   description: "The Revolution has begun",
-                   link: "https://revolutiontt.me/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q
-                       },
-                       BookSearchParams = new List<BookSearchParam>
-                       {
-                           BookSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationDataBasicLogin("For best results, change the 'Torrents per page' setting to 100 in your Profile."))
         {
-            Encoding = Encoding.GetEncoding("iso-8859-1");
-            Language = "en-US";
-            Type = "private";
+        }
 
-            AddCategoryMapping("23", TorznabCatType.TVAnime);
-            AddCategoryMapping("22", TorznabCatType.PC0day);
-            AddCategoryMapping("1", TorznabCatType.PCISO);
-            AddCategoryMapping("36", TorznabCatType.Books);
-            AddCategoryMapping("36", TorznabCatType.BooksEBook);
-            AddCategoryMapping("4", TorznabCatType.PCGames);
-            AddCategoryMapping("21", TorznabCatType.PCGames);
-            AddCategoryMapping("16", TorznabCatType.ConsolePS3);
-            AddCategoryMapping("40", TorznabCatType.ConsoleWii);
-            AddCategoryMapping("39", TorznabCatType.ConsoleXBox360);
-            AddCategoryMapping("35", TorznabCatType.ConsoleNDS);
-            AddCategoryMapping("34", TorznabCatType.ConsolePSP);
-            AddCategoryMapping("2", TorznabCatType.PCMac);
-            AddCategoryMapping("10", TorznabCatType.MoviesBluRay);
-            AddCategoryMapping("20", TorznabCatType.MoviesDVD);
-            AddCategoryMapping("12", TorznabCatType.MoviesHD);
-            AddCategoryMapping("44", TorznabCatType.MoviesOther);
-            AddCategoryMapping("11", TorznabCatType.MoviesSD);
-            AddCategoryMapping("19", TorznabCatType.MoviesSD);
-            AddCategoryMapping("6", TorznabCatType.Audio);
-            AddCategoryMapping("8", TorznabCatType.AudioLossless);
-            AddCategoryMapping("46", TorznabCatType.AudioOther);
-            AddCategoryMapping("29", TorznabCatType.AudioVideo);
-            AddCategoryMapping("43", TorznabCatType.TVOther);
-            AddCategoryMapping("42", TorznabCatType.TVHD);
-            AddCategoryMapping("45", TorznabCatType.TVOther);
-            AddCategoryMapping("41", TorznabCatType.TVSD);
-            AddCategoryMapping("7", TorznabCatType.TVSD);
-            AddCategoryMapping("9", TorznabCatType.XXX);
-            AddCategoryMapping("49", TorznabCatType.XXX);
-            AddCategoryMapping("47", TorznabCatType.XXXDVD);
-            AddCategoryMapping("48", TorznabCatType.XXX);
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping("23", TorznabCatType.TVAnime);
+            caps.Categories.AddCategoryMapping("22", TorznabCatType.PC0day);
+            caps.Categories.AddCategoryMapping("1", TorznabCatType.PCISO);
+            caps.Categories.AddCategoryMapping("36", TorznabCatType.Books);
+            caps.Categories.AddCategoryMapping("36", TorznabCatType.BooksEBook);
+            caps.Categories.AddCategoryMapping("4", TorznabCatType.PCGames);
+            caps.Categories.AddCategoryMapping("21", TorznabCatType.PCGames);
+            caps.Categories.AddCategoryMapping("16", TorznabCatType.ConsolePS3);
+            caps.Categories.AddCategoryMapping("40", TorznabCatType.ConsoleWii);
+            caps.Categories.AddCategoryMapping("39", TorznabCatType.ConsoleXBox360);
+            caps.Categories.AddCategoryMapping("35", TorznabCatType.ConsoleNDS);
+            caps.Categories.AddCategoryMapping("34", TorznabCatType.ConsolePSP);
+            caps.Categories.AddCategoryMapping("2", TorznabCatType.PCMac);
+            caps.Categories.AddCategoryMapping("10", TorznabCatType.MoviesBluRay);
+            caps.Categories.AddCategoryMapping("20", TorznabCatType.MoviesDVD);
+            caps.Categories.AddCategoryMapping("12", TorznabCatType.MoviesHD);
+            caps.Categories.AddCategoryMapping("44", TorznabCatType.MoviesOther);
+            caps.Categories.AddCategoryMapping("11", TorznabCatType.MoviesSD);
+            caps.Categories.AddCategoryMapping("19", TorznabCatType.MoviesSD);
+            caps.Categories.AddCategoryMapping("6", TorznabCatType.Audio);
+            caps.Categories.AddCategoryMapping("8", TorznabCatType.AudioLossless);
+            caps.Categories.AddCategoryMapping("46", TorznabCatType.AudioOther);
+            caps.Categories.AddCategoryMapping("29", TorznabCatType.AudioVideo);
+            caps.Categories.AddCategoryMapping("43", TorznabCatType.TVOther);
+            caps.Categories.AddCategoryMapping("42", TorznabCatType.TVHD);
+            caps.Categories.AddCategoryMapping("45", TorznabCatType.TVOther);
+            caps.Categories.AddCategoryMapping("41", TorznabCatType.TVSD);
+            caps.Categories.AddCategoryMapping("7", TorznabCatType.TVSD);
+            caps.Categories.AddCategoryMapping("9", TorznabCatType.XXX);
+            caps.Categories.AddCategoryMapping("49", TorznabCatType.XXX);
+            caps.Categories.AddCategoryMapping("47", TorznabCatType.XXXDVD);
+            caps.Categories.AddCategoryMapping("48", TorznabCatType.XXX);
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -150,7 +159,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var dom = parser.ParseDocument(results.ContentString);
+                using var dom = parser.ParseDocument(results.ContentString);
                 var rows = dom.QuerySelectorAll("#torrents-table > tbody > tr");
 
                 foreach (var row in rows.Skip(1))
@@ -172,7 +181,7 @@ namespace Jackett.Common.Indexers
                     var dateString = row.QuerySelector("td:nth-child(6) nobr").TextContent.Trim();
                     var publishDate = DateTime.ParseExact(dateString, "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
 
-                    var size = ReleaseInfo.GetBytes(row.QuerySelector("td:nth-child(7)").InnerHtml.Split('<').First().Trim());
+                    var size = ParseUtil.GetBytes(row.QuerySelector("td:nth-child(7)").InnerHtml.Split('<').First().Trim());
                     var files = ParseUtil.GetLongFromString(row.QuerySelector("td:nth-child(7) > a").TextContent);
                     var grabs = ParseUtil.GetLongFromString(row.QuerySelector("td:nth-child(8)").TextContent);
                     var seeders = ParseUtil.CoerceInt(row.QuerySelector("td:nth-child(9)").TextContent);
@@ -181,7 +190,7 @@ namespace Jackett.Common.Indexers
                     var category = row.QuerySelector(".br_type > a").GetAttribute("href").Replace("browse.php?cat=", string.Empty);
 
                     var qImdb = row.QuerySelector("a[href*=\"www.imdb.com/\"]");
-                    var imdb = qImdb != null ? ParseUtil.GetImdbID(qImdb.GetAttribute("href").Split('/').Last()) : null;
+                    var imdb = qImdb != null ? ParseUtil.GetImdbId(qImdb.GetAttribute("href").Split('/').Last()) : null;
 
                     var release = new ReleaseInfo
                     {

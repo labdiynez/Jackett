@@ -21,8 +21,49 @@ using WebClient = Jackett.Common.Utils.Clients.WebClient;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class MejorTorrent : BaseWebIndexer
+    public class MejorTorrent : IndexerBase
     {
+        public override string Id => "mejortorrent";
+        public override string Name => "MejorTorrent";
+        public override string Description => "MejorTorrent - Hay veces que un torrent viene mejor! :)";
+        public override string SiteLink { get; protected set; } = "https://www10.mejortorrent.rip/";
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://www.mejortorrento.info/",
+            "https://mejortorrent.nocensor.space/",
+            "https://www.mejortorrentes.com/",
+            "https://www.mejortorrento.info/",
+            "https://mejortorrent.nocensor.work/",
+            "https://www.mejortorrentes.net/",
+            "https://mejortorrent.nocensor.biz/",
+            "https://www.mejortorrentes.org/",
+            "https://mejortorrent.nocensor.sbs/",
+            "https://mejortorrent.unblockit.bio/",
+            "https://mejortorrent.wtf/",
+            "https://mejortorrent.unblockit.boo/",
+            "https://mejortorrent.unblockit.click/",
+            "https://www1.mejortorrent.rip/",
+            "https://mejortorrent.unblockit.asia/",
+            "https://www2.mejortorrent.rip/",
+            "https://mejortorrent.unblockit.mov/",
+            "https://www3.mejortorrent.rip/",
+            "https://www4.mejortorrent.rip/",
+            "https://mejortorrent.unblockit.rsvp/",
+            "https://mejortorrent.unblockit.vegas/",
+            "https://www5.mejortorrent.rip/",
+            "https://mejortorrent.unblockit.esq/",
+            "https://www6.mejortorrent.rip/",
+            "https://mejortorrent.unblockit.zip/",
+            "https://mejortorrent.unblockit.foo/", // 410
+            "https://www7.mejortorrent.rip/",
+            "https://www8.mejortorrent.rip/",
+            "https://www9.mejortorrent.rip/",
+        };
+        public override string Language => "es-ES";
+        public override string Type => "public";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private static class MejorTorrentCatType
         {
             public static string Pelicula => "Película";
@@ -37,87 +78,48 @@ namespace Jackett.Common.Indexers
 
         private const int PagesToSearch = 3;
 
-        // uncomment when there are more than one domain available
-        // public override string[] AlternativeSiteLinks { get; protected set; } = {
-        //     "https://mejortorrent.wtf/"
-        // };
-
-        public override string[] LegacySiteLinks { get; protected set; } = {
-            "https://www.mejortorrentt.net/",
-            "http://www.mejortorrent.org/",
-            "http://www.mejortorrent.tv/",
-            "http://www.mejortorrentt.com/",
-            "https://www.mejortorrentt.org/",
-            "http://www.mejortorrentt.org/",
-            "https://www.mejortorrents.net/",
-            "https://www.mejortorrents1.com/",
-            "https://www.mejortorrents1.net/",
-            "https://www.mejortorrento.com/",
-            "https://www.mejortorrento.org/",
-            "https://www.mejortorrento.net/",
-            "https://www.mejortorrento.info/",
-            "https://mejortorrent.nocensor.space/",
-            "https://www.mejortorrentes.com/",
-            "https://www.mejortorrento.info/",
-            "https://mejortorrent.nocensor.work/",
-            "https://www.mejortorrentes.net/",
-            "https://mejortorrent.unblockit.tv/",
-            "https://mejortorrent.unblockit.how/",
-            "https://mejortorrent.unblockit.cam/",
-            "https://mejortorrent.nocensor.biz/",
-            "https://mejortorrent.unblockit.day/",
-            "https://mejortorrent.unblockit.llc/",
-            "https://www.mejortorrentes.org/",
-            "https://mejortorrent.unblockit.blue/",
-            "https://mejortorrent.nocensor.sbs/",
-            "https://mejortorrent.unblockit.name/"
-        };
-
-        public MejorTorrent(IIndexerConfigurationService configService, WebClient w, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "mejortorrent",
-                   name: "MejorTorrent",
-                   description: "MejorTorrent - Hay veces que un torrent viene mejor! :)",
-                   link: "https://mejortorrent.wtf/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q
-                       },
-                       MusicSearchParams = new List<MusicSearchParam>
-                       {
-                           MusicSearchParam.Q
-                       },
-                       SupportsRawSearch = true
-                   },
-                   configService: configService,
+        public MejorTorrent(IIndexerConfigurationService configService, WebClient w, Logger l, IProtectionService ps, ICacheService cs)
+            : base(configService: configService,
                    client: w,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationData())
         {
-            Encoding = Encoding.UTF8;
-            Language = "es-ES";
-            Type = "public";
-
             var matchWords = new BoolConfigurationItem("Match words in title") { Value = true };
             configData.AddDynamic("MatchWords", matchWords);
 
             // Uncomment to enable FlareSolverr in the future
             //configData.AddDynamic("flaresolverr", new DisplayInfoConfigurationItem("FlareSolverr", "This site may use Cloudflare DDoS Protection, therefore Jackett requires <a href=\"https://github.com/Jackett/Jackett#configuring-flaresolverr\" target=\"_blank\">FlareSolverr</a> to access it."));
+        }
 
-            AddCategoryMapping(MejorTorrentCatType.Pelicula, TorznabCatType.Movies, "Pelicula");
-            AddCategoryMapping(MejorTorrentCatType.Serie, TorznabCatType.TVSD, "Serie");
-            AddCategoryMapping(MejorTorrentCatType.SerieHd, TorznabCatType.TVHD, "Serie HD");
-            AddCategoryMapping(MejorTorrentCatType.Musica, TorznabCatType.Audio, "Musica");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q
+                },
+                MusicSearchParams = new List<MusicSearchParam>
+                {
+                    MusicSearchParam.Q
+                },
+                SupportsRawSearch = true
+            };
+
+            caps.Categories.AddCategoryMapping(MejorTorrentCatType.Pelicula, TorznabCatType.Movies, "Pelicula");
+            caps.Categories.AddCategoryMapping(MejorTorrentCatType.Serie, TorznabCatType.TVSD, "Serie");
+            caps.Categories.AddCategoryMapping(MejorTorrentCatType.SerieHd, TorznabCatType.TVHD, "Serie HD");
+            caps.Categories.AddCategoryMapping(MejorTorrentCatType.Musica, TorznabCatType.Audio, "Musica");
             // Other category is disabled because we have problems parsing documentaries
-            //AddCategoryMapping(MejorTorrentCatType.Otro, TorznabCatType.Other, "Otro");
+            //caps.Categories.AddCategoryMapping(MejorTorrentCatType.Otro, TorznabCatType.Other, "Otro");
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -163,7 +165,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var searchResultParser = new HtmlParser();
-                var doc = searchResultParser.ParseDocument(result.ContentString);
+                using var doc = searchResultParser.ParseDocument(result.ContentString);
 
                 var container = doc.QuerySelector(".gap-y-3 > div:nth-child(1) > div:nth-child(1)");
                 var parsedDetailsLink = new List<string>();
@@ -217,7 +219,7 @@ namespace Jackett.Common.Indexers
                 try
                 {
                     var searchResultParser = new HtmlParser();
-                    var doc = searchResultParser.ParseDocument(result.ContentString);
+                    using var doc = searchResultParser.ParseDocument(result.ContentString);
 
                     var table = doc.QuerySelector(".w-11\\/12");
                     // check the search term is valid
@@ -298,7 +300,7 @@ namespace Jackett.Common.Indexers
                 throw new ExceptionWithConfigData(result.ContentString, configData);
 
             var searchResultParser = new HtmlParser();
-            var doc = searchResultParser.ParseDocument(result.ContentString);
+            using var doc = searchResultParser.ParseDocument(result.ContentString);
 
             var rows = doc.QuerySelectorAll("tr.border");
             quality = CleanQuality(quality);
@@ -338,7 +340,7 @@ namespace Jackett.Common.Indexers
                 throw new ExceptionWithConfigData(result.ContentString, configData);
 
             var searchResultParser = new HtmlParser();
-            var doc = searchResultParser.ParseDocument(result.ContentString);
+            using var doc = searchResultParser.ParseDocument(result.ContentString);
 
             var downloadLink = doc.QuerySelector(".ml-2").GetAttribute("href");
 
@@ -421,10 +423,12 @@ namespace Jackett.Common.Indexers
             // Eg. Doctor.Who.2005.(Доктор.Кто).S02E08
 
             // the season/episode part is already parsed by Jackett
-            // query.GetQueryString = Doctor.Who.2005.(Доктор.Кто).
+            // query.GetQueryString = Doctor.Who.2005.(Доктор.Кто).S02E08
             // query.Season = 2
             // query.Episode = 8
             var searchTerm = query.GetQueryString();
+            // remove the season/episode from the query as MejorTorrent only wants the series name
+            searchTerm = Regex.Replace(searchTerm, @"[S|s]\d+[E|e]\d+", "");
 
             // Server returns a 500 error if a UTF character higher than \u00FF (ÿ) is included,
             // so we need to strip them
@@ -530,14 +534,12 @@ namespace Jackett.Common.Indexers
             var cat = MejorTorrentCatType.Otro;
             if (mejortorrentCat == null)
             {
-                if (detailsStr.Contains("peliculas_extend"))
+                if (detailsStr.Contains("pelicula"))
                     cat = MejorTorrentCatType.Pelicula;
-                else if (detailsStr.Contains("series_extend"))
+                else if (detailsStr.Contains("serie"))
                     cat = MejorTorrentCatType.Serie;
-                else if (detailsStr.Contains("musica_extend"))
+                else if (detailsStr.Contains("musica"))
                     cat = MejorTorrentCatType.Musica;
-                else if (detailsStr.Contains("pelicula"))
-                    cat = MejorTorrentCatType.Pelicula;
             }
             else if (mejortorrentCat.Equals(MejorTorrentCatType.Pelicula) ||
                      mejortorrentCat.Equals(MejorTorrentCatType.Serie) ||

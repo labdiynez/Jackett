@@ -7,16 +7,8 @@ type: public
 encoding: UTF-8
 # use https://tellme.pw/btsow to find the new domain
 links:
-  - https://btsow.beauty/
+  - https://btsow.motorcycles/
 legacylinks:
-  - https://btsow.store/
-  - https://btsow.surf/
-  - https://btsow.com/
-  - https://btsow.cam/
-  - https://btsow.digital/
-  - https://btsow.shop/
-  - https://btsow.us/
-  - https://btsow.one/
   - https://btsow.rest/
   - https://btsow.bar/
   - https://btsow.click/
@@ -24,6 +16,14 @@ legacylinks:
   - https://btsow.sbs/
   - https://btsow.quest/
   - https://btsow.autos/
+  - https://btsow.beauty/
+  - https://btsow.mom/
+  - https://btsow.boats/
+  - https://btsow.hair/
+  - https://btsow.bond/
+  - https://btsow.skin/
+  - https://btsow.makeup/
+  - https://btsow.homes/
 
 caps:
   categories:
@@ -51,6 +51,10 @@ search:
   paths:
     - path: "search/{{ if .Keywords }}{{ .Keywords }}{{ else }}{{ .Today.Year }}{{ end }}"
 
+  headers:
+    # site blocks Jackett's User-Agents, so slightly alter it here (e.g. Safari/537.36 > Safari/537.35)
+    User-Agent: ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.35"]
+
   rows:
     selector: div.row:has(a[href*="/detail/hash/"])
 
@@ -72,7 +76,7 @@ search:
         - name: append
           args: " -00:00" # GMT
         - name: dateparse
-          args: "2006-01-02 -07:00"
+          args: "yyyy-MM-dd zzz"
     size:
       selector: div.size
     seeders:

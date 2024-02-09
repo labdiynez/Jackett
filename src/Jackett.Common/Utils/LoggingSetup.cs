@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Jackett.Common.Models.Config;
 using Jackett.Common.Services;
+using Jackett.Common.Utils.Logging;
 using NLog;
 using NLog.Config;
 using NLog.LayoutRenderers;
@@ -16,14 +17,12 @@ namespace Jackett.Common.Utils
         {
             var logFileName = settings.CustomLogFileName ?? "log.txt";
             var logLevel = settings.TracingEnabled ? NLog.LogLevel.Debug : NLog.LogLevel.Info;
-            // Add custom date time format renderer as the default is too long
-            ConfigurationItemFactory.Default.LayoutRenderers.RegisterDefinition("simpledatetime", typeof(SimpleDateTimeRenderer));
 
             var logConfig = new LoggingConfiguration();
 
-            var logFile = new FileTarget
+            var logFile = new CleanseFileTarget
             {
-                Layout = "${longdate} ${level} ${message} ${exception:format=ToString}",
+                Layout = "${longdate} ${level} ${message}${onexception:inner=${newline}${newline}[v${assembly-version}] ${exception:format=ToString}${newline}}",
                 FileName = Path.Combine(settings.DataFolder, logFileName),
                 ArchiveFileName = Path.Combine(settings.DataFolder, logFileName + ".{#####}.txt"),
                 ArchiveAboveSize = 2097152, // 2 MB
@@ -60,14 +59,17 @@ namespace Jackett.Common.Utils
             {
                 var logConsole = new ColoredConsoleTarget
                 {
-                    Layout = "${simpledatetime} ${level} ${message} ${exception:format=ToString}"
+                    Layout = "${date:format=MM-dd HH\\:mm\\:ss} ${level} ${message}${onexception:inner=${newline}${newline}[v${assembly-version}] ${exception:format=ToString}${newline}}"
                 };
                 logConfig.AddTarget("console", logConsole);
 
                 var logConsoleRule = new LoggingRule("*", logLevel, logConsole);
                 logConfig.LoggingRules.Add(logConsoleRule);
 
-                var logService = new LogCacheService();
+                var logService = new LogCacheService
+                {
+                    Layout = "${message}${onexception:inner=${newline}${newline}[v${assembly-version}] ${exception:format=ToString}${newline}}"
+                };
                 logConfig.AddTarget("service", logService);
 
                 var serviceRule = new LoggingRule("*", logLevel, logService);
@@ -86,13 +88,6 @@ namespace Jackett.Common.Utils
             logConfig.LoggingRules.Add(microsoftRule);
 
             return logConfig;
-        }
-
-        [LayoutRenderer("simpledatetime")]
-        public class SimpleDateTimeRenderer : LayoutRenderer
-        {
-            protected override void Append(StringBuilder builder, LogEventInfo logEvent) =>
-                builder.Append(DateTime.Now.ToString("MM-dd HH:mm:ss"));
         }
     }
 }

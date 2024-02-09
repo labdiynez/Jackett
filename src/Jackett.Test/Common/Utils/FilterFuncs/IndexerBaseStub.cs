@@ -14,13 +14,15 @@ namespace Jackett.Test.Common.Utils.FilterFuncs
 
         public virtual string[] AlternativeSiteLinks => throw TestExceptions.UnexpectedInvocation;
 
-        public virtual string DisplayName => throw TestExceptions.UnexpectedInvocation;
+        public virtual string Name => throw TestExceptions.UnexpectedInvocation;
 
-        public virtual string DisplayDescription => throw TestExceptions.UnexpectedInvocation;
+        public virtual string Description => throw TestExceptions.UnexpectedInvocation;
 
         public virtual string Type => throw TestExceptions.UnexpectedInvocation;
 
         public virtual string Language => throw TestExceptions.UnexpectedInvocation;
+
+        public virtual bool SupportsPagination => false;
 
         public virtual string LastError
         {

@@ -5,8 +5,6 @@ description: "Kufirc is a HUNGARIAN Private tracker for 3X"
 language: hu-HU
 type: private
 encoding: UTF-8
-certificates:
-  - 1a528cffb19a5306daa44f99e6cce5d2a3c657c1 # Expired 24 Oct 2022
 links:
   - https://kufirc.com/
 
@@ -133,7 +131,7 @@ search:
     autocomplete_toggle: ""
 
   rows:
-    selector: table#torrent_table > tbody > tr[class^="torrent row"]
+    selector: table#torrent_table > tbody > tr[class^="torrent row"]:has(a[href*="action=download"])
 
   fields:
     category:
@@ -150,9 +148,12 @@ search:
     download:
       selector: a[href^="torrents.php?action=download&id="]
       attribute: href
-    description:
-      optional: true
+    description_tags:
       selector: div.tags
+    description:
+      case:
+        span.icon_okay: "Verified: {{ .Result.description_tags }}"
+        "*": "Unverified: {{ .Result.description_tags }}"
     poster:
       selector: td:nth-child(2) > script
       filters:
@@ -170,7 +171,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "Jan 02 2006, 15:04"
+          args: "MMM dd yyyy, HH:mm"
     size:
       selector: td:nth-child(6)
     grabs:
@@ -185,7 +186,10 @@ search:
         "img[alt=\"Freeleech\"]": 0
         "*": 1
     uploadvolumefactor:
-      text: 1
+      case:
+        span.icon[title*="DoubleSeed"]: 2
+        "img[alt=\"DoubleSeed\"]": 2
+        "*": 1
     minimumratio:
       text: 0.5
 # Luminance

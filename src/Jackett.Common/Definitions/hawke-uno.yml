@@ -6,6 +6,8 @@ language: en-US
 type: private
 encoding: UTF-8
 links:
+  - https://hawke.uno/
+legacylinks:
   - https://www.hawke.uno/
 
 caps:
@@ -25,7 +27,7 @@ settings:
   - name: info_key
     type: info
     label: About your API key
-    default: "Find or Generate a new API Token by accessing your <a href=\"https://www.hawke.uno/\" target =_blank>hawke-uno</a> account <i>My Security</i> page and clicking on the <b>API Token</b> tab."
+    default: "Find or Generate a new API Token by accessing your <a href=\"https://www.hawke.uno/\" target=\"_blank\">hawke-uno</a> account <i>My Security</i> page and clicking on the <b>API Token</b> tab."
   - name: freeleech
     type: checkbox
     label: Search freeleech only
@@ -50,8 +52,6 @@ settings:
 login:
   path: /api/torrents
   method: get
-  inputs:
-    api_token: "{{ .Config.apikey }}"
   error:
     - selector: a[href*="/login"]
       message:
@@ -59,21 +59,25 @@ login:
 
 search:
   paths:
-    # https://hdinnovations.github.io/UNIT3D-Community-Edition-Docs/api_endpoints.html
-    # https://github.com/HDInnovations/UNIT3D-Community-Edition/blob/master/app/Http/Controllers/API/TorrentController.php
+    # https://github.com/HDInnovations/UNIT3D-Community-Edition/wiki/Torrent-API-(UNIT3D-v7.0.0)
+    # https://github.com/HDInnovations/UNIT3D-Community-Edition/blob/master/app/Http/Controllers/API/TorrentController.php#L349
     - path: "/api/torrents/filter"
       response:
         type: json
 
+  headers:
+    Authorization: ["Bearer {{ .Config.apikey }}"]
+
   inputs:
-    # if we have an id based search, add Season and Episode as query in name for UNIT3D < v6.  Else pass S/E Params for UNIT3D >= v6
-    api_token: "{{ .Config.apikey }}"
+    $raw: "{{ range .Categories }}&categories[]={{.}}{{end}}"
     name: "{{ .Keywords }}"
-    $raw: "{{ if .Query.TMDBID }}&tmdbId={{ .Query.TMDBID }}{{ else }}{{ end }}{{ if .Query.IMDBIDShort }}&imdbId={{ .Query.IMDBIDShort }}{{ else }}{{ end }}{{ if .Query.TVDBID }}&tvdbId={{ .Query.TVDBID }}{{ else }}{{ end }}{{ range .Categories }}&categories[]={{.}}{{end}}{{ if .Config.freeleech }}&free=1{{ else }}{{ end }}"
+    imdbId: "{{ .Query.IMDBIDShort }}"
+    tmdbId: "{{ .Query.TMDBID }}"
+    tvdbId: "{{ .Query.TVDBID }}"
+    free: "{{ if .Config.freeleech }}1{{ else }}{{ end }}"
     sortField: "{{ .Config.sort }}"
     sortDirection: "{{ .Config.type }}"
     perPage: 100
-    page: 1
 
   keywordsfilters:
     - name: re_replace
@@ -82,14 +86,17 @@ search:
   rows:
     selector: data
     attribute: attributes
-    count:
-      selector: meta.total
 
   fields:
     categorydesc:
       selector: category
     title:
       selector: name
+      filters:
+        - name: re_replace
+          args: ["\\(((?>[^()]+|(?<o>)\\(|(?<-o>)\\))*(?(o)(?!)))(?<!\\bHONE)(?<=\\s*- [\\w]+)\\)$", "$1"]
+        - name: re_replace
+          args: ["\\s*-\\s+(\\w+)$", "-$1"]
     details:
       selector: details_link
     download:
@@ -120,7 +127,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "01/02/2006 15:04:05 -07:00"
+          args: "MM/dd/yyyy HH:mm:ss zzz"
     size:
       selector: size
     downloadvolumefactor:

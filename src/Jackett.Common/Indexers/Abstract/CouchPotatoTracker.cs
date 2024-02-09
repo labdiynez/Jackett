@@ -14,7 +14,7 @@ using NLog;
 namespace Jackett.Common.Indexers.Abstract
 {
     [ExcludeFromCodeCoverage]
-    public abstract class CouchPotatoTracker : BaseWebIndexer
+    public abstract class CouchPotatoTracker : IndexerBase
     {
         protected string endpoint;
         protected string APIUrl => SiteLink + endpoint;
@@ -25,16 +25,9 @@ namespace Jackett.Common.Indexers.Abstract
             set => base.configData = value;
         }
 
-        protected CouchPotatoTracker(string link, string id, string name, string description,
-                                     IIndexerConfigurationService configService, WebClient client, Logger logger,
-                                     IProtectionService p, ICacheService cs, TorznabCapabilities caps,
-                                     ConfigurationData configData, string endpoint)
-            : base(id: id,
-                   name: name,
-                   description: description,
-                   link: link,
-                   caps: caps,
-                   configService: configService,
+        protected CouchPotatoTracker(IIndexerConfigurationService configService, WebClient client, Logger logger,
+                                     IProtectionService p, ICacheService cs, ConfigurationData configData, string endpoint)
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: p,
@@ -105,7 +98,7 @@ namespace Jackett.Common.Indexers.Abstract
                         Link = new Uri((string)r["download_url"])
                     };
                     release.Guid = release.Link;
-                    release.Imdb = ParseUtil.GetImdbID((string)r["imdb_id"]);
+                    release.Imdb = ParseUtil.GetImdbId((string)r["imdb_id"]);
                     var freeleech = (bool)r["freeleech"];
                     if (freeleech)
                         release.DownloadVolumeFactor = 0;

@@ -17,8 +17,40 @@ using WebClient = Jackett.Common.Utils.Clients.WebClient;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class EpubLibre : BaseWebIndexer
+    public class EpubLibre : IndexerBase
     {
+        public override string Id => "epublibre";
+        public override string Name => "EpubLibre";
+        public override string Description => "Más libros, Más libres";
+        public override string SiteLink { get; protected set; } = "https://www.epublibre.org/";
+        public override string[] AlternativeSiteLinks => new[]
+        {
+            "https://www.epublibre.org/",
+            "https://epublibre.unblockit.dad/"
+        };
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://epublibre.org/",
+            "https://epublibre.unblockit.pet/",
+            "https://epublibre.unblockit.ink/",
+            "https://epublibre.unblockit.bio/",
+            "https://epublibre.unblockit.boo/",
+            "https://epublibre.unblockit.click/",
+            "https://epublibre.unblockit.asia/",
+            "https://epublibre.unblockit.mov/",
+            "https://epublibre.unblockit.rsvp/",
+            "https://epublibre.unblockit.vegas/",
+            "https://epublibre.unblockit.esq/",
+            "https://epublibre.unblockit.zip/",
+            "https://epublibre.unblockit.foo/",
+            "https://epublibre.unblockit.ing/",
+            "https://epublibre.unblockit.date/",
+        };
+        public override string Language => "es-ES";
+        public override string Type => "public";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string SearchUrl => SiteLink + "catalogo/index/{0}/nuevo/todos/sin/todos/{1}/ajax";
         private string SobrecargaUrl => SiteLink + "inicio/sobrecarga";
         private const int MaxItemsPerPage = 18;
@@ -43,54 +75,30 @@ namespace Jackett.Common.Indexers
             {"12", "esperanto"}
         };
 
-        public override string[] AlternativeSiteLinks { get; protected set; } = {
-            "https://www.epublibre.org/",
-            "https://epublibre.unblockit.pet/"
-        };
-
-        public override string[] LegacySiteLinks { get; protected set; } = {
-            "https://epublibre.org/",
-            "https://epublibre.unblockit.kim/",
-            "https://epublibre.unblockit.bz/",
-            "https://epublibre.unblockit.tv/",
-            "https://epublibre.unblockit.how/",
-            "https://epublibre.unblockit.cam/",
-            "https://epublibre.unblockit.day/",
-            "https://epublibre.unblockit.llc/",
-            "https://epublibre.unblockit.blue/",
-            "https://epublibre.unblockit.name/",
-            "https://epublibre.unblockit.ist/",
-            "https://epublibre.unblockit.bet/",
-            "https://epublibre.unblockit.cat/",
-            "https://epublibre.unblockit.nz/",
-            "https://epublibre.unblockit.page/"
-        };
-
         public EpubLibre(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "epublibre",
-                   name: "EpubLibre",
-                   description: "Más libros, Más libres",
-                   link: "https://www.epublibre.org/",
-                   caps: new TorznabCapabilities
-                   {
-                       BookSearchParams = new List<BookSearchParam>
-                       {
-                           BookSearchParam.Q // TODO: add more book parameters
-                       }
-                   },
-                   configService: configService,
+                         ICacheService cs)
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationData())
         {
-            Encoding = Encoding.UTF8;
-            Language = "es-ES";
-            Type = "public";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.BooksEBook);
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                BookSearchParams = new List<BookSearchParam>
+                {
+                    BookSearchParam.Q // TODO: add more book parameters
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.BooksEBook);
+
+            return caps;
         }
 
         public override async Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson)
@@ -124,7 +132,7 @@ namespace Jackett.Common.Indexers
                 {
                     var json = JsonConvert.DeserializeObject<dynamic>(result.ContentString);
                     var parser = new HtmlParser();
-                    var doc = parser.ParseDocument((string)json["contenido"]);
+                    using var doc = parser.ParseDocument((string)json["contenido"]);
 
                     var rows = doc.QuerySelectorAll("div.span2");
                     foreach (var row in rows)
@@ -138,7 +146,7 @@ namespace Jackett.Common.Indexers
                         var qLink = row.QuerySelector("a");
                         var details = new Uri(qLink.GetAttribute("href"));
 
-                        var qTooltip = parser.ParseDocument(qLink.GetAttribute("data-content"));
+                        using var qTooltip = parser.ParseDocument(qLink.GetAttribute("data-content"));
                         // we get the language from the last class tag => class="pull-right sprite idioma_5"
                         var languageId = qTooltip.QuerySelector("div.pull-right").GetAttribute("class").Split('_')[1];
                         title += $" [{_languages[languageId]}] [epub]";
@@ -186,7 +194,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var doc = parser.ParseDocument(result.ContentString);
+                using var doc = parser.ParseDocument(result.ContentString);
                 var magnetLink = doc.QuerySelector("a[id=en_desc]").GetAttribute("href");
                 return Encoding.UTF8.GetBytes(magnetLink);
             }

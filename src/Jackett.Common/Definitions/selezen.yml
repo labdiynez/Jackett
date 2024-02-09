@@ -7,12 +7,13 @@ type: semi-private
 encoding: UTF-8
 links:
   - https://use.selezen.club/
-  - https://www.selezen.net/
+  - https://www.selezen.club/
   - https://selezen.org/
 legacylinks:
   - https://www.selezen.site/
   - https://mel.selezen.net/
   - https://s1.selezen.site/
+  - https://www.selezen.net/
 
 caps:
   categorymappings:
@@ -60,13 +61,13 @@ settings:
   - name: password
     type: password
     label: Password
-  - name: striprussian
+  - name: stripcyrillic
     type: checkbox
-    label: Strip Russian Letters
+    label: Strip Cyrillic Letters
     default: false
-  - name: addrussian
+  - name: addrussiantotitle
     type: checkbox
-    label: Add RUSSIAN to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.
+    label: Add RUS to end of all titles to improve language detection by Radarr. Will cause English-only results to be misidentified.
     default: false
   - name: sort
     type: select
@@ -107,6 +108,7 @@ search:
   # do=search&subaction=search&story=greyhound&titleonly=3&sortby=date&resorder=desc&showposts=1&catlist[]=49
   paths:
     - path: index.php
+      followredirect: true
   inputs:
     $raw: "{{ range .Categories }}catlist[]={{.}}&{{end}}"
     do: search
@@ -119,7 +121,7 @@ search:
     resorder: "{{ .Config.type }}"
 
   rows:
-    selector: div.card:has(h4)
+    selector: div.card:has(h4):not(:has(a[href*="/news/"]))
 
   fields:
     category:
@@ -161,22 +163,28 @@ search:
     title:
       selector: h4
       filters:
-        - name: replace
-          args: ["Лицензия", "Lic"]
-        - name: replace
-          args: ["селезень", "selezen"]
         - name: re_replace
-          args: ["(\\([А-Яа-яЁё\\W]+\\))|(^[А-Яа-яЁё\\W\\d]+\\/ )|([а-яА-ЯЁё \\-]+,+)|([а-яА-ЯЁё]+)", "{{ if .Config.striprussian }}{{ else }}$1$2$3$4{{ end }}"]
+          args: ["(?i)\\bЛицензия\\b", "Lic"]
         - name: re_replace
-          args: ["[\\:\\-\\/\\|\\[\\]]", " "]
+          args: ["(?i)\\bселезень\\b", "selezen"]
+        - name: re_replace
+          args: ["(\\([\\p{IsCyrillic}\\W]+\\))|(^[\\p{IsCyrillic}\\W\\d]+\\/ )|([\\p{IsCyrillic} \\-]+,+)|([\\p{IsCyrillic}]+)", "{{ if .Config.stripcyrillic }}{{ else }}$1$2$3$4{{ end }}"]
+        - name: re_replace
+          args: ["(?i)\\bHDTV[-\\s]?Rip\\b", "HDTV"]
+        - name: re_replace
+          args: ["(?i)\\bSAT[-\\s]?Rip\\b", "HDTV"]
+        - name: re_replace
+          args: ["(?i)\\bWEB[-\\s]?DL[-\\s]?Rip\\b", "WEB-DL"]
+        - name: re_replace
+          args: ["(?i)\\bWEB\\sRip\\b", "WEBRip"]
+        - name: re_replace
+          args: ["(?i)\\bWEB\\sDL\\b", "WEB-DL"]
+        - name: re_replace
+          args: ["[\\[\\(\\{<«][\\s\\W]*[\\]\\)\\}>»]", ""]
+        - name: re_replace
+          args: ["^[\\s&,\\.!\\?\\+\\-_\\|\\/':]+", ""]
         - name: append
-          args: "{{ if .Config.addrussian }} - RUSSIAN{{ else }}{{ end }}"
-        - name: replace
-          args: [" Rip", "Rip"]
-        - name: replace
-          args: ["WEB DL", "WEBDL"]
-        - name: replace
-          args: ["WEBDLRip", "WEBDL"]
+          args: "{{ if .Config.addrussiantotitle }} RUS{{ else }}{{ end }}"
     details:
       selector: a:has(h4)
       attribute: href
@@ -205,7 +213,7 @@ search:
         - name: append
           args: " +03:00" # MSK
         - name: dateparse
-          args: "2.01.2006 15:04 -07:00"
+          args: "d.MM.yyyy HH:mm zzz"
     seeders:
       selector: a:has(i.bx-chevrons-up)
       filters:

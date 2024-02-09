@@ -75,7 +75,7 @@ indent_size=2
 
 # JavaScript/HTML
 [*.{js,ts,json,html,cshtml}]
-indent_size=2
+indent_size=4
 
 # Code files
 [*.{cs,csx,vb,vbx}]
@@ -220,7 +220,7 @@ csharp_style_var_when_type_is_apparent=true:suggestion
 csharp_style_var_elsewhere=true:suggestion
 # Expression-bodied members
 csharp_style_expression_bodied_methods=when_on_single_line:suggestion
-csharp_style_expression_bodied_constructors=when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors=false:suggestion
 csharp_style_expression_bodied_operators=when_on_single_line:suggestion
 csharp_style_expression_bodied_properties=true:suggestion
 csharp_style_expression_bodied_indexers=true:suggestion
@@ -237,7 +237,7 @@ csharp_style_conditional_delegate_call=true:warning
 # Modifier preferences
 csharp_preferred_modifier_order=public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
 # Expression-level preferences
-csharp_prefer_braces=false:suggestion
+csharp_prefer_braces=true:suggestion
 csharp_style_deconstructed_variable_declaration=true:suggestion
 csharp_prefer_simple_default_expression=true:warning
 csharp_style_pattern_local_over_anonymous_function=true:suggestion

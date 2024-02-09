@@ -10,11 +10,10 @@ links:
 
 caps:
   categorymappings:
-    - {id: 62, cat: Books/EBook, desc: "EBook"}
-    - {id: 69, cat: Books/Mags, desc: "Zeitung"}
     - {id: 30, cat: TV/Anime, desc: "Filme - Animie"}
     - {id: 28, cat: Movies/BluRay, desc: "Filme - Bluray"}
     - {id: 31, cat: Movies/Other, desc: "Filme - Bollywood"}
+    - {id: 77, cat: TV/Documentary, desc: "Filme - DokusHD"}
     - {id: 32, cat: Movies/DVD, desc: "Filme - DVD"}
     - {id: 33, cat: Movies/HD, desc: "Filme - HD"}
     - {id: 34, cat: Movies, desc: "Filme - Klassiker"}
@@ -22,14 +21,17 @@ caps:
     - {id: 36, cat: Movies/SD, desc: "Filme - SD"}
     - {id: 37, cat: Movies/UHD, desc: "Filme - UHD"}
     - {id: 38, cat: Movies/HD, desc: "Filme - x264"}
-    - {id: 63, cat: Movies, desc: "Fuer Unsere Kleinsten"}
-    - {id: 64, cat: PC/Mobile-Other, desc: "Handy-Stuff"}
     - {id: 39, cat: Audio, desc: "Musik - Alben"}
+    - {id: 72, cat: Audio, desc: "Musik - Charts"}
     - {id: 40, cat: Audio, desc: "Musik - Diskografie"}
+    - {id: 75, cat: Audio/Lossless, desc: "Musik - Flac"}
     - {id: 41, cat: Audio/Audiobook, desc: "Musik - Hoerbuch"}
+    - {id: 74, cat: Audio/Other, desc: "Musik - Kids"}
     - {id: 42, cat: Audio, desc: "Musik - Mixe"}
-    - {id: 43, cat: Audio/MP3, desc: "Musik - MP3"}
     - {id: 66, cat: Audio, desc: "Musik - Pack"}
+    - {id: 70, cat: Audio, desc: "Musik - Sampler Deu."}
+    - {id: 71, cat: Audio, desc: "Musik - Sampler Int."}
+    - {id: 76, cat: Audio/Other, desc: "Musik - Soundtrack"}
     - {id: 44, cat: Audio/Video, desc: "Musik - Video"}
     - {id: 45, cat: PC, desc: "Programme - Linux"}
     - {id: 48, cat: PC/Mac, desc: "Programme - Mac"}
@@ -39,7 +41,11 @@ caps:
     - {id: 51, cat: TV, desc: "Serien - Klassiker"}
     - {id: 52, cat: TV, desc: "Serien - Pack"}
     - {id: 53, cat: TV/Sport, desc: "Serien - Sport"}
+    - {id: 62, cat: Books/EBook, desc: "EBook"}
+    - {id: 63, cat: Movies, desc: "Fuer Unsere Kleinsten"}
+    - {id: 64, cat: PC/Mobile-Other, desc: "Handy-Stuff"}
     - {id: 60, cat: Other, desc: "Sonstiges"}
+    - {id: 69, cat: Books/Mags, desc: "Zeitung"}
     - {id: 54, cat: PC/Mobile-Other, desc: "Spiele - Handy"}
     - {id: 55, cat: Console, desc: "Spiele - Konsolen"}
     - {id: 57, cat: PC/Games, desc: "Spiele - Mac / Linux / PC"}
@@ -71,7 +77,7 @@ settings:
   - name: info_free
     type: info
     label: About Freeleech and OnlyUpload at Coastal Crew
-    default: <li>FreeLeech are torrents where neither the download or upload is counted. (On the Jackett dashboard search results these are tagged as NoUpload).</li><li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li>
+    default: "<ul><li>FreeLeech are torrents where neither the download or upload is counted. (On the Jackett dashboard search results these are tagged as NoUpload).</li><li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li></ul>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -157,7 +163,7 @@ search:
         - name: replace
           args: ["\xA0", " "]
         - name: dateparse
-          args: "02.01.2006 15:04:05 -07:00"
+          args: "dd.MM.yyyy HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="pic/oupic.gif"]: 0 # only upload is counted

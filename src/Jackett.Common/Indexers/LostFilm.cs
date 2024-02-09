@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
@@ -20,24 +19,36 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    internal class LostFilm : BaseWebIndexer
+    public class LostFilm : IndexerBase
     {
-        public override string[] LegacySiteLinks { get; protected set; } = {
-            "https://lostfilm.site",
-            "https://lostfilm.tw/",
+        public override string Id => "lostfilm";
+        public override string Name => "LostFilm.tv";
+        public override string Description => "Unique portal about foreign series";
+        public override string SiteLink { get; protected set; } = "https://www.lostfilm.life/";
+        public override string[] AlternativeSiteLinks => new[]
+        {
+            // Uptrends.com uptime checkpoints // Uptimia.com availability locations
+            "https://www.lostfilm.life/", // 43/43 // 41/47
+            "https://www.lostfilmtv5.site/", // 43/43 // 40/42
+            "https://www.lostfilmtv2.site/", // 43/43 // 38/46
+            "https://www.lostfilmtv3.site/", // 43/43 // 33/40
+            "https://www.lostfilm.tv/", // 39/43 // 32/42
+            "https://www.lostfilm.uno/", // 27/43 // 30/46
+            "https://www.lostfilm.win/", // 27/43 // 29/42
+            "https://www.lostfilm.tw/", // 26/43 // 33/46
+            "https://www.lostfilmtv.site/", // 18/43 // 17/45
         };
+        public override string[] LegacySiteLinks => new[]
+        {
+            "https://lostfilm.site", // redirects to .tw
+            "https://lostfilm.tw/", // redirects to www.
+            "https://www.lostfilm.run/", // ERR_NAME_NOT_RESOLVED
+        };
+        public override string Language => "ru-RU";
+        public override string Type => "semi-private";
 
-        public override string[] AlternativeSiteLinks { get; protected set; } = {
-            "https://www.lostfilm.run/",
-            "https://www.lostfilmtv.site/",
-            "https://www.lostfilm.tv/",
-            "https://www.lostfilm.win/",
-            "https://www.lostfilm.tw/",
-            "https://www.lostfilmtv2.site/",
-            "https://www.lostfilmtv5.site/",
-            "https://www.lostfilm.uno/"
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
 
- };
         private static readonly Regex parsePlayEpisodeRegex = new Regex("PlayEpisode\\('(?<id>\\d{1,3})(?<season>\\d{3})(?<episode>\\d{3})'\\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex parseReleaseDetailsRegex = new Regex("Видео:\\ (?<quality>.+).\\ Размер:\\ (?<size>.+).\\ Перевод", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -55,7 +66,6 @@ namespace Jackett.Common.Indexers
         // PlayEpisode function produce urls like this:
         // https://www.lostfilm.tv/v_search.php?c=119&s=5&e=16
         private string ReleaseUrl => SiteLink + "v_search.php";
-
 
         internal class TrackerUrlDetails
         {
@@ -107,37 +117,40 @@ namespace Jackett.Common.Indexers
 
         public LostFilm(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
             ICacheService cs)
-            : base(id: "lostfilm",
-                   name: "LostFilm.tv",
-                   description: "Unique portal about foreign series",
-                   link: "https://www.lostfilm.run/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationDataCaptchaLogin())
         {
-            Encoding = Encoding.UTF8;
-            Language = "ru-RU";
-            Type = "semi-private";
+        }
 
-            webclient.AddTrustedCertificate(new Uri(SiteLink).Host, "98D43B6E740B42C02A9BD1A9D1A813E4350BE332"); // for *.win expired 26/Mar/22
-            webclient.AddTrustedCertificate(new Uri(SiteLink).Host, "34287FB53A58EC6AE590E7DD7E03C70C0263CADC"); // for *.tw  expired 01/Apr/21
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q
+                }
+            };
 
             // TODO: review if there is only this category (movie search is enabled)
-            AddCategoryMapping(1, TorznabCatType.TV);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.TV);
+
+            return caps;
+        }
+
+        public override void LoadValuesFromJson(JToken jsonConfig, bool useProtectionService = false)
+        {
+            base.LoadValuesFromJson(jsonConfig, useProtectionService);
+
+            webclient?.AddTrustedCertificate(new Uri(SiteLink).Host, "34287FB53A58EC6AE590E7DD7E03C70C0263CADC"); // for *.tw  expired 01/Apr/21
         }
 
         public override async Task<ConfigurationData> GetConfigurationForSetup()
@@ -145,7 +158,7 @@ namespace Jackett.Common.Indexers
             // looks like after some failed login attempts there's a captcha
             var loginPage = await RequestWithCookiesAsync(LoginUrl, string.Empty);
             var parser = new HtmlParser();
-            var document = parser.ParseDocument(loginPage.ContentString);
+            using var document = parser.ParseDocument(loginPage.ContentString);
             var qCaptchaImg = document.QuerySelector("img#captcha_pictcha");
             if (qCaptchaImg != null)
             {
@@ -155,7 +168,7 @@ namespace Jackett.Common.Indexers
             }
             else
             {
-                configData.CaptchaImage.Value = new byte[0];
+                configData.CaptchaImage.Value = Array.Empty<byte>();
             }
             configData.CaptchaCookie.Value = loginPage.Cookies;
             UpdateCookieHeader(loginPage.Cookies);
@@ -193,7 +206,7 @@ namespace Jackett.Common.Indexers
             await ConfigureIfOK(result.Cookies, result.ContentString != null && result.ContentString.Contains("\"success\":true"), () =>
             {
                 var errorMessage = result.ContentString;
-                if (errorMessage.Contains("\"error\":2"))
+                if (errorMessage.Contains("\"error\":1") || errorMessage.Contains("\"error\":2") || errorMessage.Contains("\"error\":4"))
                     errorMessage = "Captcha is incorrect";
                 if (errorMessage.Contains("\"error\":3"))
                     errorMessage = "E-mail or password is incorrect";
@@ -430,7 +443,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var document = parser.ParseDocument(results.ContentString);
+                using var document = parser.ParseDocument(results.ContentString);
                 var rows = document.QuerySelectorAll("div.row");
 
                 foreach (var row in rows)
@@ -459,7 +472,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var document = parser.ParseDocument(results.ContentString);
+                using var document = parser.ParseDocument(results.ContentString);
 
                 var playButton = document.QuerySelector("div.external-btn");
                 if (playButton != null && !playButton.ClassList.Contains("inactive"))
@@ -469,14 +482,17 @@ namespace Jackett.Common.Indexers
                     var dateString = document.QuerySelector("div.title-block > div.details-pane > div.left-box").TextContent;
                     var key = (dateString.Contains("TBA")) ? "ru: " : "eng: ";
                     dateString = TrimString(dateString, key, " г."); // '... Дата выхода eng: 09 марта 2012 г. ...' -> '09 марта 2012'
+
                     DateTime date;
-                    if (dateString.Length == 4) //dateString might be just a year, e.g. https://www.lostfilm.tv/series/Ghosted/season_1/episode_14/
+                    if (dateString.Length == 4)
                     {
-                        date = DateTime.ParseExact(dateString, "yyyy", CultureInfo.InvariantCulture).ToLocalTime();
+                        // dateString might be just a year, e.g. https://www.lostfilm.tv/series/Ghosted/season_1/episode_14/
+                        date = DateTime.TryParseExact(dateString, "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsedDate) ? parsedDate : DateTime.Now;
                     }
                     else
                     {
-                        date = DateTime.Parse(dateString, new CultureInfo(Language)); // dd mmmm yyyy
+                        // dd mmmm yyyy
+                        date = DateTime.TryParse(dateString, new CultureInfo(Language), DateTimeStyles.AssumeLocal, out var parsedDate) ? parsedDate : DateTime.Now;
                     }
 
                     var urlDetails = new TrackerUrlDetails(playButton);
@@ -508,7 +524,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var document = parser.ParseDocument(results.ContentString);
+                using var document = parser.ParseDocument(results.ContentString);
                 var seasons = document.QuerySelectorAll("div.serie-block");
                 var rowSelector = "table.movie-parts-list > tbody > tr";
 
@@ -647,7 +663,7 @@ namespace Jackett.Common.Indexers
         #endregion
         #region Tracker parsing
 
-        private async Task<List<ReleaseInfo>> FetchTrackerReleases(TrackerUrlDetails details)
+        private async Task<IReadOnlyList<ReleaseInfo>> FetchTrackerReleases(TrackerUrlDetails details)
         {
             var queryCollection = new NameValueCollection
             {
@@ -673,7 +689,7 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var document = parser.ParseDocument(results.ContentString);
+                using var document = parser.ParseDocument(results.ContentString);
                 var meta = document.QuerySelector("meta");
                 var metaContent = meta.GetAttribute("content");
 
@@ -687,7 +703,7 @@ namespace Jackett.Common.Indexers
             }
 
             // Failure path
-            return new List<ReleaseInfo>();
+            return Array.Empty<ReleaseInfo>();
         }
 
         private async Task<List<ReleaseInfo>> FollowTrackerRedirection(string url, TrackerUrlDetails details)
@@ -699,92 +715,107 @@ namespace Jackett.Common.Indexers
             try
             {
                 var parser = new HtmlParser();
-                var document = parser.ParseDocument(results.ContentString);
+                using var document = parser.ParseDocument(results.ContentString);
                 var rows = document.QuerySelectorAll("div.inner-box--item");
 
-                logger.Debug("> Parsing " + rows.Count().ToString() + " releases");
-
-                var serieTitle = document.QuerySelector("div.inner-box--subtitle").TextContent;
-                serieTitle = serieTitle.Substring(0, serieTitle.LastIndexOf(','));
-
-                var episodeInfo = document.QuerySelector("div.inner-box--text").TextContent;
-                var episodeName = TrimString(episodeInfo, '(', ')');
-
-                foreach (var row in rows)
+                if (rows.Count() > 0)
                 {
-                    try
+                    logger.Debug("> Parsing " + rows.Count().ToString() + " releases");
+
+                    var serieTitle = document.QuerySelector("div.inner-box--subtitle").TextContent;
+                    serieTitle = serieTitle.Substring(0, serieTitle.LastIndexOf(','));
+
+                    var episodeInfo = document.QuerySelector("div.inner-box--text").TextContent;
+                    var episodeName = TrimString(episodeInfo, '(', ')');
+
+                    foreach (var row in rows)
                     {
-
-                        var detailsInfo = row.QuerySelector("div.inner-box--desc").TextContent;
-                        var releaseDetails = parseReleaseDetailsRegex.Match(detailsInfo);
-
-                        // ReSharper states "Expression is always false"
-                        // TODO Refactor to get the intended operation
-                        if (releaseDetails == null)
+                        try
                         {
-                            throw new FormatException("Failed to map release details string: " + detailsInfo);
-                        }
 
-                        /*
-                         * For supported qualities see:
-                         *  - TvCategoryParser.cs
-                         *  - https://github.com/SickRage/SickRage/wiki/Quality-Settings#quality-names-to-recognize-the-quality-of-a-file
-                         */
-                        var quality = releaseDetails.Groups["quality"].Value.Trim();
-                        // Adapt shitty quality format for common algorythms
-                        quality = Regex.Replace(quality, "-Rip", "Rip", RegexOptions.IgnoreCase);
-                        quality = Regex.Replace(quality, "WEB-DLRip", "WEBDL", RegexOptions.IgnoreCase);
-                        quality = Regex.Replace(quality, "WEB-DL", "WEBDL", RegexOptions.IgnoreCase);
-                        quality = Regex.Replace(quality, "HDTVRip", "HDTV", RegexOptions.IgnoreCase);
-                        // Fix forgotten p-Progressive suffix in resolution index
-                        quality = Regex.Replace(quality, "1080 ", "1080p ", RegexOptions.IgnoreCase);
-                        quality = Regex.Replace(quality, "720 ", "720p ", RegexOptions.IgnoreCase);
+                            var detailsInfo = row.QuerySelector("div.inner-box--desc").TextContent;
+                            var releaseDetails = parseReleaseDetailsRegex.Match(detailsInfo);
 
-                        var techComponents = new[]
-                        {
+                            // ReSharper states "Expression is always false"
+                            // TODO Refactor to get the intended operation
+                            if (releaseDetails == null)
+                            {
+                                throw new FormatException("Failed to map release details string: " + detailsInfo);
+                            }
+
+                            /*
+                             * For supported qualities see:
+                             *  - TvCategoryParser.cs
+                             *  - https://github.com/SickRage/SickRage/wiki/Quality-Settings#quality-names-to-recognize-the-quality-of-a-file
+                             */
+                            var quality = releaseDetails.Groups["quality"].Value.Trim();
+                            // Adapt shitty quality format for common algorythms
+                            quality = Regex.Replace(quality, "-Rip", "Rip", RegexOptions.IgnoreCase);
+                            quality = Regex.Replace(quality, "WEB-DLRip", "WEBDL", RegexOptions.IgnoreCase);
+                            quality = Regex.Replace(quality, "WEB-DL", "WEBDL", RegexOptions.IgnoreCase);
+                            quality = Regex.Replace(quality, "HDTVRip", "HDTV", RegexOptions.IgnoreCase);
+                            // Fix forgotten p-Progressive suffix in resolution index
+                            quality = Regex.Replace(quality, "1080 ", "1080p ", RegexOptions.IgnoreCase);
+                            quality = Regex.Replace(quality, "720 ", "720p ", RegexOptions.IgnoreCase);
+
+                            var techComponents = new[]
+                            {
                             "rus",
                             quality,
                             "(LostFilm)"
                         };
-                        var techInfo = string.Join(" ", techComponents.Where(s => !string.IsNullOrEmpty(s)));
+                            var techInfo = string.Join(" ", techComponents.Where(s => !string.IsNullOrEmpty(s)));
 
-                        // Ru title: downloadLink.TextContent.Replace("\n", "");
-                        // En title should be manually constructed.
-                        var titleComponents = new[] {
+                            // Ru title: downloadLink.TextContent.Replace("\n", "");
+                            // En title should be manually constructed.
+                            var titleComponents = new[] {
                             serieTitle, details.GetEpisodeString(), episodeName, techInfo
                         };
-                        var downloadLink = row.QuerySelector("div.inner-box--link > a");
-                        var sizeString = releaseDetails.Groups["size"].Value.ToUpper();
-                        sizeString = sizeString.Replace("ТБ", "TB"); // untested
-                        sizeString = sizeString.Replace("ГБ", "GB");
-                        sizeString = sizeString.Replace("МБ", "MB");
-                        sizeString = sizeString.Replace("КБ", "KB"); // untested
-                        var link = new Uri(downloadLink.GetAttribute("href"));
+                            var downloadLink = row.QuerySelector("div.inner-box--link > a");
+                            var sizeString = releaseDetails.Groups["size"].Value.ToUpper();
+                            sizeString = sizeString.Replace("ТБ", "TB"); // untested
+                            sizeString = sizeString.Replace("ГБ", "GB");
+                            sizeString = sizeString.Replace("МБ", "MB");
+                            sizeString = sizeString.Replace("КБ", "KB"); // untested
+                            var link = new Uri(downloadLink.GetAttribute("href"));
 
-                        // TODO this feels sparse compared to other trackers. Expand later
-                        var release = new ReleaseInfo
+                            // TODO this feels sparse compared to other trackers. Expand later
+                            var release = new ReleaseInfo
+                            {
+                                Category = new[] { TorznabCatType.TV.ID },
+                                Title = string.Join(" - ", titleComponents.Where(s => !string.IsNullOrEmpty(s))),
+                                Link = link,
+                                Guid = link,
+                                Size = ParseUtil.GetBytes(sizeString),
+                                // add missing torznab fields not available from results
+                                Seeders = 1,
+                                Peers = 2,
+                                DownloadVolumeFactor = 0,
+                                UploadVolumeFactor = 1,
+                                MinimumRatio = 1,
+                                MinimumSeedTime = 172800 // 48 hours
+                            };
+
+                            // TODO Other trackers don't have this log line. Remove or add to other trackers?
+                            logger.Debug("> Add: " + release.Title);
+                            releases.Add(release);
+                        }
+                        catch (Exception ex)
                         {
-                            Category = new[] { TorznabCatType.TV.ID },
-                            Title = string.Join(" - ", titleComponents.Where(s => !string.IsNullOrEmpty(s))),
-                            Link = link,
-                            Guid = link,
-                            Size = ReleaseInfo.GetBytes(sizeString),
-                            // add missing torznab fields not available from results
-                            Seeders = 1,
-                            Peers = 2,
-                            DownloadVolumeFactor = 0,
-                            UploadVolumeFactor = 1,
-                            MinimumRatio = 1,
-                            MinimumSeedTime = 172800 // 48 hours
-                        };
-
-                        // TODO Other trackers don't have this log line. Remove or add to other trackers?
-                        logger.Debug("> Add: " + release.Title);
-                        releases.Add(release);
+                            logger.Error(string.Format("{0}: Error while parsing row '{1}':\n\n{2}", Id, row.OuterHtml, ex));
+                        }
                     }
-                    catch (Exception ex)
+                }
+                else
+                {
+                    if (results.ContentString.Contains("Контент недоступен на территории Российской Федерации"))
                     {
-                        logger.Error(string.Format("{0}: Error while parsing row '{1}':\n\n{2}", Id, row.OuterHtml, ex));
+                        logger.Debug($"> Content is not available in the Russian Federation");
+                    }
+                    else
+                    {
+                        var message = document.QuerySelector("p").TextContent;
+                        logger.Debug($"> {message}");
                     }
                 }
             }
@@ -792,7 +823,6 @@ namespace Jackett.Common.Indexers
             {
                 OnParseError(results.ContentString, ex);
             }
-
             return releases;
         }
 
@@ -818,8 +848,8 @@ namespace Jackett.Common.Indexers
             var dateString = dateColumn.QuerySelector("span.small-text")?.TextContent;
             // 'Eng: 23.05.2017' -> '23.05.2017' OR '23.05.2017' -> '23.05.2017'
             dateString = (string.IsNullOrEmpty(dateString)) ? dateColumn.QuerySelector("span")?.TextContent : dateString.Substring(dateString.IndexOf(":") + 2);
-            var date = DateTime.Parse(dateString, new CultureInfo(Language)); // dd.mm.yyyy
-            return date;
+            // dd.mm.yyyy
+            return DateTime.TryParse(dateString, new CultureInfo(Language), DateTimeStyles.AssumeLocal, out var parsedDate) ? parsedDate : DateTime.Now;
         }
 
         #endregion

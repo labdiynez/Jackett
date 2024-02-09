@@ -5,7 +5,6 @@ description: "1337X is a Public torrent site that offers verified torrent downlo
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 requestDelay: 2
 links:
   - https://1337x.to/
@@ -13,30 +12,34 @@ links:
   - https://x1337x.ws/
   - https://x1337x.eu/
   - https://x1337x.se/
-  - https://1337x.unblockit.pet/
-  - https://1337x.nocensor.lol/
+  - https://1337x.so/
+  - https://1337x.unblockit.dad/
   - https://1337x.unblockninja.com/
+  - https://1337x.ninjaproxy1.com/
+  - https://1337x.proxyninja.org/
+  - https://1337x.torrentbay.st/
 legacylinks:
   - https://1337x.is/
-  - https://1337x.nocensor.work/
-  - https://1337x.unblockit.kim/
-  - https://1337x.unblockit.bz/
-  - https://1337x.unblockit.tv/
-  - https://1337x.unblockit.how/
-  - https://1337x.unblockit.cam/
-  - https://1337x.nocensor.biz/
   - https://1337x.gd/
-  - https://1337x.unblockit.day/
-  - https://1337x.unblockit.llc/
-  - https://1337x.unblockit.blue/
-  - https://1337x.unblockit.name/
-  - https://1337x.nocensor.sbs/
-  - https://1337x.unblockit.ist/
-  - https://1337x.unblockit.bet/
-  - https://1337x.unblockit.cat/
-  - https://1337x.unblockit.nz/
-  - https://1337x.nocensor.world/
-  - https://1337x.unblockit.page/
+  - https://1337x.unblockit.pet/
+  - https://1337x.nocensor.lol/
+  - https://1337x.unblockit.ink/
+  - https://1337x.nocensor.art/
+  - https://1337x.unblockit.bio/
+  - https://1337x.unblockit.boo/
+  - https://1337x.mrunblock.guru/
+  - https://1337x.mrunblock.life/
+  - https://1337x.unblockit.click/
+  - https://1337x.unblockit.asia/
+  - https://1337x.unblockit.mov/
+  - https://1337x.unblockit.rsvp/
+  - https://1337x.unblockit.vegas/
+  - https://1337x.unblockit.esq/
+  - https://1337x.unblockit.zip/
+  - https://1337x.unblockit.foo/
+  - https://1337x.unblockit.ing/
+  - https://1337x.mrunblock.bond/
+  - https://1337x.unblockit.date/
 
 caps:
   categorymappings:
@@ -182,6 +185,11 @@ search:
     - path: "{{ if or .Query.Album .Query.Artist .Keywords }}sort-search{{ else }}cat/Movies{{ end }}{{ if or .Query.Album .Query.Artist }}/{{ or .Query.Album .Query.Artist }}{{ else }}/{{ .Keywords }}{{ end }}{{ if or .Query.Album .Query.Artist .Keywords }}/{{ else }}{{ end }}{{ .Config.sort }}/{{ .Config.type }}/1/"
     - path: "{{ if or .Query.Album .Query.Artist .Keywords }}sort-search{{ else }}cat/TV{{ end }}{{ if or .Query.Album .Query.Artist }}/{{ or .Query.Album .Query.Artist }}{{ else }}/{{ .Keywords }}{{ end }}{{ if or .Query.Album .Query.Artist .Keywords }}/{{ else }}{{ end }}{{ .Config.sort }}/{{ .Config.type }}/{{ if or .Query.Album .Query.Artist .Keywords }}2{{ else }}1{{ end }}/"
     - path: "{{ if or .Query.Album .Query.Artist .Keywords }}sort-search{{ else }}cat/Music{{ end }}{{ if or .Query.Album .Query.Artist }}/{{ or .Query.Album .Query.Artist }}{{ else }}/{{ .Keywords }}{{ end }}{{ if or .Query.Album .Query.Artist .Keywords }}/{{ else }}{{ end }}{{ .Config.sort }}/{{ .Config.type }}/{{ if or .Query.Album .Query.Artist .Keywords }}3{{ else }}1{{ end }}/"
+    - path: "{{ if or .Query.Album .Query.Artist .Keywords }}sort-search{{ else }}cat/Other{{ end }}{{ if or .Query.Album .Query.Artist }}/{{ or .Query.Album .Query.Artist }}{{ else }}/{{ .Keywords }}{{ end }}{{ if or .Query.Album .Query.Artist .Keywords }}/{{ else }}{{ end }}{{ .Config.sort }}/{{ .Config.type }}/{{ if or .Query.Album .Query.Artist .Keywords }}4{{ else }}1{{ end }}/"
+
+  keywordsfilters:
+    - name: re_replace # daily standard S2023 > 2023
+      args: ["\\bS(20\\d{2})\\b", "$1"]
 
   rows:
     selector: tr:has(a[href^="/torrent/"])
@@ -254,7 +262,7 @@ search:
         - name: re_replace
           args: ["st|nd|rd|th", ""]
         - name: dateparse
-          args: "3pm Jan. 2"
+          args: "htt MMM. d"
     date_years:
       # (more than a year ago) Apr. 18th '11
       optional: true
@@ -265,7 +273,7 @@ search:
         - name: re_replace
           args: ["st|nd|rd|th", ""]
         - name: dateparse
-          args: "Jan. 2 06"
+          args: "MMM. d yy"
     date_today:
       # (today) 12:25am
       optional: true

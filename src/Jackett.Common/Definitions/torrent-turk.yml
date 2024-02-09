@@ -41,6 +41,7 @@ caps:
     - {id: 190, cat: Movies, desc: "Movies/Netflix Film"}
     - {id: 195, cat: TV, desc: "TV/Exxen"}
     - {id: 199, cat: TV, desc: "TV/GAİN"}
+    - {id: 201, cat: TV, desc: "TV/Tabii"}
     - {id: 171, cat: Audio, desc: "Music"}
     - {id: 172, cat: Audio, desc: "Music/Turkish"}
     - {id: 173, cat: Audio, desc: "Music/Foreign"}
@@ -65,12 +66,13 @@ caps:
     book-search: [q]
 
 settings:
-  - name: username
+  - name: cookie
     type: text
-    label: Username
-  - name: password
-    type: password
-    label: Password
+    label: Cookie
+  - name: info
+    type: info
+    label: How to get the Cookie
+    default: "<ol><li>Login to this tracker with your browser</li><li>Open the <b>DevTools</b> panel by pressing <b>F12</b></li><li>Select the <b>Network</b> tab</li><li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)</li><li>Refresh the page by pressing <b>F5</b></li><li>Click on the first row entry</li><li>Select the <b>Headers</b> tab on the Right panel</li><li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section</li><li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</li></ol>"
   - name: freeleech
     type: checkbox
     label: Filter freeleech only
@@ -78,7 +80,7 @@ settings:
   - name: info
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b><li>And set the <b>Language (Dil)</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</ol>"
+    default: "<ol><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b></li><li>And set the <b>Language (Dil)</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</li></ol>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -100,23 +102,9 @@ settings:
     default: "If you are getting the error: <b>An error has occurred!You can't view this page unless you read all your unread messages</b>, then access the site with your browser and <b>mark as read</b> all PMs."
 
 login:
-  path: ?p=home&pid=1
-  method: form
-  form: form#loginbox_form
-  submitpath: ajax/login.php
+  method: cookie
   inputs:
-    action: login
-    loginbox_membername: "{{ .Config.username }}"
-    loginbox_password: "{{ .Config.password }}"
-    loginbox_remember: 1
-  selectorinputs:
-    securitytoken:
-      selector: "script:contains(\"stKey: \")"
-      filters:
-        - name: regexp
-          args: "stKey: \"(.+?)\","
-  error:
-    - selector: ":contains(\"-ERROR-\")"
+    cookie: "{{ .Config.cookie }}"
   test:
     path: ?p=torrents&type=bookmarks&pid=508
     selector: a#logout
@@ -124,9 +112,6 @@ login:
 search:
   paths:
     - path: /
-  keywordsfilters:
-    - name: re_replace
-      args: ["[^a-zA-Z0-9]+", "%25"]
   inputs:
     p: torrents
     pid: 32
@@ -142,6 +127,8 @@ search:
 
   rows:
     selector: "table#torrents_table_classic > tbody > tr:has(td.torrent_name){{ if .Config.freeleech }}:has(img[title=\"FREE!\"]){{ else }}{{ end }}"
+    filters:
+      - name: andmatch
 
   fields:
     category:
@@ -151,12 +138,15 @@ search:
         - name: querystring
           args: cid
     title:
-      selector: a[href*="?p=torrents&pid=10&action=details"]
+      selector: td.torrent_name > a
     details:
-      selector: a[href*="?p=torrents&pid=10&action=details"]
+      selector: td.torrent_name > a
       attribute: href
     download:
-      selector: a[href*="?p=torrents&pid=10&action=download"]
+      selector: td.download > a
+      attribute: href
+    magnet:
+      selector: a[href^="magnet:?xt="]
       attribute: href
     date_day:
       # Uploaded Friday at 05:11 by
@@ -178,7 +168,7 @@ search:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: dateparse
-          args: "02-01-2006 15:04"
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]
@@ -207,5 +197,5 @@ search:
         "img[title=\"Upload Multiplier: 2\"]": 2
         "*": 1
     minimumratio:
-      text: 0.5
+      text: 0.7
 # TSUE 2.2

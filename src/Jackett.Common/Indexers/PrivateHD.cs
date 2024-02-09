@@ -11,38 +11,51 @@ namespace Jackett.Common.Indexers
     [ExcludeFromCodeCoverage]
     public class PrivateHD : AvistazTracker
     {
+        public override string Id => "privatehd";
+        public override string Name => "PrivateHD";
+        public override string Description => "BitTorrent site for High Quality, High Definition (HD) movies and TV Shows";
+        public override string SiteLink { get; protected set; } = "https://privatehd.to/";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         public PrivateHD(IIndexerConfigurationService configService, WebClient wc, Logger l, IProtectionService ps,
-            ICacheService cs)
-            : base(id: "privatehd",
-                   name: "PrivateHD",
-                   description: "BitTorrent site for High Quality, High Definition (HD) movies and TV Shows",
-                   link: "https://privatehd.to/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.Genre
-                       },
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.Genre
-                       }
-                   },
-                   configService: configService,
+                         ICacheService cs)
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cs: cs
                    )
         {
-            AddCategoryMapping(1, TorznabCatType.Movies);
-            AddCategoryMapping(1, TorznabCatType.MoviesUHD);
-            AddCategoryMapping(1, TorznabCatType.MoviesHD);
-            AddCategoryMapping(1, TorznabCatType.MoviesSD);
-            AddCategoryMapping(2, TorznabCatType.TV);
-            AddCategoryMapping(2, TorznabCatType.TVUHD);
-            AddCategoryMapping(2, TorznabCatType.TVHD);
-            AddCategoryMapping(2, TorznabCatType.TVSD);
+        }
+
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                LimitsDefault = 50,
+                LimitsMax = 50,
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q, TvSearchParam.Season, TvSearchParam.Ep, TvSearchParam.ImdbId, TvSearchParam.TvdbId, TvSearchParam.Genre
+                },
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId, MovieSearchParam.TmdbId, MovieSearchParam.Genre
+                },
+                TvSearchImdbAvailable = true
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.Movies);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesUHD);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesHD);
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesSD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TV);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVUHD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVHD);
+            caps.Categories.AddCategoryMapping(2, TorznabCatType.TVSD);
+
+            return caps;
         }
     }
 }

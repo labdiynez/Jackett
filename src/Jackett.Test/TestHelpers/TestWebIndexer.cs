@@ -11,32 +11,29 @@ namespace Jackett.Test.TestHelpers
 {
     public class TestWebIndexer : BaseWebIndexer
     {
-        public TestWebIndexer() :
-            base(id: "test_id",
-                 name: "test_name",
-                 description: "test_description",
-                 link: "https://test.link/",
-                 caps: new TorznabCapabilities(),
-                 client: null,
-                 configService: null,
-                 logger: null,
-                 configData: new ConfigurationData(),
-                 p: null,
-                 cacheService: null)
+        public override string Id => "test_id";
+        public override string Name => "test_name";
+        public override string Description => "test_description";
+        public override string SiteLink => "https://test.link/";
+        public override string[] AlternativeSiteLinks => new[]
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-us";
-            Type = "private";
-        }
-
-        public override string[] AlternativeSiteLinks { get; protected set; } = {
             "https://test.link/",
             "https://alternative-test.link/"
         };
-
-        public override string[] LegacySiteLinks { get; protected set; } = {
+        public override string[] LegacySiteLinks => new[]
+        {
             "https://legacy-test.link/"
         };
+        public override Encoding Encoding { get; protected set; } = Encoding.UTF8;
+        public override string Language { get; protected set; } = "en-us";
+        public override string Type { get; protected set; } = "private";
+
+        public override TorznabCapabilities TorznabCaps { get; protected set; } = new TorznabCapabilities();
+
+        public TestWebIndexer()
+            : base(client: null, configService: null, logger: null, configData: new ConfigurationData(), p: null, cacheService: null)
+        {
+        }
 
         public override Task<IndexerConfigurationStatus> ApplyConfiguration(JToken configJson) =>
             throw new NotImplementedException();

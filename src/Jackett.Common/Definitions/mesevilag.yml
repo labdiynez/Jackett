@@ -142,13 +142,17 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     seeders:
       selector: td:nth-last-child(4)
     leechers:
       selector: td:nth-last-child(3)
     grabs:
       selector: td:nth-last-child(2)
+    description:
+      case:
+        img[src="pic/yes.png"]: Verified
+        img[src="pic/nincs.png"]: Unverified
     downloadvolumefactor:
       selector: td:nth-last-child(5) > font
       case:

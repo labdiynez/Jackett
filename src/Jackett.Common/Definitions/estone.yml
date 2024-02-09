@@ -1,12 +1,14 @@
 ---
 id: estone
 name: eStone
-description: "eStone (XiDER, BeLoad, BigTorrent) is a HUNGARIAN Private Torrent Tracker for 0DAY / GENERAL"
+description: "eStone (BigTorrent) is a HUNGARIAN Private Torrent Tracker for 0DAY / GENERAL"
 language: hu-HU
 type: private
 encoding: UTF-8
 links:
-  - http://estone.cc/ # site does not support https ERR_CONNECTION_REFUSED
+  - https://estone.cc/
+legacylinks:
+  - http://estone.cc/
 
 caps:
   categorymappings:
@@ -83,7 +85,8 @@ login:
           - name: replace
             args: ["\");", ""]
   test:
-    path: letoltes.php
+    path: index.php
+    selector: a[href="logout.php"]
 
 search:
   paths:
@@ -144,7 +147,7 @@ search:
         - name: append
           args: "+01:00" # CET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="pic/free.png"]: 0
@@ -159,7 +162,9 @@ search:
         - name: regexp
           args: "\\((.+?)\\)"
     description:
-      text: "{{ .Result.genre }}"
+      case:
+        img[src="pic/yes.png"]: "Verified: {{ .Result.genre }}"
+        img[src="pic/nincs.png"]: "Unverified: {{ .Result.genre }}"
     minimumratio:
       text: 1.0
     minimumseedtime:

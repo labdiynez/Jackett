@@ -4,7 +4,7 @@ name: Bitspyder
 description: "Bitspyder is a Private site for Educational BOOKS / AUDIO"
 language: en-US
 type: private
-encoding: windows-1252
+encoding: iso-8859-1
 links:
   - https://bitspyder.net/
 legacylinks:
@@ -87,12 +87,14 @@ login:
   error:
     - selector: td.msg_info > font > b
   test:
-    path: browse.php
+    path: index.php
+    selector: a[href="logout.php"]
 
 search:
   paths:
     - path: browse.php
   inputs:
+    $raw: "{{ range .Categories }}c{{.}}=1&{{end}}"
     search: "{{ .Keywords }}"
     # 0 active, 1 incldead, 2 onlydead
     incldead: 1
@@ -101,10 +103,15 @@ search:
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
 
+  keywordsfilters:
+    - name: re_replace
+      args: ["\\s+", " "] # More than 1 space to 1 space
+    - name: re_replace
+      args: ["(\\w+)", "+$1"] # prepend + to each word
+    - name: trim
+
   rows:
     selector: table > tbody > tr[class]
-    filters:
-      - name: andmatch
 
   fields:
     # there are two styles, we support both
@@ -148,7 +155,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_upload:
       optional: true
       selector: a[title^="Upploaded at"]
@@ -161,7 +168,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_upload .Result.date_added }}{{ or .Result.date_upload .Result.date_added }}{{ else }}now{{ end }}"
     downloadvolumefactor:
@@ -169,7 +176,6 @@ search:
     uploadvolumefactor:
       text: 1
     description:
-      optional: true
       selector: font[color="#990000"]
     minimumratio:
       text: 1.0

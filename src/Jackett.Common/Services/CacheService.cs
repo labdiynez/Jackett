@@ -8,6 +8,7 @@ using Jackett.Common.Models;
 using Jackett.Common.Models.Config;
 using Jackett.Common.Services.Interfaces;
 using Jackett.Common.Utils;
+using Newtonsoft.Json;
 using NLog;
 
 namespace Jackett.Common.Services
@@ -60,7 +61,7 @@ namespace Jackett.Common.Services
                     _cache.Add(indexer.Id, new TrackerCache
                     {
                         TrackerId = indexer.Id,
-                        TrackerName = indexer.DisplayName,
+                        TrackerName = indexer.Name,
                         TrackerType = indexer.Type
                     });
                 }
@@ -113,12 +114,12 @@ namespace Jackett.Common.Services
             }
         }
 
-        public List<TrackerCacheResult> GetCachedResults()
+        public IReadOnlyList<TrackerCacheResult> GetCachedResults()
         {
             lock (_cache)
             {
                 if (!IsCacheEnabled())
-                    return new List<TrackerCacheResult>();
+                    return Array.Empty<TrackerCacheResult>();
 
                 PruneCacheByTtl(); // remove expired results
 
@@ -248,14 +249,11 @@ namespace Jackett.Common.Services
 
         private static string GetSerializedQuery(TorznabQuery query)
         {
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(query);
+            var json = JsonConvert.SerializeObject(query);
 
             // Changes in the query to improve cache hits
             // Both request must return the same results, if not we are breaking Jackett search
             json = json.Replace("\"SearchTerm\":null", "\"SearchTerm\":\"\"");
-
-            // The Cache parameter's value should not affect caching itself
-            json = json.Replace("\"Cache\":false", "\"Cache\":true");
 
             return json;
         }

@@ -1,61 +1,61 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using Jackett.Common.Models;
 using Jackett.Common.Models.IndexerConfig;
 using Jackett.Common.Services.Interfaces;
+using Jackett.Common.Utils;
 using Newtonsoft.Json.Linq;
 using NLog;
 using static Jackett.Common.Models.IndexerConfig.ConfigurationData;
 
 namespace Jackett.Common.Indexers
 {
-    public class EraiRaws : BaseWebIndexer
+    public class EraiRaws : IndexerBase
     {
-        const string RSS_PATH = "feed/?type=magnet";
-
-        public override string[] AlternativeSiteLinks { get; protected set; } = {
+        public override string Id => "erai-raws";
+        public override string Name => "Erai-Raws";
+        public override string Description => "Erai-Raws is a team release site for Anime subtitles.";
+        public override string SiteLink { get; protected set; } = "https://www.erai-raws.info/";
+        public override string[] AlternativeSiteLinks => new[]
+        {
             "https://www.erai-raws.info/",
-            "https://beta.erai-raws.info/",
-            "https://erairaws.nocensor.lol/"
+            "https://beta.erai-raws.info/"
         };
-
-        public override string[] LegacySiteLinks { get; protected set; } = {
+        public override string[] LegacySiteLinks => new[]
+        {
             "https://erairaws.nocensor.space/",
             "https://erairaws.nocensor.work/",
             "https://erairaws.nocensor.biz/",
             "https://erairaws.nocensor.sbs/",
-            "https://erairaws.nocensor.world/"
+            "https://erairaws.nocensor.world/",
+            "https://erairaws.nocensor.lol/",
+            "https://erairaws.nocensor.art/",
+            "https://erairaws.mrunblock.guru/",
+            "https://erairaws.mrunblock.life/",
+            "https://erairaws.nocensor.click/",
+            "https://erairaws.mrunblock.bond/",
+            "https://erairaws.nocensor.cloud/"
         };
+        public override string Language => "en-US";
+        public override string Type => "semi-private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
+        const string RSS_PATH = "feed/?type=magnet";
 
         public EraiRaws(IIndexerConfigurationService configService, Utils.Clients.WebClient wc, Logger l,
             IProtectionService ps, ICacheService cs)
-            : base(id: "erai-raws",
-                   name: "Erai-Raws",
-                   description: "Erai-Raws is a team release site for Anime subtitles.",
-                   link: "https://www.erai-raws.info/",
-                   caps: new TorznabCapabilities
-                   {
-                       TvSearchParams = new List<TvSearchParam>
-                       {
-                           TvSearchParam.Q
-                       }
-                   },
-                   configService: configService,
+            : base(configService: configService,
                    client: wc,
                    logger: l,
                    p: ps,
                    cacheService: cs,
                    configData: new ConfigurationData())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "semi-private";
-
             var rssKey = new StringConfigurationItem("RSSKey") { Value = "" };
             configData.AddDynamic("rssKey", rssKey);
             configData.AddDynamic("rssKeyHelp", new DisplayInfoConfigurationItem(string.Empty, "Find the RSS Key by accessing <a href=\"https://www.erai-raws.info/rss-page/\" target =_blank>Erai-Raws RSS page</a> while you're logged in. Copy the <i>All RSS</i> URL, the RSS Key is the last part. Example: for the URL <b>.../feed/?type=torrent&0879fd62733b8db8535eb1be2333</b> the RSS Key is <b>0879fd62733b8db8535eb1be2333</b>"));
@@ -78,9 +78,21 @@ namespace Jackett.Common.Indexers
                 "title-detail-parsing-help",
                 new DisplayInfoConfigurationItem("", "Title Detail Parsing will attempt to determine the season and episode number from the release names and reformat them as a suffix in the format S1E1. If successful, this should provide better matching in applications such as Sonarr.")
             );
+        }
 
-            // Configure the category mappings
-            AddCategoryMapping(1, TorznabCatType.TVAnime, "Anime - Sub");
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                TvSearchParams = new List<TvSearchParam>
+                {
+                    TvSearchParam.Q
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.TVAnime, "Anime - Sub");
+
+            return caps;
         }
 
         private TitleParser titleParser = new TitleParser();
@@ -141,7 +153,7 @@ namespace Jackett.Common.Indexers
                 }
                 else
                 {
-                    logger.Warn($"Could not parse {DisplayName} RSS item '{node.OuterXml}'");
+                    logger.Warn($"Could not parse {Name} RSS item '{node.OuterXml}'");
                 }
             }
 
@@ -157,13 +169,13 @@ namespace Jackett.Common.Indexers
                 // Validate the release
                 if (releaseInfo.PublishDate == null)
                 {
-                    logger.Warn($"Failed to parse {DisplayName} RSS feed item '{fi.Title}' due to malformed publish date.");
+                    logger.Warn($"Failed to parse {Name} RSS feed item '{fi.Title}' due to malformed publish date.");
                     continue;
                 }
 
                 if (releaseInfo.MagnetLink == null && string.IsNullOrWhiteSpace(releaseInfo.InfoHash))
                 {
-                    logger.Warn($"Failed to parse {DisplayName} RSS feed item '{fi.Title}' due to malformed link URI and no infohash available.");
+                    logger.Warn($"Failed to parse {Name} RSS feed item '{fi.Title}' due to malformed link URI and no infohash available.");
                     continue;
                 }
 
@@ -318,7 +330,7 @@ namespace Jackett.Common.Indexers
             {
                 Title = StripTitle(feedItem.Title);
                 Quality = feedItem.Quality;
-                Size = ReleaseInfo.GetBytes(feedItem.Size);
+                Size = ParseUtil.GetBytes(feedItem.Size);
                 DetailsLink = ParseDetailsLink(feedItem.Description);
                 InfoHash = feedItem.InfoHash;
                 SubTitles = feedItem.SubTitles.Replace("[", " ").Replace("]", " ").ToUpper();

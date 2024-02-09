@@ -5,10 +5,9 @@ description: "M-Team TP (MTTP) is a CHINESE Private Torrent Tracker for HD MOVIE
 language: zh-CN
 type: private
 encoding: UTF-8
-requestDelay: 2
+requestDelay: 5
 links:
   - https://kp.m-team.cc/
-legacylinks:
   - https://tp.m-team.cc/
   - https://pt.m-team.cc/
 
@@ -68,10 +67,6 @@ settings:
     type: checkbox
     label: Search freeleech only
     default: false
-  - name: info
-    type: info
-    label: ""
-    default: For best results disable the torrent name tooltip (User CP/Tracker Settings/Torrents Page). Otherwise long release names will be cut off.
   - name: sort
     type: select
     label: Sort requested from site
@@ -92,6 +87,14 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile.
+  - name: info_title
+    type: info
+    label: About Titles
+    default: For best results, disable the torrent name tooltip in <b>User CP/Tracker Settings/Torrents Page</b>. Otherwise long release names will be cut off.
+  - name: info_download_link
+    type: info
+    label: About Download Links
+    default: For best results, you must enable the <b>Download icon</b> in <b>User CP/Tracker Settings/Torrents Page</b>.
 
 login:
   path: takelogin.php
@@ -104,14 +107,10 @@ login:
     - selector: td.embedded:has(h2:contains("failed"))
     - selector: td.toolbox:contains("錯誤")
     - selector: td.toolbox:contains("Error")
+    - selector: td.toolbox:contains("限制登")
   test:
     path: index.php
     selector: a[href="logout.php"]
-
-download:
-  selectors:
-    - selector: a[href$="&https=1"]
-      attribute: href
 
 search:
   paths:
@@ -121,6 +120,7 @@ search:
       categories: [410, 429, 424, 430, 426, 437, 431, 432, 436, 425, 433, 411, 412, 413]
     - path: music.php
       categories: [406, 408, 434]
+  allowEmptyInputs: true
   inputs:
     $raw: "{{ range .Categories }}cat{{.}}=1&{{end}}"
     search: "{{ if .Query.IMDBID }}{{ .Query.IMDBID }}{{ else }}{{ .Keywords }}{{ end }}"
@@ -130,10 +130,11 @@ search:
     spstate: "{{ if .Config.freeleech }}2{{ else }}0{{ end }}"
     # 0 title, 3 uploader, 4 imdb url
     search_area: "{{ if .Query.IMDBID }}4{{ else }}0{{ end }}"
-    # 0 and, 1 or, 2 exact
+    # 0 AND, 1 OR, 2 exact
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: table.torrents > tbody > tr:has(table.torrentname)
@@ -142,13 +143,12 @@ search:
     title_default:
       # shortened for long release names
       selector: a[href^="details.php?id="] > b
-    title_optional:
+    title:
       # not available if IMDB tooltips are turned on
-      optional: true
       selector: a[title][href^="details.php?id="]
       attribute: title
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      optional: true
+      default: "{{ .Result.title_default }}"
     category:
       selector: a[href^="?cat="]
       attribute: href
@@ -159,10 +159,10 @@ search:
       selector: a[href^="details.php?id="]
       attribute: href
     download:
-      selector: a[href^="details.php?id="]
+      selector: a[href^="download.php?id="]
       attribute: href
     poster:
-      selector: img[alt="torrent thumbnail"]
+      selector: img[alt="torrent thumbnail"][src]
       attribute: src
       filters:
         - name: replace
@@ -186,7 +186,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_elapsed:
       selector: td.rowfollow:nth-last-child(7):not(:has(span))
       optional: true
@@ -194,7 +194,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     downloadvolumefactor:
@@ -211,7 +211,12 @@ search:
         img.pro_free2up: 2
         img.pro_2up: 2
         "*": 1
+    minimumratio:
+      text: 1
+    minimumseedtime:
+      # 2 days (as seconds = 2 x 24 x 60 x 60)
+      text: 172800
     description:
       selector: td:nth-child(2)
-      remove: a, img
+      remove: a, b, font, img, span
 # NexusPHP Standard v1.5 Beta 4

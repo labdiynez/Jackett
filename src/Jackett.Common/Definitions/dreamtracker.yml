@@ -14,6 +14,10 @@ caps:
     - {id: 113, cat: TV/Anime, desc: "Anime"}
     - {id: 114, cat: TV/Anime, desc: "Anime Series"}
     - {id: 115, cat: Movies/Other, desc: "Anime Movies"}
+    # VIP
+    - {id: 122, cat: Other, desc: "Only VIP"}
+    - {id: 123, cat: Audio, desc: "VIP Music"}
+    - {id: 124, cat: Movies, desc: "VIP Movies"}
     # Kids Stuff
     - {id: 1, cat: Movies/Other, desc: "Kids Stuff"}
     - {id: 14, cat: Movies/Other, desc: "Cartoon No Subs"}
@@ -58,6 +62,7 @@ caps:
     - {id: 59, cat: TV, desc: "Tv Shows & Series"}
     - {id: 62, cat: TV/Foreign, desc: "Tv Shows Foreign"}
     - {id: 63, cat: TV, desc: "Tv Shows Greek"}
+    - {id: 126, cat: TV/Foreign, desc: "Mini Series Foreign"}
     - {id: 64, cat: TV/Foreign, desc: "Series Foreign"}
     - {id: 65, cat: TV, desc: "Series Greek"}
     - {id: 92, cat: TV/Foreign, desc: "Series Foreign Packs"}
@@ -114,7 +119,7 @@ settings:
   - name: info
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing</b> option in your profile to <b>Classic</b><li>And set the <b>Language</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Greek</i> will prevent upload dates.</ol>"
+    default: "<ol><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing</b> option in your profile to <b>Classic</b></li><li>And set the <b>Language</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Greek</i> will prevent upload dates.</li></ol>"
 
 login:
   path: ?p=home&pid=1
@@ -187,7 +192,7 @@ search:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: dateparse
-          args: "02-01-2006 15:04"
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]
@@ -215,4 +220,9 @@ search:
       case:
         "img[src$=\"/torrent_multiple_upload.png\"]": 2
         "*": 1
+    minimumseedtime:
+      # 110 hours  (as seconds = 110 x 60 x 60)
+      text: 396000
+    minimumratio:
+      text: 1.0
 # TSUE 2.2

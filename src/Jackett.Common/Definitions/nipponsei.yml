@@ -38,23 +38,21 @@ search:
         - name: replace
           args: ["[Nipponsei] ", ""]
     details:
-      text: "{{ .Config.sitelink }}"
+      text: /
     download:
       selector: a
       attribute: href
-    date_optional:
-      optional: true
+    date:
       selector: td.date
+      optional: true
+      default: now
       filters:
         - name: dateparse
-          args: "2006-01-02 15:04"
-    date:
-      text: "{{ if .Result.date_optional }}{{ .Result.date_optional }}{{ else }}now{{ end }}"
-    size_optional:
-      optional: true
-      selector: td.bytes
+          args: "yyyy-MM-dd HH:mm"
     size:
-      text: "{{ if .Result.size_optional }}{{ .Result.size_optional }}{{ else }}128 MB{{ end }}"
+      selector: td.bytes
+      optional: true
+      default: 128 MB
     seeders:
       selector: "{{ if .Keywords }}td:nth-child(2){{ else }}td:nth-child(4){{ end }}"
     leechers:

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Html.Parser;
@@ -17,8 +16,17 @@ using NLog;
 namespace Jackett.Common.Indexers
 {
     [ExcludeFromCodeCoverage]
-    public class PixelHD : BaseWebIndexer
+    public class PixelHD : IndexerBase
     {
+        public override string Id => "pixelhd";
+        public override string Name => "PiXELHD";
+        public override string Description => "PixelHD (PxHD) is a Private Torrent Tracker for HD .MP4 MOVIES / TV";
+        public override string SiteLink { get; protected set; } = "https://pixelhd.me/";
+        public override string Language => "en-US";
+        public override string Type => "private";
+
+        public override TorznabCapabilities TorznabCaps => SetCapabilities();
+
         private string LoginUrl => SiteLink + "login.php";
         private string BrowseUrl => SiteLink + "torrents.php";
 
@@ -32,39 +40,36 @@ namespace Jackett.Common.Indexers
         private string input_username = null;
         private string input_password = null;
 
-        public PixelHD(IIndexerConfigurationService configService, WebClient webClient, Logger logger,
-            IProtectionService ps, ICacheService cs)
-            : base(id: "pixelhd",
-                   name: "PiXELHD",
-                   description: "PixelHD (PxHD) is a Private Torrent Tracker for HD .MP4 MOVIES / TV",
-                   link: "https://pixelhd.me/",
-                   caps: new TorznabCapabilities
-                   {
-                       MovieSearchParams = new List<MovieSearchParam>
-                       {
-                           MovieSearchParam.Q, MovieSearchParam.ImdbId
-                       }
-                   },
-                   configService: configService,
+        public PixelHD(IIndexerConfigurationService configService, WebClient webClient, Logger logger, IProtectionService ps, ICacheService cs)
+            : base(configService: configService,
                    logger: logger,
                    p: ps,
                    cacheService: cs,
                    client: webClient,
-                   configData: new ConfigurationDataCaptchaLogin()
-                )
+                   configData: new ConfigurationDataCaptchaLogin())
         {
-            Encoding = Encoding.UTF8;
-            Language = "en-US";
-            Type = "private";
+        }
 
-            AddCategoryMapping(1, TorznabCatType.MoviesHD);
+        private TorznabCapabilities SetCapabilities()
+        {
+            var caps = new TorznabCapabilities
+            {
+                MovieSearchParams = new List<MovieSearchParam>
+                {
+                    MovieSearchParam.Q, MovieSearchParam.ImdbId
+                }
+            };
+
+            caps.Categories.AddCategoryMapping(1, TorznabCatType.MoviesHD);
+
+            return caps;
         }
 
         public override async Task<ConfigurationData> GetConfigurationForSetup()
         {
             var loginPage = await RequestWithCookiesAsync(LoginUrl, string.Empty);
             var LoginParser = new HtmlParser();
-            var LoginDocument = LoginParser.ParseDocument(loginPage.ContentString);
+            using var LoginDocument = LoginParser.ParseDocument(loginPage.ContentString);
 
             configData.CaptchaCookie.Value = loginPage.Cookies;
 
@@ -111,7 +116,7 @@ namespace Jackett.Common.Indexers
             await ConfigureIfOK(result.Cookies, result.ContentString.Contains("logout.php"), () =>
            {
                var LoginParser = new HtmlParser();
-               var LoginDocument = LoginParser.ParseDocument(result.ContentString);
+               using var LoginDocument = LoginParser.ParseDocument(result.ContentString);
                var errorMessage = LoginDocument.QuerySelector("span.warning[id!=\"no-cookies\"]:has(br)").TextContent;
                throw new ExceptionWithConfigData(errorMessage, configData);
            });
@@ -153,7 +158,7 @@ namespace Jackett.Common.Indexers
 
             var IMDBRegEx = new Regex(@"tt(\d+)", RegexOptions.Compiled);
             var hParser = new HtmlParser();
-            var ResultDocument = hParser.ParseDocument(results.ContentString);
+            using var ResultDocument = hParser.ParseDocument(results.ContentString);
             try
             {
                 var Groups = ResultDocument.QuerySelectorAll("div.browsePoster");
@@ -185,7 +190,7 @@ namespace Jackett.Common.Indexers
                         var link = new Uri(SiteLink + Row.QuerySelector("a[href^=\"torrents.php?action=download\"]").GetAttribute("href"));
                         var seeders = ParseUtil.CoerceInt(Seeders.TextContent);
                         var details = new Uri(SiteLink + title.GetAttribute("href"));
-                        var size = ReleaseInfo.GetBytes(Size.TextContent);
+                        var size = ParseUtil.GetBytes(Size.TextContent);
                         var leechers = ParseUtil.CoerceInt(Leechers.TextContent);
                         var grabs = ParseUtil.CoerceLong(Grabs.TextContent);
                         var publishDate = DateTimeUtil.FromTimeAgo(added.TextContent);

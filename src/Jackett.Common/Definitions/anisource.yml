@@ -5,9 +5,7 @@ description: "AniSource is a Public site for HD Anime raws."
 language: en-US
 type: public
 encoding: UTF-8
-requestDelay: 2
-certificates:
-  - f400d50a4dac4dd6546c869ac75669846205a0d2 # expired 26 Aug 2022
+requestDelay: 5
 links:
   - https://asnet.pw/
 
@@ -27,17 +25,12 @@ search:
     - path: /
       inputs:
         tpage: 2
-    - path: /
-      inputs:
-        tpage: 3
-    - path: /
-      inputs:
-        tpage: 4
-    - path: /
-      inputs:
-        tpage: 5
   inputs:
     search: "{{ .Keywords }}"
+
+  headers:
+    # site blocks Jackett's User-Agents, so slightly alter it here (e.g. Chrome/87.0. > Chrome/97.0.)
+    User-Agent: ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4280.88 Safari/537.36"]
 
   rows:
     selector: div[class^="item"]
@@ -54,12 +47,12 @@ search:
     details:
       selector: a[href*="/showprofile/"]
       attribute: href
-    download:
-      selector: a[href*="/download/"]
+    infohash:
+      selector: a[href*="/showprofile/"]
       attribute: href
-    magnet:
-      selector: a[href^="magnet:?xt="]
-      attribute: href
+      filters:
+        - name: regexp
+          args: ([A-F|a-f|0-9]{40})
     date:
       selector: font[color="Black"]
       filters:
@@ -70,7 +63,7 @@ search:
         - name: append
           args: " -09:00" # CUS
         - name: dateparse
-          args: "2006-01-02 15:04 -07:00"
+          args: "yyyy-MM-dd HH:mm zzz"
     size:
       selector: font[color="Black"]
       filters:

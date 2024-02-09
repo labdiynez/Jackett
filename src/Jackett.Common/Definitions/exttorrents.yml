@@ -5,15 +5,19 @@ description: "EXT Torrents is a Public torrent site for MOVIES / TV / GENERAL"
 language: en-US
 type: public
 encoding: UTF-8
-requestDelay: 2
+requestDelay: 5
 links:
   - https://ext.to/
-  - https://site.extto.com/
-  - https://ext.torrentbay.to/
+  - https://search.extto.com/
+  - https://extranet.torrentbay.st/
 legacylinks:
   - https://ext.unblockninja.com/
   - https://t.extto.com/
   - https://torrent.extto.com/
+  - https://site.extto.com/
+  - https://ext.torrentbay.to/
+  - https://extranet.torrentbay.to/
+  - https://extranet.torrentbay.net/
 
 caps:
   categorymappings:
@@ -104,14 +108,15 @@ download:
 
 search:
   paths:
-    - path: "{{ if .Keywords }}search/?q={{ .Keywords }}&{{ else }}latest/?{{ end }}order={{ .Config.sort }}&sort={{ .Config.type }}"
-    - path: "{{ if .Keywords }}search/?q={{ .Keywords }}/2/&{{ else }}latest/2/?{{ end }}order={{ .Config.sort }}&sort={{ .Config.type }}"
-    - path: "{{ if .Keywords }}search/?q={{ .Keywords }}/3/&{{ else }}latest/3/?{{ end }}order={{ .Config.sort }}&sort={{ .Config.type }}"
-    - path: "{{ if .Keywords }}search/?q={{ .Keywords }}/4/&{{ else }}latest/4/?{{ end }}order={{ .Config.sort }}&sort={{ .Config.type }}"
+    - path: "{{ if .Keywords }}search/{{ .Keywords }}/?order={{ .Config.sort }}&sort={{ .Config.type }}{{ else }}latest/{{ end }}"
+    - path: "{{ if .Keywords }}search/{{ .Keywords }}/2/?order={{ .Config.sort }}&sort={{ .Config.type }}{{ else }}latest/2/{{ end }}"
+      followredirect: true
 
-  headers:
-    # site presents hcaptcha challenge for Jackett's User-Agent, so slightly alter it here (e.g. Safari/537.36 > Safari/537.35)
-    User-Agent: ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.35"]
+  keywordsfilters:
+    - name: tolower
+    - name: trim
+    - name: re_replace
+      args: ["[^\\w]+", "-"]
 
   rows:
     selector: table.table-striped > tbody > tr
@@ -120,6 +125,8 @@ search:
     category:
       selector: td:nth-child(1) div div a:last-child
       attribute: href
+      optional: true
+      default: "/other/"
     title:
       selector: td:nth-child(1) div a
     details:
@@ -130,11 +137,10 @@ search:
       attribute: href
     size:
       selector: td:nth-child(2)
-    files_optional:
+    files:
       selector: td:nth-child(3)
       optional: true
-    files:
-      text: "{{ if .Result.files_optional }}{{ .Result.files_optional }}{{ else }}0{{ end }}"
+      default: 1
     date:
       selector: td:nth-child(4)
     seeders:

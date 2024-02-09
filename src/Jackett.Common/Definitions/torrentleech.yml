@@ -5,7 +5,7 @@ description: "not here _ not scene"
 language: en-US
 type: private
 encoding: UTF-8
-requestDelay: 2.4 # #13796
+requestDelay: 4.1 # #13796
 links:
   - https://www.torrentleech.org/
   - https://www.torrentleech.cc/
@@ -17,58 +17,53 @@ legacylinks:
 
 caps:
   categorymappings:
-    - {id: 1, cat: Movies, desc: "Movies"}
     - {id: 8, cat: Movies/SD, desc: "Movies Cam"}
     - {id: 9, cat: Movies/SD, desc: "Movies TS/TC"}
     - {id: 11, cat: Movies/SD, desc: "Movies DVDRip/DVDScreener"}
-    - {id: 12, cat: Movies/DVD, desc: "Movies DVD-R"}
-    - {id: 13, cat: Movies/BluRay, desc: "Movies Bluray"}
-    - {id: 14, cat: Movies/HD, desc: "Movies BlurayRip"}
-    - {id: 15, cat: Movies, desc: "Movies Boxsets"}
-    - {id: 29, cat: TV/Documentary, desc: "Documentaries"}
-    - {id: 47, cat: Movies/UHD, desc: "Movies 4K"}
-    - {id: 36, cat: Movies/Foreign, desc: "Movies Foreign"}
     - {id: 37, cat: Movies/WEB-DL, desc: "Movies WEBRip"}
     - {id: 43, cat: Movies/HD, desc: "Movies HDRip"}
+    - {id: 14, cat: Movies/HD, desc: "Movies BlurayRip"}
+    - {id: 12, cat: Movies/DVD, desc: "Movies DVD-R"}
+    - {id: 13, cat: Movies/BluRay, desc: "Movies Bluray"}
+    - {id: 47, cat: Movies/UHD, desc: "Movies 4K"}
+    - {id: 15, cat: Movies, desc: "Movies Boxsets"}
+    - {id: 29, cat: TV/Documentary, desc: "Documentaries"}
 
-    - {id: 2, cat: TV, desc: "TV"}
     - {id: 26, cat: TV/SD, desc: "TV Episodes"}
-    - {id: 27, cat: TV, desc: "TV Boxsets"}
     - {id: 32, cat: TV/HD, desc: "TV Episodes HD"}
-    - {id: 44, cat: TV/Foreign, desc: "TV Foreign"}
+    - {id: 27, cat: TV, desc: "TV Boxsets"}
 
-    - {id: 3, cat: PC/Games, desc: "Games"}
     - {id: 17, cat: PC/Games, desc: "Games PC"}
+    - {id: 42, cat: PC/Mac, desc: "Games Mac"}
     - {id: 18, cat: Console/XBox, desc: "Games XBOX"}
     - {id: 19, cat: Console/XBox 360, desc: "Games XBOX360"}
     - {id: 40, cat: Console/XBox One, desc: "Games XBOXONE"}
     - {id: 20, cat: Console/PS3, desc: "Games PS2"}
     - {id: 21, cat: Console/PS3, desc: "Games Mac"}
+    - {id: 39, cat: Console/PS4, desc: "Games PS4"}
+    - {id: 49, cat: Console/PS4, desc: "Games PS5"}
     - {id: 22, cat: Console/PSP, desc: "Games PSP"}
     - {id: 28, cat: Console/Wii, desc: "Games Wii"}
     - {id: 30, cat: Console/NDS, desc: "Games Nintendo DS"}
-    - {id: 39, cat: Console/PS4, desc: "Games PS4"}
-    - {id: 42, cat: PC/Mac, desc: "Games Mac"}
     - {id: 48, cat: Console/Other, desc: "Games Nintendo Switch"}
 
-    - {id: 4, cat: Audio, desc: "Music"}
-    - {id: 16, cat: Audio/Video, desc: "Music videos"}
-    - {id: 31, cat: Audio, desc: "Audio"}
-
-    - {id: 7, cat: TV, desc: "Animation"}
-    - {id: 34, cat: TV/Anime, desc: "TV Anime"}
-    - {id: 35, cat: TV, desc: "TV Cartoons"}
-
-    - {id: 5, cat: Books, desc: "Books"}
-    - {id: 45, cat: Books/EBook, desc: "Books EBooks"}
-    - {id: 46, cat: Books/Comics, desc: "Books Comics"}
-
-    - {id: 6, cat: PC, desc: "Apps"}
     - {id: 23, cat: PC/ISO, desc: "PC ISO"}
     - {id: 24, cat: PC/Mac, desc: "PC Mac"}
     - {id: 25, cat: PC/Mobile-Other, desc: "PC Mobile"}
     - {id: 33, cat: PC/0day, desc: "PC 0-day"}
     - {id: 38, cat: Other, desc: "Education"}
+
+    - {id: 34, cat: TV/Anime, desc: "TV Anime"}
+    - {id: 35, cat: TV, desc: "TV Cartoons"}
+
+    - {id: 45, cat: Books/EBook, desc: "Books EBooks"}
+    - {id: 46, cat: Books/Comics, desc: "Books Comics"}
+
+    - {id: 31, cat: Audio, desc: "Audio"}
+    - {id: 16, cat: Audio/Video, desc: "Music videos"}
+
+    - {id: 36, cat: Movies/Foreign, desc: "Movies Foreign"}
+    - {id: 44, cat: TV/Foreign, desc: "TV Foreign"}
 
   modes:
     search: [q]
@@ -76,6 +71,7 @@ caps:
     movie-search: [q, imdbid]
     music-search: [q]
     book-search: [q]
+  allowrawsearch: true
 
 settings:
   - name: username
@@ -84,9 +80,24 @@ settings:
   - name: password
     type: password
     label: Password
+  - name: alt2fatoken
+    type: text
+    label: Alt 2FA Token
+  - name: info_alt2fatoken
+    type: info
+    label: "About Alt 2FA Token"
+    default: "(Site Profile => Alt 2FA Token) Only fill in the <b>Alt 2FA Token</b> if you have enabled <b>2FA</b> on the TorrentLeech Web Site. Otherwise just leave it empty."
   - name: freeleech
     type: checkbox
     label: Search freeleech only
+    default: false
+  - name: exclude_scene
+    type: checkbox
+    label: Exclude SCENE torrents from results
+    default: false
+  - name: exclude_archives
+    type: checkbox
+    label: Exclude torrents with the tag RAR from results
     default: false
   - name: sort
     type: select
@@ -111,12 +122,20 @@ settings:
 
 login:
   path: user/account/login/
-  method: post
+  method: form
+  form: form[name="login-form"]
   inputs:
     username: "{{ .Config.username }}"
     password: "{{ .Config.password }}"
+    alt2FAToken: "{{ .Config.alt2fatoken }}"
   error:
     - selector: p.text-danger
+    - selector: .login-container h2:contains("One Time Password")
+      message:
+        text: "Your TorrentLeech account has 2FA enabled. Please recheck your indexer settings."
+    - selector: form[name="login-form"]
+      message:
+        text: "Login page detected at {{ .Config.sitelink }}."
   test:
     path: /
     selector: a[href="/user/account/logout"]
@@ -124,7 +143,8 @@ login:
 search:
   paths:
     # "newfilter/2" include 0day and music
-    - path: "torrents/browse/list/{{ if .Config.freeleech }}facets/tags:FREELEECH/{{ else }}{{ end }}{{ if .Query.IMDBID }}imdbID/{{ .Query.IMDBID }}/{{ else }}exact/1/query/{{ .Keywords }}/{{ end }}{{ if .Keywords }}{{ else }}newfilter/2/{{ end }}{{ if .Categories }}categories/{{ join .Categories \",\" }}/{{ else }}{{ end }}orderby/{{ .Config.sort }}/order/{{ .Config.type }}"
+    # https://www.torrentleech.org/torrents/browse/list/categories/29,2,26,27,32,44,7,34,35/facets/tags:FREELEECH,nonscene/exact/1/query/friends/orderby/added/order/desc
+    - path: "torrents/browse/list{{ if .Categories }}/categories/{{ join .Categories \",\" }}{{ else }}{{ end }}{{ if or .Config.freeleech .Config.exclude_scene }}/facets/tags:{{ else }}{{ end }}{{ if .Config.freeleech }}FREELEECH{{ else }}{{ end }}{{ if and .Config.freeleech .Config.exclude_scene }},{{ else }}{{ end }}{{ if .Config.exclude_scene }}nonscene{{ else }}{{ end }}/{{ if .Query.IMDBID }}imdbID/{{ .Query.IMDBID }}/{{ else }}exact/1/query/{{ .Keywords }}/{{ end }}{{ if .Keywords }}{{ else }}newfilter/2/{{ end }}orderby/{{ .Config.sort }}/order/{{ .Config.type }}"
       response:
         type: json
 
@@ -132,6 +152,8 @@ search:
     # remove dashes at the beginning of keywords as they exclude search strings (see issue #3096)
     - name: re_replace
       args: ["(^|\\s)-", " "]
+    - name: append
+      args: "{{ if .Config.exclude_archives }} -tags:rar{{ else }}{{ end }}"
   rows:
     selector: torrentList
     count:
@@ -143,6 +165,10 @@ search:
     title_test: # title can be null #13736
       selector: name
       optional: true
+      filters:
+        # remove [REQ]/[REQUEST]
+        - name: re_replace
+          args: ["(?i)^\\[REQ(UEST(ED)?)?\\]\\s*", ""]
     title:
       text: "{{ if .Result.title_test }}{{ .Result.title_test }}{{ else }}TorrentLeech did not provide a title{{ end }}"
     _id:
@@ -150,9 +176,9 @@ search:
     _filename:
       selector: filename
     details:
-      text: "{{ .Config.sitelink }}torrent/{{ .Result._id }}"
+      text: "/torrent/{{ .Result._id }}"
     download:
-      text: "{{ .Config.sitelink }}download/{{ .Result._id }}/{{ .Result._filename }}"
+      text: "/download/{{ .Result._id }}/{{ .Result._filename }}"
     genre:
       selector: tags
       filters:
@@ -174,7 +200,7 @@ search:
       # auto adjusted by site account profile
       filters:
         - name: dateparse
-          args: "2006-01-02 15:04:05"
+          args: "yyyy-MM-dd HH:mm:ss"
     size:
       selector: size
     downloadvolumefactor:
@@ -191,4 +217,4 @@ search:
       # 10 days for registered users, less for upgraded users
       # 10 day (as seconds = 7 x 24 x 60 x 60)
       text: 864000
-# json enigine n/a
+# json engine n/a

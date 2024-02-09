@@ -6,6 +6,8 @@ language: bg-BG
 type: private
 encoding: UTF-8
 links:
+  - http://www.p2pbg.com/ # site does not support https ERR_CONNECTION_REFUSED
+legacylinks:
   - http://p2pbg.com/ # site does not support https ERR_CONNECTION_REFUSED
 
 caps:
@@ -135,18 +137,17 @@ search:
     title_default:
       # often abbreviated
       selector: td:nth-child(2) a
-    title_optional:
+    title:
       # usually full length
       selector: td a[title]
       attribute: title
       optional: true
+      default: "{{ .Result.title_default }}"
       filters:
         - name: replace
           args: ["View details: ", ""]
         - name: replace
           args: ["Преглед на детайли: ", ""]
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
     details:
       selector: td a[href*="id="]
       attribute: href
@@ -187,7 +188,7 @@ search:
       optional: true
       filters:
         - name: dateparse
-          args: "02/01/2006"
+          args: "dd/MM/yyyy"
     date:
       text: "{{ if or .Result.date_day .Result.date_year }}{{ or .Result.date_day .Result.date_year }}{{ else }}now{{ end }}"
     size:

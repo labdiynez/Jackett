@@ -7,28 +7,27 @@ type: public
 encoding: UTF-8
 followredirect: true
 links:
-  - https://torrentsir135.com/
+  - https://torrentsir162.com/
 legacylinks:
-  - http://torrentsir126.com/
-  - https://torrentsir126.com/
-  - http://torrentsir127.com/
-  - httsp://torrentsir127.com/
-  - https://torrentsir127.com/
-  - http://torrentsir128.com/
-  - https://torrentsir128.com/
-  - http://torrentsir129.com/
-  - https://torrentsir129.com/
-  - http://torrentsir130.com/
-  - https://torrentsir130.com/
-  - http://torrentsir131.com/
-  - https://torrentsir131.com/
-  - http://torrentsir132.com/
-  - https://torrentsir132.com/
-  - http://torrentsir133.com/
-  - https://torrentsir133.com/
-  - http://torrentsir134.com/
-  - https://torrentsir134.com/
-  - http://torrentsir135.com/
+  - http://torrentsir153.com/
+  - https://torrentsir153.com/
+  - http://torrentsir154.com/
+  - https://torrentsir154.com/
+  - http://torrentsir155.com/
+  - https://torrentsir155.com/
+  - http://torrentsir156.com/
+  - https://torrentsir156.com/
+  - http://torrentsir157.com/
+  - https://torrentsir157.com/
+  - http://torrentsir158.com/
+  - https://torrentsir158.com/
+  - http://torrentsir159.com/
+  - https://torrentsir159.com/
+  - http://torrentsir160.com/
+  - https://torrentsir160.com/
+  - http://torrentsir161.com/
+  - https://torrentsir161.com/
+  - http://torrentsir162.com/
 
 caps:
   categorymappings:
@@ -36,6 +35,7 @@ caps:
     - {id: "ani", cat: TV, desc: "동영상 (Video)"}
     - {id: "game", cat: Console, desc: "기타 (Games)"}
     - {id: "tv", cat: TV, desc: "시사/교양 (TV)"}
+    - {id: "netflix", cat: TV, desc: "넷플시리즈 (Netflix)"}
     - {id: "movie", cat: Movies, desc: "영화 (Movie)"}
     - {id: "drama", cat: TV, desc: "드라마 (Drama)"}
     - {id: "entertain", cat: TV, desc: "예능/오락 (Entertainment)"}
@@ -53,10 +53,8 @@ caps:
     book-search: [q]
 
 settings:
-  - name: flaresolverr
-    type: info
-    label: FlareSolverr
-    default: This site may use Cloudflare DDoS Protection, therefore Jackett requires <a href="https://github.com/Jackett/Jackett#configuring-flaresolverr" target="_blank">FlareSolverr</a> to access it.
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 download:
   infohash:

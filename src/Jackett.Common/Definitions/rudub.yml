@@ -1,20 +1,46 @@
 ---
 id: rudub
+replaces:
+  - baibako
 name: RUDUB
 description: "RUDUB (ex-BaibaKoTV) is a RUSSIAN Semi-Private Torrent Tracker for TV"
 language: ru-RU
 type: semi-private
 encoding: windows-1251
+followredirect: true
 links:
-  - https://rudub.xyz/
+  - https://13january.rudub.online/
 legacylinks:
-  - http://baibako.tv/
-  - https://baibako.tv/
-  - http://bko.baibako.tv/
-  - http://rudub.tv/ # redirects to *.net
-  - http://rudub.co/
-  - https://rudub.net/
-  - https://rudub.pw/
+  - https://14december.rudub.online/
+  - https://15december.rudub.online/
+  - https://16december.rudub.online/
+  - https://17december.rudub.online/
+  - https://18december.rudub.online/
+  - https://19december.rudub.online/
+  - https://20december.rudub.online/
+  - https://21december.rudub.online/
+  - https://22december.rudub.online/
+  - https://23december.rudub.online/
+  - https://24december.rudub.online/
+  - https://25december.rudub.online/
+  - https://26december.rudub.online/
+  - https://27december.rudub.online/
+  - https://28december.rudub.online/
+  - https://29december.rudub.online/
+  - https://30december.rudub.online/
+  - https://31december.rudub.online/
+  - https://01january.rudub.online/
+  - https://02january.rudub.online/
+  - https://03january.rudub.online/
+  - https://04january.rudub.online/
+  - https://05january.rudub.online/
+  - https://06january.rudub.online/
+  - https://07january.rudub.online/
+  - https://08january.rudub.online/
+  - https://09january.rudub.online/
+  - https://10january.rudub.online/
+  - https://11january.rudub.online/
+  - https://12january.rudub.online/
 
 caps:
   categorymappings:
@@ -70,7 +96,7 @@ login:
   error:
     - selector: div.login2
   test:
-    path: /
+    path: browse.php
     selector: a[href="logout.php"]
 
 search:

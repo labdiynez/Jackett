@@ -27,11 +27,13 @@ caps:
     - {id: 424, cat: XXX, desc: "Cumshot"}
     - {id: 451, cat: XXX, desc: "Deepthroat"}
     - {id: 455, cat: XXX, desc: "Extreme"}
+    - {id: 460, cat: XXX, desc: "Fansite"}
     - {id: 454, cat: XXX, desc: "Family"}
     - {id: 425, cat: XXX, desc: "Feature"}
     - {id: 426, cat: XXX, desc: "Fetish"}
     - {id: 457, cat: XXX, desc: "Fisting"}
     - {id: 453, cat: XXX, desc: "Gangbang"}
+    - {id: 459, cat: XXX, desc: "Game"}
     - {id: 427, cat: XXX, desc: "Gay / Bi"}
     - {id: 412, cat: XXX, desc: "Hair"}
     - {id: 411, cat: XXX, desc: "Hardcore"}
@@ -96,7 +98,7 @@ settings:
   - name: info_activity
     type: info
     label: Account Inactivity
-    default: "Inactive accounts will be deleted based on the following rules:<ul><li>Elite-ranked or higher-ranked accounts are never deleted after parking (in the control panel).</li><li>Veteran-ranked or higher-ranked accounts are never deleted.</li><li>Parked accounts are deleted if users haven't logged in for more than 400 days.</li><li>Non-parked accounts are deleted if users haven't logged in for more than 150 days.</li><li>Accounts with both uploaded and downloaded quantities at 0 will be deleted if users haven't logged in for more than 100 consecutive days.</li></ul>"
+    default: "You must log in to the site at least once a month; otherwise, your account will be suspended."
 
 login:
   path: takelogin.php

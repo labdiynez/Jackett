@@ -5,36 +5,43 @@ description: "GkTorrent is a French Public site for TV / MOVIES / GENERAL"
 language: fr-FR
 type: public
 encoding: UTF-8
-followredirect: true
-# to fetch current domain use https://www.protege-torrent.com/Gktorrent
+# to fetch current domain use https://www.rantop.org/
 links:
-  - https://www.gktorrent.lol/
+  - https://www.gktorrent.my/
 legacylinks:
+  # latest domains list
   - https://www.rantop.org/
-  - https://gktorrent.nocensor.work/
-  - https://gktorrent.nocensor.biz/
-  - https://www.gktorrents.org/
-  - https://gktorrent.nocensor.sbs/
-  - https://gktorrent.nocensor.world/
-  - https://gktorrent.nocensor.lol/
-  - https://gktorrent.mrunblock.guru/
-  - https://gktorrent.mrunblock.life/
-  - https://gktorrent.nocensor.click/
-  - https://www.gktorrents.cc/
-  - https://www.gktorrent.ac/
-  - https://www.gktorrent.ph/
-  - https://www.gktorrent.vc/
-  - https://www.gktorrent.mx/
+  - https://gktorrent.news/
+  - https://www.torrent.onl/
+  - https://www.site-torrent.com/
+  # domain lists no longer working
+  - https://www.protege-torrent.com/
+  - https://www.torrent.ws/
+  - https://www.protege-liens.com/
+  - https://www.protege-liens.net/
+  # actual legacylinks
   - https://www.gktorrent.fi/
   - https://www.gktorrent.wf/
   - https://gktorrent.nocensor.cloud/
   - https://gktorrent.mrunblock.bond/
   - https://www.gktorrent.wtf/
   - https://www.gktorrent.vg/
+  - https://www.gktorrent.lol/
+  - https://www.gktorrent.sh/
+  - https://www.gktorrent.eu/
+  - https://www.gktorrent.xyz/
+  - https://www.gktorrent.pm/
+  - https://www.gktorrent.tw/
+  - https://www.gktorrent.in/
+  - https://www.gktorrent.sk/
+  - https://www.gktorrent.uno/
+  - https://www.gktorrent.gy/
+  - https://www.gktorrent.si/
 
 caps:
   categorymappings:
     - {id: Films, cat: Movies, desc: "Movies"}
+    - {id: Vidéos, cat: Movies, desc: "Vidéos"}
     - {id: Animes, cat: TV/Anime, desc: "Anime"}
     - {id: Séries, cat: TV, desc: "TV Series"}
     - {id: Spectacles, cat: TV, desc: "TV Shows"}
@@ -57,6 +64,8 @@ caps:
   allowrawsearch: true
 
 settings:
+  - name: info_flaresolverr
+    type: info_flaresolverr
   - name: multilang
     type: checkbox
     label: Replace MULTi by another language in release name
@@ -88,7 +97,7 @@ download:
 
 search:
   paths:
-    - path: "{{ if .Keywords }}recherche/{{ .Keywords }}{{ else }}{{ end }}"
+    - path: "{{ if .Keywords }}recherche/{{ .Keywords }}{{ else }}home{{ end }}"
   keywordsfilters:
     # if searching for season packs swith S01 to saison 1 #9712
     - name: re_replace
@@ -97,7 +106,7 @@ search:
       args: ["(?i)(S)(\\d{1,3})$", "saison $2"]
 
   rows:
-    selector: table.table-hover > tbody > tr:has(a[onclick*="torrent/"])
+    selector: table.table-hover > tbody > tr:has(td a[href])
 
   fields:
     category:
@@ -124,10 +133,10 @@ search:
       text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
     details:
       selector: td:nth-child(1) a
-      attribute: onclick
+      attribute: href
       filters:
         - name: regexp
-          args: (/?torrent/\d+)
+          args: (/?detail/\d+)
     download:
       text: "{{ .Result.details }}"
     size:

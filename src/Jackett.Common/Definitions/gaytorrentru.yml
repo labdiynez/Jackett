@@ -45,9 +45,14 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Unused accounts (both upload and download are zero) are disabled by the system after 60 days of no login. Used accounts with prior activity (upload and/or download) are disabled by the system after 240 days of no login."
 
 caps:
   categorymappings:
+    - {id: 69, cat: XXX, desc: "AI"}
     - {id: 62, cat: XXX, desc: "Amateur"}
     - {id: 29, cat: XXX, desc: "Anal"}
     - {id: 46, cat: XXX, desc: "Anime Games"}
@@ -107,6 +112,8 @@ login:
   inputs:
     username: "{{ .Config.username }}"
     password: "{{ .Config.password }}"
+  error:
+    - selector: div.panel:has(h3:contains("Login failed"))
   test:
     path: browse.php
     selector: a[href$="/logout.php"]

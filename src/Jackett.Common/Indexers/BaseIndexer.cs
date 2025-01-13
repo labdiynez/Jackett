@@ -23,6 +23,7 @@ namespace Jackett.Common.Indexers
     public abstract class BaseIndexer : IIndexer
     {
         public virtual string Id { get; protected set; }
+        public virtual string[] Replaces { get; protected set; } = Array.Empty<string>();
         public virtual string Name { get; protected set; }
         public virtual string Description { get; protected set; }
 
@@ -37,6 +38,8 @@ namespace Jackett.Common.Indexers
         public virtual string Type { get; protected set; }
 
         public virtual bool SupportsPagination => false;
+
+        public virtual int PageSize => 0;
 
         public virtual bool IsConfigured { get; protected set; }
         public virtual string[] Tags { get; protected set; }
@@ -165,7 +168,7 @@ namespace Jackett.Common.Indexers
 
         protected virtual IEnumerable<ReleaseInfo> FilterResults(TorznabQuery query, IEnumerable<ReleaseInfo> results)
         {
-            var filteredResults = results.Where(IsValidRelease).ToList();
+            var filteredResults = results.Where(r => IsValidRelease(r, query.InteractiveSearch)).ToList();
 
             // filter results with wrong categories
             if (query.Categories.Length > 0)
@@ -237,11 +240,31 @@ namespace Jackett.Common.Indexers
             return fixedResults;
         }
 
-        protected virtual bool IsValidRelease(ReleaseInfo release)
+        protected virtual bool IsValidRelease(ReleaseInfo release, bool interactiveSearch)
         {
             if (release.Title.IsNullOrWhiteSpace())
             {
-                logger.Error("Invalid Release: '{0}' from indexer: {1}. No title provided.", release.Details, Name);
+                logger.Error("[{0}] Invalid Release: '{1}'. No title provided.", Id, release.Details);
+
+                return false;
+            }
+
+            if (interactiveSearch)
+            {
+                // Show releases with issues in the interactive search
+                return true;
+            }
+
+            if (release.Size == null)
+            {
+                logger.Warn("[{0}] Invalid Release: '{1}'. No size provided.", Id, release.Details);
+
+                return false;
+            }
+
+            if (release.Category == null || !release.Category.Any())
+            {
+                logger.Warn("[{0}] Invalid Release: '{1}'. No categories provided.", Id, release.Details);
 
                 return false;
             }
@@ -293,18 +316,28 @@ namespace Jackett.Common.Indexers
             if (query.HasSpecifiedCategories)
             {
                 var supportedCats = TorznabCaps.Categories.SupportedCategories(query.Categories);
+
                 if (supportedCats.Length == 0)
                 {
                     if (!isMetaIndexer)
+                    {
                         logger.Error($"All categories provided are unsupported in {Name}: {string.Join(",", query.Categories)}");
+                    }
+
                     return false;
                 }
+
                 if (supportedCats.Length != query.Categories.Length && !isMetaIndexer)
                 {
-                    var unsupportedCats = query.Categories.Except(supportedCats);
-                    logger.Warn($"Some of the categories provided are unsupported in {Name}: {string.Join(",", unsupportedCats)}");
+                    var unsupportedCats = query.Categories.Except(supportedCats).ToList();
+
+                    if (unsupportedCats.Any())
+                    {
+                        logger.Warn($"Some of the categories provided are unsupported in {Name}: {string.Join(",", unsupportedCats)}");
+                    }
                 }
             }
+
             return true;
         }
 
@@ -348,6 +381,10 @@ namespace Jackett.Common.Indexers
 
                 results = FilterResults(queryCopy, results).ToList();
                 results = FixResults(queryCopy, results).ToList();
+
+                // De-dupe releases by Guid so duplicate results aren't returned.
+                results = results.GroupBy(r => r.Guid).Select(g => g.First()).ToList();
+
                 cacheService.CacheResults(this, queryCopy, results.ToList());
                 errorCount = 0;
                 expireAt = DateTime.Now.Add(HealthyStatusValidity);
@@ -366,6 +403,9 @@ namespace Jackett.Common.Indexers
                 throw new IndexerException(this, ex);
             }
         }
+
+        public abstract IIndexerRequestGenerator GetRequestGenerator();
+        public abstract IParseIndexerResponse GetParser();
 
         protected abstract Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query);
     }
@@ -509,7 +549,7 @@ namespace Jackett.Common.Indexers
 
             if (response.IsRedirect)
             {
-                await FollowIfRedirect(response);
+                response = await FollowIfRedirect(response);
             }
 
             if (response.IsRedirect)
@@ -518,7 +558,7 @@ namespace Jackett.Common.Indexers
                 if (redirectingTo.Scheme == "magnet")
                     return Encoding.UTF8.GetBytes(redirectingTo.OriginalString);
 
-                await FollowIfRedirect(response);
+                response = await FollowIfRedirect(response);
             }
 
             if (response.Status != System.Net.HttpStatusCode.OK && response.Status != System.Net.HttpStatusCode.Continue && response.Status != System.Net.HttpStatusCode.PartialContent)
@@ -540,7 +580,7 @@ namespace Jackett.Common.Indexers
 
             var response = await RequestWithCookiesAsync(requestLink, null, RequestType.GET, referer);
             if (response.IsRedirect)
-                await FollowIfRedirect(response);
+                response = await FollowIfRedirect(response);
 
             return response;
         }
@@ -580,6 +620,25 @@ namespace Jackett.Common.Indexers
             return result;
         }
 
+        protected async Task<WebResult> RequestWithCookiesAndRetryAsync(WebRequest request)
+        {
+            return await RetryStrategy
+                 .ExecuteAsync(async _ => await RequestWithCookiesAsync(request))
+                 .ConfigureAwait(false);
+        }
+
+        protected virtual async Task<WebResult> RequestWithCookiesAsync(WebRequest request)
+        {
+            request.Encoding = Encoding;
+
+            var result = await webclient.GetResultAsync(request);
+
+            CheckSiteDown(result);
+            UpdateCookieHeader(result.Cookies);
+
+            return result;
+        }
+
         protected async Task<WebResult> RequestLoginAndFollowRedirect(string url, IEnumerable<KeyValuePair<string, string>> data, string cookies, bool returnCookiesFromFirstCall, string redirectUrlOverride = null, string referer = null, bool accumulateCookies = false, Dictionary<string, string> headers = null)
         {
             var request = new WebRequest
@@ -602,7 +661,7 @@ namespace Jackett.Common.Indexers
 
             if (response.IsRedirect)
             {
-                await FollowIfRedirect(response, request.Url, redirectUrlOverride, response.Cookies, accumulateCookies);
+                response = await FollowIfRedirect(response, request.Url, redirectUrlOverride, response.Cookies, accumulateCookies);
             }
 
             if (returnCookiesFromFirstCall)
@@ -626,7 +685,7 @@ namespace Jackett.Common.Indexers
             }
         }
 
-        protected async Task FollowIfRedirect(WebResult response, string referrer = null, string overrideRedirectUrl = null, string overrideCookies = null, bool accumulateCookies = false, int maxRedirects = 5)
+        protected async Task<WebResult> FollowIfRedirect(WebResult response, string referrer = null, string overrideRedirectUrl = null, string overrideCookies = null, bool accumulateCookies = false, int maxRedirects = 5)
         {
             for (var i = 0; i < maxRedirects; i++)
             {
@@ -641,7 +700,7 @@ namespace Jackett.Common.Indexers
                     break;
                 }
 
-                await DoFollowIfRedirect(response, referrer, overrideRedirectUrl, overrideCookies, accumulateCookies);
+                response = await DoFollowIfRedirect(response, referrer, overrideRedirectUrl, overrideCookies, accumulateCookies);
 
                 if (accumulateCookies)
                 {
@@ -654,6 +713,8 @@ namespace Jackett.Common.Indexers
                     response.Cookies = overrideCookies;
                 }
             }
+
+            return response;
         }
 
         protected virtual string ResolveCookies(string incomingCookies = "")
@@ -681,7 +742,7 @@ namespace Jackett.Common.Indexers
             }
         }
 
-        private async Task DoFollowIfRedirect(WebResult incomingResponse, string referrer = null, string overrideRedirectUrl = null, string overrideCookies = null, bool accumulateCookies = false)
+        private async Task<WebResult> DoFollowIfRedirect(WebResult incomingResponse, string referrer = null, string overrideRedirectUrl = null, string overrideCookies = null, bool accumulateCookies = false)
         {
             if (incomingResponse.IsRedirect)
             {
@@ -702,8 +763,11 @@ namespace Jackett.Common.Indexers
                     Cookies = redirRequestCookies,
                     Encoding = Encoding
                 });
-                MapperUtil.Mapper.Map(redirectedResponse, incomingResponse);
+
+                return redirectedResponse;
             }
+
+            return incomingResponse;
         }
 
         protected List<string> GetAllTrackerCategories() =>
@@ -782,6 +846,99 @@ namespace Jackett.Common.Indexers
 
         protected WebClient webclient;
         protected readonly string downloadUrlBase = "";
+
+        public override IIndexerRequestGenerator GetRequestGenerator() => throw new NotImplementedException();
+
+        public override IParseIndexerResponse GetParser() => throw new NotImplementedException();
+
+        protected override Task<IEnumerable<ReleaseInfo>> PerformQuery(TorznabQuery query)
+        {
+            return FetchReleasesAsync(g => g.GetSearchRequests(query), query);
+        }
+
+        protected virtual async Task<IEnumerable<ReleaseInfo>> FetchReleasesAsync(Func<IIndexerRequestGenerator, IndexerPageableRequestChain> pageableRequestChainSelector, TorznabQuery query)
+        {
+            var releases = new List<ReleaseInfo>();
+
+            var generator = GetRequestGenerator();
+            var parser = GetParser();
+
+            var pageableRequestChain = pageableRequestChainSelector(generator);
+
+            for (var i = 0; i < pageableRequestChain.Tiers; i++)
+            {
+                var pageableRequests = pageableRequestChain.GetTier(i).ToList();
+
+                foreach (var pageableRequest in pageableRequests)
+                {
+                    var pagedReleases = new List<ReleaseInfo>();
+
+                    var pageSize = PageSize;
+
+                    foreach (var request in pageableRequest)
+                    {
+                        var page = await FetchPageAsync(request, parser);
+
+                        pageSize = pageSize == 1 ? page.Releases.Count : pageSize;
+
+                        pagedReleases.AddRange(page.Releases);
+
+                        if (!IsFullPage(page.Releases, pageSize))
+                        {
+                            break;
+                        }
+                    }
+
+                    releases.AddRange(pagedReleases.Where(r => IsValidRelease(r, query.InteractiveSearch)));
+                }
+
+                if (releases.Any())
+                {
+                    break;
+                }
+            }
+
+            return releases;
+        }
+
+        protected virtual bool IsFullPage(IList<ReleaseInfo> page, int pageSize)
+        {
+            return pageSize != 0 && page.Count >= pageSize;
+        }
+
+        protected virtual async Task<IndexerQueryResult> FetchPageAsync(IndexerRequest request, IParseIndexerResponse parser)
+        {
+            var response = await FetchIndexerResponseAsync(request);
+
+            try
+            {
+                var releases = parser.ParseResponse(response).ToList();
+
+                if (releases.Count == 0)
+                {
+                    logger.Trace("No releases found. Response: {0}", response.Content);
+                }
+
+                return new IndexerQueryResult
+                {
+                    Releases = releases,
+                    Response = response.WebResponse
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.Trace("Unexpected response content ({0} bytes): {1}", response.WebResponse.ContentString.Length, response.WebResponse.ContentString);
+                OnParseError(response.Content, ex);
+                throw;
+            }
+        }
+
+        protected virtual async Task<IndexerResponse> FetchIndexerResponseAsync(IndexerRequest request)
+        {
+            var response = await RequestWithCookiesAndRetryAsync(request.WebRequest);
+
+            return new IndexerResponse(request, response);
+        }
     }
 
     public abstract class BaseCachingWebIndexer : BaseWebIndexer

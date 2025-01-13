@@ -13,6 +13,7 @@ namespace Jackett.Common.Models
         private static readonly Regex _StandardizeDashesRegex = new Regex(@"\p{Pd}+", RegexOptions.Compiled);
         private static readonly Regex _StandardizeSingleQuotesRegex = new Regex(@"[\u0060\u00B4\u2018\u2019]", RegexOptions.Compiled);
 
+        public bool InteractiveSearch { get; set; }
         public string QueryType { get; set; }
         public int[] Categories { get; set; }
         public int Extended { get; set; }
@@ -30,7 +31,7 @@ namespace Jackett.Common.Models
         [JsonIgnore]
         public bool Cache { get; set; } = true;
 
-        public int Season { get; set; }
+        public int? Season { get; set; }
         public string Episode { get; set; }
         public string SearchTerm { get; set; }
 
@@ -101,7 +102,7 @@ namespace Jackett.Common.Models
             Publisher.IsNotNullOrWhiteSpace() ||
             Year.HasValue;
 
-        public bool HasSpecifiedCategories => (Categories != null && Categories.Length > 0);
+        public bool HasSpecifiedCategories => Categories is { Length: > 0 };
 
         public string SanitizedSearchTerm
         {
@@ -167,6 +168,7 @@ namespace Jackett.Common.Models
         {
             var ret = new TorznabQuery
             {
+                InteractiveSearch = InteractiveSearch,
                 QueryType = QueryType,
                 Extended = Extended,
                 ApiKey = ApiKey,
@@ -212,7 +214,7 @@ namespace Jackett.Common.Models
 
         // Some trackers don't support AND logic for search terms resulting in unwanted results.
         // Using this method we can AND filter it within jackett.
-        // With limit we can limit the amount of characters which should be compared (use it if a tracker doesn't return the full title).
+        // With "limit" we can limit the amount of characters which should be compared (use it if a tracker doesn't return the full title).
         public bool MatchQueryStringAND(string title, int? limit = null, string queryStringOverride = null)
         {
             var commonWords = new[] { "and", "the", "an" };
@@ -222,10 +224,12 @@ namespace Jackett.Common.Models
             {
                 var queryString = !string.IsNullOrWhiteSpace(queryStringOverride) ? queryStringOverride : GetQueryString();
 
-                if (limit != null && limit > 0)
+                if (limit is > 0)
                 {
                     if (limit > queryString.Length)
+                    {
                         limit = queryString.Length;
+                    }
 
                     queryString = queryString.Substring(0, (int)limit);
                 }
@@ -241,14 +245,20 @@ namespace Jackett.Common.Models
 
         public string GetEpisodeSearchString()
         {
-            if (Season == 0)
+            if (Season == null || Season == 0)
+            {
                 return string.Empty;
+            }
 
             string episodeString;
             if (DateTime.TryParseExact($"{Season} {Episode}", "yyyy MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var showDate))
-                episodeString = showDate.ToString("yyyy.MM.dd");
-            else if (string.IsNullOrEmpty(Episode))
+            {
+                episodeString = showDate.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture);
+            }
+            else if (Episode.IsNullOrWhiteSpace())
+            {
                 episodeString = $"S{Season:00}";
+            }
             else
             {
                 try
@@ -259,8 +269,8 @@ namespace Jackett.Common.Models
                 {
                     episodeString = $"S{Season:00}E{Episode}";
                 }
-
             }
+
             return episodeString;
         }
     }
